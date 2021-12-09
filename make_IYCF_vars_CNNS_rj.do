@@ -84,6 +84,11 @@ replace ebf2d =. if age_days >2
 * 82 children in sample <= 2 days
 tab ebf2d q303, m 
 
+* Currently Breastfeeding
+recode q307 (1=1)(2 8=0)(missing=.), gen(currently_bf)
+la var currently_bf "Currently breasfeeding"
+tab currently_bf q307, m 
+
 
 * Prelacteal feeds
 * What was [NAME] given to drink? within first three days after delivery
@@ -252,19 +257,14 @@ lab var vita_fruit_veg "6: Vitamin A rich fruits and vegetables"
 lab var fruit_veg "7: Other fruits and vegetables"
 // lab val fruit_veg fruit_veg1
 
-
-* DON'T USE
-// gen breast_milk=0
-// replace breast_milk =1 if q307==1
-// lab define breast_milk 0"No" 1 "Yes"
-// tab breast_milk,m
-
-
 foreach var of varlist carb dairy all_meat vita_fruit_veg {
 	lab val `var' no_yes
 }
-* Test all 8 groups 
-foreach var of varlist carb dairy all_meat egg vita_fruit_veg fruit_veg breast_milk {
+
+* Test all 8 groups including breastmilk as one of the 8 groups
+* DO NOT USE breast_milk as variable.  Use currently_bf
+
+foreach var of varlist carb dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
 	tab `var' , m
 }
 
@@ -276,26 +276,13 @@ lab val agegroup agegroup
 
 * Number of food groups out of eight
 cap drop sumfoodgrp
-egen sumfoodgrp = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg breast_milk)
+egen sumfoodgrp = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg currently_bf)
 tabulate sumfoodgrp, generate(fg)
 rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 fg9) ///
 	   (fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8)		
 
 
-
-
-
-	   
-
-
-*Continued breastfeeding
-gen cont_bf = 0
-replace cont_bf = 1 if q307 == 1 
-
-gen cont_bf_12_23 = cont_bf if age_days>335 & age_days<730 
-tab cont_bf_12_23, m
-
-*Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
+*Introduction to semi_solid, solid, soft_food in children from 6-8 months of age
 * based on 
 * q311: did [name] eat any solid, semisolid, or soft foods yesterday during the day
 * q312: number of |times index child ate solid, semi solid, soft foods yesterday 
@@ -312,13 +299,116 @@ la var intro_compfood "Intro to complementary food 6-8 months of age"
 tab intro_compfood
 // this indicator is always 6-8 m 
 
+	   
+	   
+
+*EXCLUSIVE BREASTFEEDING
+*Exclusive breastfeeding is defined as breastfeeding with no other food or drink, not even water.
+*Using the WHO guideline for defining ebf variable - create a condition variable based on 
+*if the child received any other food items (liquid/solids/semi-solids) on previous day
+
+cap drop ebf
+
+// 		tab		  water    
+// 		tab		  juice      
+//           tab        broth     
+//             tab      milk       	
+//               tab    formula    
+//                 tab  other_liq 
+// 				  tab sumfoodgrp
+		  
+* Create ebf variable - 1 yes 0 no
+gen ebf=0 
+replace ebf =1 if currently_bf ==1
+replace ebf =0 if water      !=0 
+replace ebf =0 if juice      !=0 
+replace ebf =0 if broth      !=0 			
+replace ebf =0 if milk       !=0 
+replace ebf =0 if formula    !=0 
+replace ebf =0 if other_liq  !=0 
+replace ebf =0 if sumfoodgrp !=0 
+				  
+
+// no liquids besides breastmilk
+// no food groups consumed - sumfoodgrp==0 
+replace ebf =0 if q311 ==1
+// no eating any solid, semisolid, or soft foods yesterday q311==2
+replace ebf =. if age_days >182
+la var ebf "Exclusive breasfeeding"
+tab ebf
+tab ebf agemos
 
 
-* Currently Breastfeeding
-recode q307 (1=1)(2 8=0)(missing=.), gen(currently_bf)
-tab currently_bf q307, m 
+* We have already reviewed and converted the vars below into new vars.  Use new vars for definition
+// cap drop condition 					   
+// gen condition = 0	if age_days<183				   
+// replace condition = 1 if q310a==2 & q310b==2 & q310c==2 & q310d1==2  & q310e1==2  & q310f==2 & q310g1==2  & q310h==2 ///
+//                        & q310i==2 & q310j==2 & q310k==2 & q310l==2 & q310m==2 & q310n==2 & q310o==2 & q310p==2 & q310q==2 & q310r==2 & q310s==2 & q310t==2 ///
+// 					   & q310u==2 & q310v==2 & q310w==2 & q311==2
+// tab condition, m
 
-* Exclusive Breastfeeding
+cap drop exbf
+gen exbf = 0 if age_days<183
+* cont_bf is wrong here
+replace exbf = 1 if condition == 1 & cont_bf==1 & age_days<183 
+tab exbf
+
+
+
+/*
+       exbf |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |      1,486       42.43       42.43
+          1 |      2,016       57.57      100.00
+------------+-----------------------------------
+      Total |      3,502      100.00
+*/
+
+
+
+* MEDIAN duration of exbf for children below six months
+
+gen agemos_round = round(age_days/30.42, 0.01)   //exact age in months round of to 2 digits after decimal
+tab agemos_round, m 
+
+* create a age in months variable for exclusively bf children
+cap drop agemos_ebf
+gen agemos_ebf = agemos_round if age_days<183
+kdensity agemos_ebf
+
+
+*set agemos_ebf to missing if exbf=no
+replace agemos_ebf=. if exbf==0
+
+
+*median duration of EXBF is the median of agemos_ebf
+univar agemos_ebf
+* median duration ebf must be weighted to have matching results to report. 
+
+/*
+                                     -------------- Quantiles --------------
+Variable       n       Mean     S.D.      Min      .25      Mdn        .75      Max
+-------------------------------------------------------------------------------
+agemos_ebf    2033     2.58     1.63     0.00     1.18     2.47*     3.85     6.02
+-------------------------------------------------------------------------------
+*/
+
+	   
+
+
+*Continued breastfeeding
+gen cont_bf = 0
+replace cont_bf = 1 if q307 == 1 
+
+gen cont_bf_12_23 = cont_bf if age_days>335 & age_days<730 
+tab cont_bf_12_23, m
+
+
+
+
+
+
+
 
 
 
