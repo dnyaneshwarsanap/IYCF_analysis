@@ -745,6 +745,11 @@ la val state state_name
 
 tab state, m 
 
+* Survey Weights
+gen nat_wgt =iw_s_pool    //national women's sample weight (6 decimals)
+gen reg_wgt = reg_weight_survey
+gen state_wgt =iweight_s    // 	state women's sample weight (6 decimals)
+
 * male / female
 
 * Save data with name of survey
