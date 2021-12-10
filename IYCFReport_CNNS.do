@@ -1416,21 +1416,27 @@ tabulate diet, generate(d)
 * This method does not give weighted results
 
 
-
-webuse grunfeld, clear
-collapse (sum) mvalue invest kstock, by(year)
-gen percent1 = mvalue / (mvalue + invest + kstock)
-gen percent2 = (mvalue+invest)/ (mvalue + invest + kstock)
-gen percent3 = 1
+collapse d1 d2 d3 d4 d5 d6 [aw=nat_wgt], by(agemos)
+drop if agemos >24
+// collapse (sum) mvalue invest kstock, by(year)
+gen p1 = d1
+gen p2 = d1 + d2
+gen p3 = d1 + d2 + d3
+gen p4 = d1 + d2 + d3 + d4
+gen p5 = d1 + d2 + d3 + d4 + d5
+gen p6 = 1
 gen zero = 0 
-twoway rarea zero percent1 year /// 
-    || rarea percent1 percent2 year /// 
-    || rarea percent2 percent3 year  /// 
-    ||, legend(order(3 "kstock" 2 "invest" 1 "mvalue")) /// 
-     xla(1935(5)1950 1954) ytitle(dopey cumulation percent)
-
+twoway rarea zero p1 agemos /// 
+    || rarea p1 p2 agemos /// 
+    || rarea p1 p2 agemos /// 
+    || rarea p2 p3 agemos /// 
+	|| rarea p3 p4 agemos /// 
+	|| rarea p4 p5 agemos /// 
+    || rarea p5 p6 agemos  /// 
+    ||, legend(order(6 "missing" 5 "not BF" 4 "CF & BF" 3 "Form & BF" 2 "H2O & BF" 1 "EBF")) /// 
+     xla(0(1)24) ytitle(percent)
+* Labels are wrong
 	 
-twoway (area hs year, color(gs13)) (area ms year, color(gs9)) (area ls year, color(gs4)), xlabel(1970 (5) 2005, alternate) ylabel(0 (25) 100, alternate nogrid val) xtitle("") text(10 1980 "{bf:low-skilled}") text(50 1990 "{bf:medium-skilled}") text(90 1995 "{bf:high-skilled}") by(industry, legend(off))
 
 
 graph twoway (lpoly group1_cdd  agemos [aw=nat_weight_survey], lcolor(olive) degree(1) /// Grains roots tubers
