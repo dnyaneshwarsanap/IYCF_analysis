@@ -17,8 +17,9 @@ tab result
 * Complete N  38,060  
 
 * Change from age in months to age in days
+* One year = 365.25 days
 * Ages in month by day ranges
-* 6 - 23 M  (183 - 730)
+* 6 - 23 M  (183 - 730)  // 
 * Under 24 M
 * 6 - 8 M   (183 - 243)
 * 9 -23 M   (243 - 730)
@@ -40,7 +41,7 @@ tab age_days,m
 // cap drop count
 // bysort age_days: egen count = count(age_days)
 // line count age_days
-gen agemos = floor(age_days/30.42)
+gen agemos = floor(age_days/30.4375)
 tab agemos, m 
 
 * Ever breastfed (children born in past 24 months)
@@ -274,26 +275,34 @@ gen agegroup = floor(age_days/183 +1)   // agemons/6 +1
 lab def agegroup 1 "0-5m" 2 "6-11m" 3 "12=17m" 4 "18-23m" 5 "24-29m" 6 "30-35m" 7 "36-41m" 8 "42-47m" 9 "48-53m" 10 "54-59m"
 lab val agegroup agegroup
 
-* Number of food groups out of eight
+* Number of food groups out of eight - includes currently breastfeeding
 cap drop sumfoodgrp
 egen sumfoodgrp = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg currently_bf)
 tabulate sumfoodgrp, generate(fg)
 rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 fg9) ///
 	   (fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8)		
 
+* Any solid/semi-solid food consumption -  Does NOT include currently breastfeeding
+cap drop any_solid_semi_food
+egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
+replace any_solid_semi_food = 1 if any_solid_semi_food >1
+tab any_solid_semi_food, m 
+
 
 *Introduction to semi_solid, solid, soft_food in children from 6-8 months of age
 * based on 
 * q311: did [name] eat any solid, semisolid, or soft foods yesterday during the day
 * q312: number of |times index child ate solid, semi solid, soft foods yesterday 
-* sumfoodgrp - number of food groups eaten yesterday
+* any_solid_semi_food
+
 tab q312 q311, m 
 * no inconsistency between q311 and q312
-tab sumfoodgrp q311, m 
-* inconsistency between q311 and sumfoodgrp
+tab any_solid_semi_food q311, m 
+* inconsistency between q311 and any_solid_semi_food  - 12 cases
+replace any_solid_semi_food = 1 if q311==1
 
 gen intro_compfood = 0
-replace intro_compfood = 1 if q311 == 1 | sumfoodgrp>=1 
+replace intro_compfood = 1 if q311 == 1 | any_solid_semi_food ==1 
 replace intro_compfood =. if age_days<=183 | age_days>=243
 la var intro_compfood "Intro to complementary food 6-8 months of age"
 tab intro_compfood
@@ -308,31 +317,18 @@ tab intro_compfood
 *if the child received any other food items (liquid/solids/semi-solids) on previous day
 
 cap drop ebf
-
-// 		tab		  water    
-// 		tab		  juice      
-//           tab        broth     
-//             tab      milk       	
-//               tab    formula    
-//                 tab  other_liq 
-// 				  tab sumfoodgrp
-		  
 * Create ebf variable - 1 yes 0 no
+// no liquids besides breastmilk
+// no food groups consumed - any_solid_semi_food==0 
 gen ebf=0 
 replace ebf =1 if currently_bf ==1
-replace ebf =0 if water      !=0 
-replace ebf =0 if juice      !=0 
-replace ebf =0 if broth      !=0 			
-replace ebf =0 if milk       !=0 
-replace ebf =0 if formula    !=0 
-replace ebf =0 if other_liq  !=0 
-replace ebf =0 if sumfoodgrp !=0 
-				  
-
-// no liquids besides breastmilk
-// no food groups consumed - sumfoodgrp==0 
-replace ebf =0 if q311 ==1
-// no eating any solid, semisolid, or soft foods yesterday q311==2
+replace ebf =0 if water      ==1 | ///
+                  juice      ==1 | ///
+				  broth      ==1 | ///			
+                  milk       ==1 | ///
+                  formula    ==1 | ///
+                  other_liq  ==1 | ///
+                  any_solid_semi_food ==1 
 replace ebf =. if age_days >182
 la var ebf "Exclusive breasfeeding"
 tab ebf
@@ -347,56 +343,29 @@ tab ebf agemos
 // 					   & q310u==2 & q310v==2 & q310w==2 & q311==2
 // tab condition, m
 
-cap drop exbf
-gen exbf = 0 if age_days<183
-* cont_bf is wrong here
-replace exbf = 1 if condition == 1 & cont_bf==1 & age_days<183 
-tab exbf
+// cap drop exbf
+// gen exbf = 0 if age_days<183
+// * cont_bf is wrong here
+// replace exbf = 1 if condition == 1 & cont_bf==1 & age_days<183 
+// tab exbf
 
 
-
-/*
-       exbf |      Freq.     Percent        Cum.
-------------+-----------------------------------
-          0 |      1,486       42.43       42.43
-          1 |      2,016       57.57      100.00
-------------+-----------------------------------
-      Total |      3,502      100.00
-*/
-
-
-
-* MEDIAN duration of exbf for children below six months
-
-gen agemos_round = round(age_days/30.42, 0.01)   //exact age in months round of to 2 digits after decimal
-tab agemos_round, m 
-
-* create a age in months variable for exclusively bf children
-cap drop agemos_ebf
-gen agemos_ebf = agemos_round if age_days<183
-kdensity agemos_ebf
-
-
+* MEDIAN duration of exclusive breastfeeding
+cap drop age_ebf
+gen age_ebf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
+replace age_ebf = . if age_days >183
 *set agemos_ebf to missing if exbf=no
-replace agemos_ebf=. if exbf==0
+replace age_ebf=. if ebf==0
+la var age_ebf "Median age of exclusive breasfeeding in months"
+sum age_ebf [aw=iw_s_pool] , d
 
+* MEDIAN duration of continued breastfeeding
+gen age_cbf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
+replace age_cbf=. if currently_bf !=1
+la var age_cbf "Median age of continued breasfeeding in months"
+sum age_cbf [aw=iw_s_pool] , d
 
-*median duration of EXBF is the median of agemos_ebf
-univar agemos_ebf
-* median duration ebf must be weighted to have matching results to report. 
-
-/*
-                                     -------------- Quantiles --------------
-Variable       n       Mean     S.D.      Min      .25      Mdn        .75      Max
--------------------------------------------------------------------------------
-agemos_ebf    2033     2.58     1.63     0.00     1.18     2.47*     3.85     6.02
--------------------------------------------------------------------------------
-*/
-
-	   
-
-
-*Continued breastfeeding
+*Continued breastfeeding 12-23 months 
 gen cont_bf = 0
 replace cont_bf = 1 if q307 == 1 
 
@@ -487,6 +456,9 @@ replace freq_yogurt = 0 if yogurt ==0  | q310g2==98
 tab q310e2 freq_yogurt , m 
 
 * Frequency of Milk and non solid semi-solid dairy feeds in children 0-23 months
+
+* DOUBLE CHECK THAT YOGURT INCLUDED IN MILK FEEDS  / See NY guidance and WHO docs
+
 gen milk_feeds= freq_milk + freq_formula + freq_yogurt	
 replace milk_feeds = 7 if milk_feeds>=7 & milk_feeds !=.
 la val milk_feeds feeds
@@ -635,6 +607,7 @@ lab var rururb "Residence"
 tab rururb, m 
 
 * socio-economic status
+* IS THIS CORRECT NAME ?
 tab wi, m
 
 
@@ -685,7 +658,7 @@ region 5       West            Gujarat(24), Maharshtra (27), Goa(30)
 region 6       South           Andhra Pradesh(28),  Karnataka(29),  Kerala(32),  Tamil Nadu(33),  Telangana(99) 
 --------------------------------------------------------------------------------------------------------------------------------------------------
 */
-
+* UTs are MISSING IN THE REGIONS
 
 
 * CNNS state variable has to be harmonized with all survey state identification variables
@@ -697,10 +670,10 @@ replace state =2   if  state_cnns ==28
 replace state =3   if  state_cnns ==12
 replace state =4   if  state_cnns ==18
 replace state =5   if  state_cnns ==10
-// 6 Chandigarh, add
+// 6 Chandigarh
 replace state =7   if  state_cnns ==22
-// 8 "Dadra and Nagar Haveli", add
-// 9 "Daman and Diu", add
+// 8 "Dadra and Nagar Haveli"
+// 9 "Daman and Diu"
 replace state =10  if  state_cnns ==30
 replace state =11  if  state_cnns ==24
 replace state =12  if  state_cnns ==6
@@ -709,7 +682,7 @@ replace state =14  if  state_cnns ==1
 replace state =15  if  state_cnns ==20
 replace state =16  if  state_cnns ==29
 replace state =17  if  state_cnns ==32
-// 18 Lakshadweep, add
+// 18 Lakshadweep
 replace state =19  if  state_cnns ==23
 replace state =20  if  state_cnns ==27
 replace state =21  if  state_cnns ==14
@@ -718,7 +691,7 @@ replace state =23  if  state_cnns ==15
 replace state =24  if  state_cnns ==13
 replace state =25  if  state_cnns ==7
 replace state =26  if  state_cnns ==21
-// 27 Puducherry, add
+// 27 Puducherry
 replace state =28  if  state_cnns ==3
 replace state =29  if  state_cnns ==8
 replace state =30  if  state_cnns ==11
