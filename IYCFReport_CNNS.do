@@ -140,7 +140,7 @@ foreach row in `RowLevels' {
 }
 * add national / total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
-	quietly summarize `var1' [aw=national_wgt] 
+	quietly summarize `var1' [aw=nat_wgt] 
 	local result = r(mean) * 100
 	putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
 	putdocx table `TableNum'(`RowCount',3) = (r(N)), nformat(%16.0gc) halign(center)
@@ -200,12 +200,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -266,12 +266,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -320,7 +320,7 @@ foreach row in `RowLevels' {
 }
 * add national / total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
-	quietly summarize `var1' [aw=national_wgt] 
+	quietly summarize `var1' [aw=nat_wgt] 
 	local result = r(mean) * 100
 	putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
 	putdocx table `TableNum'(`RowCount',3) = (r(N)), nformat(%16.0gc) halign(center)
@@ -379,12 +379,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -430,7 +430,7 @@ foreach row in `RowLevels' {
 }
 * add national / total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
-	quietly summarize `var1' [aw=national_wgt] 
+	quietly summarize `var1' [aw=nat_wgt] 
 	local result = r(mean) * 100
 	putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
 	putdocx table `TableNum'(`RowCount',3) = (r(N)), nformat(%16.0gc) halign(center)
@@ -491,12 +491,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -557,12 +557,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -607,7 +607,7 @@ foreach row in `RowLevels' {
 }
 * add national / total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
-	quietly summarize `var1' [aw=national_wgt] 
+	quietly summarize `var1' [aw=nat_wgt] 
 	local result = r(mean) * 100
 	putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
 	putdocx table `TableNum'(`RowCount',3) = (r(N)), nformat(%16.0gc) halign(center)
@@ -667,12 +667,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -733,12 +733,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -783,7 +783,7 @@ foreach row in `RowLevels' {
 }
 * add national / total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
-	quietly summarize `var1' [aw=national_wgt] 
+	quietly summarize `var1' [aw=nat_wgt] 
 	local result = r(mean) * 100
 	putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
 	putdocx table `TableNum'(`RowCount',3) = (r(N)), nformat(%16.0gc) halign(center)
@@ -843,12 +843,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -909,12 +909,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -988,7 +988,7 @@ foreach row in `RowLevels' {
 }
 * add national / total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
-	quietly summarize `var1' [aw=national_wgt] 
+	quietly summarize `var1' [aw=nat_wgt] 
 	local result = r(mean) * 100
 	putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
 	putdocx table `TableNum'(`RowCount',3) = (r(N)), nformat(%16.0gc) halign(center)
@@ -1049,12 +1049,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -1115,12 +1115,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -1183,7 +1183,7 @@ foreach row in `RowLevels' {
 }
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
-	quietly summarize `var1' [aw=national_wgt] // add weights
+	quietly summarize `var1' [aw=nat_wgt] // add weights
 	local result = r(mean) * 100
 	putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
 	putdocx table `TableNum'(`RowCount',3) = (r(N)), nformat(%16.0gc) halign(center)
@@ -1246,12 +1246,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -1313,12 +1313,12 @@ foreach row in `RowLevels' {
 * add total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	foreach col in `columns' {
-		quietly summarize `Var' [aw=national_wgt]  if `ColVar'==`col'
+		quietly summarize `Var' [aw=nat_wgt]  if `ColVar'==`col'
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		local ColNum = `col'+1
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 		// add total N to far right column
-		quietly summarize `Var' [aw=national_wgt]  if `col'==4
+		quietly summarize `Var' [aw=nat_wgt]  if `col'==4
 		local ColNum = `col'+2
 		putdocx table `TableNum'(`RowCount',`ColNum') = (r(N)), nformat(%16.0gc) halign(center)
 }
@@ -1329,7 +1329,7 @@ putdocx save iycf_cnns, append
  
 
 // gen state_wgt = iweight_s                                           
-// gen national_wgt = iw_s_pool   
+// gen nat_wgt = iw_s_pool   
 
 //X.X. Median age of exclusive breastfeeding in months
 putdocx begin, font("Calibri", 9)
@@ -1368,22 +1368,94 @@ foreach row in `RowLevels' {
 }
 * add national / total to foot of table
 putdocx table `TableNum'(`RowCount',1) = ("Overall")
-	quietly summarize `var1' [aw=national_wgt]   , detail
+	quietly summarize `var1' [aw=nat_wgt]   , detail
 	local result = r(p50) 
 	putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.2f) halign(center)
 	putdocx table `TableNum'(`RowCount',3) = (r(N)), nformat(%16.0gc) halign(center)
 
 putdocx save iycf_cnns, append 
 
+* dot graph of median ebf
+cap drop order
+egen order =median(age_ebf), by(state)
+graph dot age_ebf, over(state, sort(order)) ytitle(Median Months of Exclusive Breastfeeding)
+
+* dot graph of median continued bf
+cap drop order
+egen order =median(age_cbf), by(state)
+graph dot age_cbf, over(state, sort(order)) ytitle(Median Months of Continued Breastfeeding)
+* how to weight summary states
+// https://www.stata.com/support/faqs/data-management/weighted-group-summary-statistics/
+
+
+*Variable for breastfeeding area graph
+
+cap drop diet
+gen diet=9
+replace diet=1 if currently_bf==1 
+replace diet=2 if currently_bf==1 & water==1 
+replace diet=3 if currently_bf==1 & other_liq==1 
+replace diet=3 if currently_bf==1 & juice==1 
+replace diet=3 if currently_bf==1 & broth==1 
+// replace diet=3 if currently_bf==1 & teas==1 
+replace diet=4 if currently_bf==1 & formula==1 
+replace diet=4 if currently_bf==1 & milk==1 
+replace diet=5 if currently_bf==1 & any_solid_semi_food==1 
+replace diet=6 if currently_bf==0 
+
+la def diet 1 "exclusively breastfed" ///
+			2 "plain water & breastmilk" ///
+			3 "non-milk liquids & breastmilk" ///
+			4 "other milks/formula & breastmilk" ///
+			5 "comp foods & breastmilk" ///
+			6 "not breastfed" ///
+			9 "missing"
+
+tab diet, m 
+tabulate diet, generate(d)
+* This method does not give weighted results
 
 
 
+webuse grunfeld, clear
+collapse (sum) mvalue invest kstock, by(year)
+gen percent1 = mvalue / (mvalue + invest + kstock)
+gen percent2 = (mvalue+invest)/ (mvalue + invest + kstock)
+gen percent3 = 1
+gen zero = 0 
+twoway rarea zero percent1 year /// 
+    || rarea percent1 percent2 year /// 
+    || rarea percent2 percent3 year  /// 
+    ||, legend(order(3 "kstock" 2 "invest" 1 "mvalue")) /// 
+     xla(1935(5)1950 1954) ytitle(dopey cumulation percent)
+
+	 
+twoway (area hs year, color(gs13)) (area ms year, color(gs9)) (area ls year, color(gs4)), xlabel(1970 (5) 2005, alternate) ylabel(0 (25) 100, alternate nogrid val) xtitle("") text(10 1980 "{bf:low-skilled}") text(50 1990 "{bf:medium-skilled}") text(90 1995 "{bf:high-skilled}") by(industry, legend(off))
 
 
+graph twoway (lpoly group1_cdd  agemos [aw=nat_weight_survey], lcolor(olive) degree(1) /// Grains roots tubers
+		title("                IYCF food groups consumed - CNNS 2016-18") ///
+		xtitle("Age in months", size(medlarge)) ytitle("%") ///
+		legend(size(0.9) pos(3) col(1) order(1 "Grains roots tubers" 2 "Dairy" 3 "Vita A Fruits/Veg" 4 "Other Fruit/Veg" /// 
+		5 "Legumes/Nuts" 6 "Eggs" 7 "Animal source foods") stack) ///
+		xlabel(2(2)24)) ///
+	(lpoly group3_cdd  agemos [aw=nat_weight_survey], lcolor(gold) lpattern(dash) degree(1)) /// Dairy
+	(lpoly group6_cdd  agemos [aw=nat_weight_survey], lcolor(orange) lpattern(longdash) degree(1)) /// Vita A Fruits/Veg
+	(lpoly group7_cdd  agemos [aw=nat_weight_survey], lcolor(green) lpattern(solid) degree(1)) /// Other Fruit/Veg
+	(lpoly group2_cdd  agemos [aw=nat_weight_survey], lcolor(brown) lpattern(dash) degree(1)) /// Legumes
+	(lpoly group5_cdd  agemos [aw=nat_weight_survey], lcolor(ebblue) lpattern(longdash) degree(1)) /// Eggs
+	(lpoly group4_cdd  agemos [aw=nat_weight_survey], lcolor(red) lpattern(solid) degree(1)) 
 
 
-
-
+*Double check with original labels
+graph twoway (lpoly group1_cdd  agemos [aw=nat_weight_survey], degree(1)) /// Grains roots tubers
+	(lpoly group3_cdd  agemos [aw=nat_weight_survey], degree(1)) /// Dairy
+	(lpoly group6_cdd  agemos [aw=nat_weight_survey], degree(1)) /// Vita A Fruits/Veg
+	(lpoly group7_cdd  agemos [aw=nat_weight_survey], degree(1)) /// Other Fruit/Veg
+	(lpoly group2_cdd  agemos [aw=nat_weight_survey], degree(1)) /// Legumes
+	(lpoly group4_cdd  agemos [aw=nat_weight_survey], degree(1)) /// Eggs
+	(lpoly group5_cdd  agemos [aw=nat_weight_survey], degree(1)) 
+	
 
 
 
