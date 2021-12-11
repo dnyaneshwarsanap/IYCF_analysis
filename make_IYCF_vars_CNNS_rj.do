@@ -86,10 +86,22 @@ replace ebf2d =. if age_days >2
 tab ebf2d q303, m 
 
 * Currently Breastfeeding
-recode q307 (1=1)(2 8=0)(missing=.), gen(currently_bf)
-la var currently_bf "Currently breasfeeding"
+* Pay attention to order of assignment of currently BF
+// 1. ever breastfed
+// 2. still breastfeeding
+// 3. breastfed yesterday
+cap drop currently_bf
+gen currently_bf = .
+replace currently_bf = 0 if q301 !=1
+replace currently_bf = 0 if q306 ==2
+replace currently_bf = 1 if q307 ==1
+replace currently_bf = 0 if q307 >=2
+// recode q307 (1=1)(2 8=0)(missing=.), gen(currently_bf)
+la var currently_bf "Currently breastfeeding"
+tab currently_bf, m 
 tab currently_bf q307, m 
-
+tab currently_bf q306, m 
+tab currently_bf q301, m 
 
 * Prelacteal feeds
 * What was [NAME] given to drink? within first three days after delivery
