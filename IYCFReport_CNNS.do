@@ -14,22 +14,17 @@
 cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
 
 * data
-*use "C:\Temp\iycf_cnns.dta", clear 
-use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\iycf_cnns.dta", clear
+use "C:\Temp\iycf_cnns.dta", clear 
+// use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\iycf_cnns.dta", clear
 
 * make IYCF var - Median Duration of Ex. BF  ----> this var is now created in all 4 make IYCF vars do files
 
 
-* CNNS weights, should be coded in mk_vars do file
-// iweight_s 
-// iw_s_pool 
-// iweight_b 
-// iw_b_pool 
-// reg_weight_survey 
-// reg_weight_bio
+* All weights, should be coded in mk_vars do file
+* National, Regional, State and District
 
 *gen state_weight = iweight_s                                            // already included in make vars do files as - state_wgt
-*gen nat_weight = iw_s_pool                                              // already included in make vars do files as - national_wgt
+// gen nat_weight = iw_s_pool                                              // already included in make vars do files as - national_wgt
 
 /*
 List of tables for Survey Report
@@ -1412,10 +1407,29 @@ la def diet 1 "exclusively breastfed" ///
 			9 "missing"
 
 tab diet, m 
-tabulate diet, generate(d)
-* This method does not give weighted results
+
+* No cases of bf and form? 
+tab diet formula, m 
 
 
+cap drop d1 d2 d3 d4 d5 d6
+// tabulate diet, generate(d) - cannot use because sometimes there are missing categories
+gen d1 = cond(diet==1, 1, 0)
+gen d2 = cond(diet==2, 1, 0)
+gen d3 = cond(diet==3, 1, 0)
+gen d4 = cond(diet==4, 1, 0)
+gen d5 = cond(diet==5, 1, 0)
+gen d6 = cond(diet==6, 1, 0)
+
+
+
+// https://dhsprogram.com/data/Guide-to-DHS-Statistics/Breastfeeding_and_Complementary_Feeding.htm
+// Handling of Missing Values
+// Missing data on breastfeeding is treated as not currently breastfeeding in numerator and included in the denominator. Missing and “don’t know” 
+// data on foods and liquids given is treated as not given in numerator and included in denominator.
+
+
+* Create weighted results for graph
 collapse d1 d2 d3 d4 d5 d6 [aw=nat_wgt], by(agemos)
 drop if agemos >24
 // collapse (sum) mvalue invest kstock, by(year)
@@ -1424,21 +1438,31 @@ gen p2 = d1 + d2
 gen p3 = d1 + d2 + d3
 gen p4 = d1 + d2 + d3 + d4
 gen p5 = d1 + d2 + d3 + d4 + d5
-gen p6 = 1
+gen p6 = d1 + d2 + d3 + d4 + d5 + d6
+gen p7 = 1
 gen zero = 0 
-twoway rarea zero p1 agemos /// 
-    || rarea p1 p2 agemos /// 
-    || rarea p1 p2 agemos /// 
-    || rarea p2 p3 agemos /// 
-	|| rarea p3 p4 agemos /// 
-	|| rarea p4 p5 agemos /// 
-    || rarea p5 p6 agemos  /// 
-    ||, legend(order(6 "missing" 5 "not BF" 4 "CF & BF" 3 "Form & BF" 2 "H2O & BF" 1 "EBF")) /// 
+twoway rarea zero p1 agemos, col(gold) /// 
+    || rarea p1 p2 agemos,   col(ltblue) /// 
+    || rarea p2 p3 agemos,   col(eggshell) /// 
+	|| rarea p3 p4 agemos,   col(orange_red) ///
+	|| rarea p4 p5 agemos,   col(emerald) /// 
+    || rarea p5 p6 agemos,   col(olive_teal)  /// 
+    ||, legend(ring(0) position(2) col(1) size(vsmall) ///
+		order(6 "not BF" 5 "CF & BF" 4 "Form & BF" 3 "Non-milk liq & BF" 2 "H2O & BF" 1 "EBF")) /// 
      xla(0(1)24) ytitle(percent)
-* Labels are wrong
+
+legend(ring(0) position(8) bmargin(large)) 
 	 
+la def diet 1 "exclusively breastfed" ///
+			2 "plain water & breastmilk" ///
+			3 "non-milk liquids & breastmilk" ///
+			4 "other milks/formula & breastmilk" ///
+			5 "comp foods & breastmilk" ///
+			6 "not breastfed" ///
+			9 "missing"
 
 
+	
 graph twoway (lpoly group1_cdd  agemos [aw=nat_weight_survey], lcolor(olive) degree(1) /// Grains roots tubers
 		title("                IYCF food groups consumed - CNNS 2016-18") ///
 		xtitle("Age in months", size(medlarge)) ytitle("%") ///
