@@ -1413,13 +1413,13 @@ tab diet formula, m
 
 
 cap drop d1 d2 d3 d4 d5 d6
-// tabulate diet, generate(d) - cannot use because sometimes there are missing categories
-gen d1 = cond(diet==1, 1, 0)
-gen d2 = cond(diet==2, 1, 0)
-gen d3 = cond(diet==3, 1, 0)
-gen d4 = cond(diet==4, 1, 0)
-gen d5 = cond(diet==5, 1, 0)
-gen d6 = cond(diet==6, 1, 0)
+// tabulate diet, generate(d) - cannot use this line because sometimes there are missing categories
+gen d1 = cond(diet==1, 100, 0)
+gen d2 = cond(diet==2, 100, 0)
+gen d3 = cond(diet==3, 100, 0)
+gen d4 = cond(diet==4, 100, 0)
+gen d5 = cond(diet==5, 100, 0)
+gen d6 = cond(diet==6, 100, 0)
 
 
 
@@ -1431,15 +1431,17 @@ gen d6 = cond(diet==6, 1, 0)
 
 * Create weighted results for graph
 collapse d1 d2 d3 d4 d5 d6 [aw=nat_wgt], by(agemos)
+gen total = d1 + d2 + d3 + d4 + d5 + d6
+
 drop if agemos >24
 // collapse (sum) mvalue invest kstock, by(year)
-gen p1 = d1
-gen p2 = d1 + d2
-gen p3 = d1 + d2 + d3
-gen p4 = d1 + d2 + d3 + d4
-gen p5 = d1 + d2 + d3 + d4 + d5
+gen p1 = d1 
+gen p2 = d1 + d2 
+gen p3 = d1 + d2 + d3 
+gen p4 = d1 + d2 + d3 + d4 
+gen p5 = d1 + d2 + d3 + d4 + d5 
 gen p6 = d1 + d2 + d3 + d4 + d5 + d6
-gen p7 = 1
+gen hundred = 100  
 gen zero = 0 
 twoway rarea zero p1 agemos, col(gold) /// 
     || rarea p1 p2 agemos,   col(ltblue) /// 
@@ -1448,18 +1450,12 @@ twoway rarea zero p1 agemos, col(gold) ///
 	|| rarea p4 p5 agemos,   col(emerald) /// 
     || rarea p5 p6 agemos,   col(olive_teal)  /// 
     ||, legend(ring(0) position(2) col(1) size(vsmall) ///
-		order(6 "not BF" 5 "CF & BF" 4 "Form & BF" 3 "Non-milk liq & BF" 2 "H2O & BF" 1 "EBF")) /// 
-     xla(0(1)24) ytitle(percent)
+		order(6 "Not BF" 5 "CF & BF" 4 "Formula & BF" 3 "Non-milk liq & BF" 2 "H2O & BF" 1 "Exclusive BF")) /// 
+     xla(0(1)24) ytitle(Percent) xtitle(Age in Months) title(Breastfeeding Area Graph)
 
-legend(ring(0) position(8) bmargin(large)) 
+* see svedberg2.do for area graph
 	 
-la def diet 1 "exclusively breastfed" ///
-			2 "plain water & breastmilk" ///
-			3 "non-milk liquids & breastmilk" ///
-			4 "other milks/formula & breastmilk" ///
-			5 "comp foods & breastmilk" ///
-			6 "not breastfed" ///
-			9 "missing"
+
 
 
 	
