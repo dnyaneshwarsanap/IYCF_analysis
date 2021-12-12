@@ -1449,7 +1449,7 @@ twoway rarea zero p1 agemos, col(gold) ///
 	|| rarea p3 p4 agemos,   col(orange_red) ///
 	|| rarea p4 p5 agemos,   col(emerald) /// 
     || rarea p5 p6 agemos,   col(olive_teal)  /// 
-    ||, legend(ring(0) position(2) col(1) size(vsmall) ///
+    ||, legend(ring(0) position(2) col(1) size(tiny) ///
 		order(6 "Not BF" 5 "CF & BF" 4 "Formula & BF" 3 "Non-milk liq & BF" 2 "H2O & BF" 1 "Exclusive BF")) /// 
      xla(0(1)24) ytitle(Percent) xtitle(Age in Months) title(Breastfeeding Area Graph)
 
