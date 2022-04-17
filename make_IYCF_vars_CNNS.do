@@ -3,8 +3,12 @@
 * Robert updated 9 12 2021 review for EBF 
 version 16
 
+
+* CHECK FINAL N of CNNS 
+
+
 cd "C:/Temp"
-use "C:\TEMP\CNNS_04_Cleaned_21MAY_final_with_constructed_var.dta"
+use "C:\TEMP\CNNS_04_Cleaned_21MAY_final_with_constructed_var.dta", clear
 * use "C:\Temp\CNNS_04_Cleaned_3JUNE_final.dta", clear
 
 * use "C:\Users\roypu\OneDrive\Documents\UNICEF 2019-20\CNNS IYCF Analysis\CNNS_04_version_1.1.dta"
@@ -22,7 +26,9 @@ group7_cdd childdd childdd_nbf minaccdiet minaccdietbf minaccdietnbf ironfood fo
 
 gen one=1
 
-* tab result
+
+* CHECK FINAL N of CNNS 
+tab result
 * Complete N  38,060  
 
 * Change from age in months to age in days
@@ -562,7 +568,7 @@ gen unhealthy_food = .
 cap drop lbw
 gen birthweight = q645wght if q645wght < 8
 tab birthweight
-kdensity birthweight
+// kdensity birthweight
 recode birthweight (0/2.499999=1)(2.5/8=0), gen(lbw)
 tab lbw, m
 
@@ -636,7 +642,11 @@ tab wi_s,m
 gen nat_wgt =iw_s_pool    //national women's sample weight (6 decimals)
 
 * Regional weights not added
+merge 1:1 case_id using "C:\TEMP\CNNS_04_regional_weights.dta"
+
 gen reg_wgt = reg_weight_survey
+gen reg_bio_wgt = reg_weight_bio
+
 
 gen state_wgt =iweight_s    // 	state women's sample weight (6 decimals)
 
@@ -697,7 +707,7 @@ region 6       South           Andhra Pradesh(28),  Karnataka(29),  Kerala(32), 
 
 
 * CNNS state variable has to be harmonized with all survey state identification variables
-gen state_cnns = state
+clonevar state_cnns = state
 * state_cnns is the original non modified var.  state is the new harmonized var. 
 
 // 1 "A&N islands"
@@ -784,19 +794,27 @@ gen round=4
 
 * if doing analysis on only IYCF then drop all other vars. 
 
-// keep one int_date age_days agemos ///
-// evbf eibf eibf_timing ebf2d ebf age_cbf age_ebf prelacteal_milk prelacteal_water prelacteal_sugarwater ///
-// prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey ///
-// prelacteal_janamghuti prelacteal_other bottle water juice milk ///
-// formula other_liq juice broth yogurt fortified_food bread vita_veg potato leafy_green ///
-// any_solid_semi_food vita_fruit fruit_veg organ meat egg fish cont_bf semisolid carb leg_nut dairy ///
-// all_meat vita_fruit_veg agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
-// intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk freq_formula freq_yogurt ///
-// milk_feeds feeds mmf_nobf min_milk_freq_nbf mmf_all mixed_milk mad_all egg_meat ///
-// zero_fv sugar_bev unhealthy_food lbw anc4plus csection earlyanc ///
-// mum_educ caste rururb wi wi_s state region sex nat_wgt state_wgt round  
+keep one int_date age_days agemos ///
+evbf eibf eibf_timing ebf2d ebf age_cbf age_ebf prelacteal_milk prelacteal_water prelacteal_sugarwater ///
+prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey ///
+prelacteal_janamghuti prelacteal_other bottle water juice milk ///
+formula other_liq juice broth yogurt fortified_food bread vita_veg potato leafy_green ///
+any_solid_semi_food vita_fruit fruit_veg organ meat egg fish cont_bf semisolid carb leg_nut dairy ///
+all_meat vita_fruit_veg agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
+intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk freq_formula freq_yogurt ///
+milk_feeds feeds mmf_nobf min_milk_freq_nbf mmf_all mixed_milk mad_all egg_meat ///
+zero_fv sugar_bev unhealthy_food lbw anc4plus csection earlyanc ///
+mum_educ caste rururb wi wi_s state region sex nat_wgt state_wgt round  
 
 
 
 * Save data with name of survey
 save iycf_cnns, replace 
+
+
+// end
+
+// use "C:\TEMP\CNNS_04_regional_weights.dta", clear
+// rename caseid case_id
+// sum case_id
+// save "C:\TEMP\CNNS_04_regional_weights.dta", replace 

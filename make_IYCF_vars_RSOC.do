@@ -2,15 +2,18 @@
 * create standardized data following WHO 2020 IYCF indicator definitions
 * Robert 
 
-*cd "C:/Temp"
+version 16 
 
-*use "C:\Temp\IYCF\RSOC\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
+// use "C:\Temp\IYCF\RSOC\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
 * EMW - ever married women
-*use "C:\Temp\IYCF\RSOC\Household_India_RSOC.dta", clear
-* Household data does not include IYCF
+// use "C:\Temp\IYCF\RSOC\Household_India_RSOC.dta", clear
+* Please note Household data does not include IYCF
 
-cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
-use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\EMW_INDIA_RSOC.dta"
+cd "C:/Temp"
+use "C:\Temp\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
+
+// cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
+// use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\EMW_INDIA_RSOC.dta"
 
 
 * make IYCF vars.do
@@ -41,12 +44,9 @@ gen dob_date = mdy(birthmonth , birthday , birthyear)
 format dob_date %td
 // kdensity dob_date
  
- 
 
- 
 * date of interview - Data recorded as string
 tab q106_1
-
 
 * Convert string to number
 destring q106_1, gen(temp)
@@ -133,93 +133,40 @@ tab eibf_timing
 tab  q185a1_2 eibf_timing, m
 tab  q185a1_3 eibf_timing, m
 
-
-
-
-*Continued breastfeeding
-tab q190
-gen cont_bf = 0
-replace cont_bf = 1 if q190 == 1 
-tab cont_bf q190
-
-gen cont_bf_12_23 = cont_bf if age_days>335 &age_days<730 
-tab cont_bf_12_23, m
-
-
-
-
-*EXCLUSIVE BREASTFEEDING
-*Exclusive breastfeeding is defined as breastfeeding with no other food or drink, not even water.
-* using the WHO guideline for defining exbf variable - 
-*create a condition variable based on weather the child received any other food items (liquid/solids/semi-solids) on previous day
-*Condition = 1 indicates that the child has not received any food items on yesterday
-
-cap drop condition 					   
-gen condition = 0	if age_days<183				   
-replace condition = 1 if q195a1_1==2 & q195a1_2==2 & q195a1_3==2 & q195a1_4==2 & q195a1_5==2 & q195a1_6==2 & q195a1_7==2 & q197a1_1==2 & q197a1_2==2 & ///
-                         q197a1_3==2 & q197a1_4==2 & q197a1_5==2 & q197a1_6==2 & q197a1_7==2 & q197a1_8==2 & q197a1_9==2 & q197a1_10==2 & q197a1_11==2 & ///
-						 q197a1_12==2 & q197a1_13==2 & q197a1_14==2 & q197a1_15==2 & q198==2
-
-tab condition, m
-
-cap drop exbf
-gen exbf = 0 if age_days<183
-replace exbf = 1 if condition == 1 & cont_bf==1 & age_days<183 
-tab exbf
-/*
-      exbf |      Freq.     Percent        Cum.
-------------+-----------------------------------
-          0 |      1,832       31.74       31.74
-          1 |      3,939       68.26      100.00
-------------+-----------------------------------
-      Total |      5,771      100.00
-*/
-
-
-
-* MEDIAN deuration of exbf for children below six months
-
-gen agemos_round = round(age_days/30.42, 0.01)   //exact age in months round of to 2 digits after decimal
-tab agemos_round, m 
-
-* create a age in months variable for exclusively bf children
-cap drop agemos_ebf
-gen agemos_ebf = agemos_round if age_days<183
-kdensity agemos_ebf
-
-
-*set agemos_ebf to missing if exbf=no
-replace agemos_ebf=. if exbf==0
-
-
-*median duration of EXBF is the median of agemos_ebf
-univar agemos_ebf
-
-/*
-                                        -------------- Quantiles --------------
-Variable       n     Mean     S.D.      Min      .25      Mdn      .75      Max
--------------------------------------------------------------------------------
-agemos_ebf    3980     3.05     1.68     0.00     1.64     3.02     4.47     6.02
--------------------------------------------------------------------------------
-*/
-
-
-
-
 * Exclusively breastfed for the first two days after birth
 * Percentage of children born in the last 24 months who were fed exclusively with breast milk for the first two days after birth
 * q187 Was [NAME] given anything to drink other than breast milk within the first three days after delivery?
 * The RSOC did not ask the question in the best method, so we are trying to edit to represent 2 	days. 
 
 tab q187
-cap drop ebf2d
+cap drop ebf2d  //   In the first 3 days after delivery, was child given something other than breastmilk
+
 gen ebf2d =0
-replace ebf2d=1 if q303!=1 // q303!=1 means no other drink was given to the child in 1st three days
+replace ebf2d=1 if q303!=1 // q303 means no other drink was given to the child in 1st three days
 replace ebf2d =. if age_days >2
 * Question was not asked correctly so variable will only be valid at national level 
 * 30 children in sample <= 2 days
 tab ebf2d q187, m 
 
+* Currently Breastfeeding
+* Pay attention to order of assignment of currently BF
+// 1. ever breastfed
+// 2. still breastfeeding
+// 3. breastfed yesterday
+// missing and dont know are considered as No --WHO guidelines
+cap drop currently_bf
+gen currently_bf = .
+//Ever breastfed
+replace currently_bf = 0 if q184 !=1    
+replace currently_bf = 1 if q184 ==1    
+//Are you still breastfeeding
+replace currently_bf = 0 if q190 !=1    
+replace currently_bf = 1 if q190 ==1
+//Was breastfed yesterday during the day or at night?
+replace currently_bf = 1 if q192 ==1   
+replace currently_bf = 0 if q192 ==2 | q192==98
+la var currently_bf "Currently breastfeeding"
+tab currently_bf, m 
 
 
 * Prelacteal feeds
@@ -238,13 +185,22 @@ gen prelacteal_honey      = cond(q188_8==1, 1, 0)
 gen prelacteal_janamghuti = cond(q188_9==1, 1, 0)
 gen prelacteal_other      = cond(q188_96==1, 1, 0)
 
-local prelacteal = "prelacteal_milk prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_fruitjuice prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other"
-foreach var in `prelacteal' { 
+local prelacteal_feeds = "prelacteal_milk prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_fruitjuice prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other"
+foreach var in `prelacteal_feeds' { 
 	replace `var' = . if  age_days>=730
+}
+
+
+cap drop prelacteal_otherthanmilk
+gen prelacteal_otherthanmilk =0
+local prelacteal = "prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_fruitjuice prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other"
+foreach var in `prelacteal' { 
+	replace prelacteal_otherthanmilk = 1 if  `var'==1
 }
 
 tab  q187 prelacteal_milk
 tab  prelacteal_milk
+tab  prelacteal_otherthanmilk
 tab  q187 prelacteal_other
 
 *Colostrum Feeding
@@ -256,6 +212,8 @@ tab colostrum q186, m
 
 * bottle feeding (did child drink anything from bottle)
 gen bottle =. 
+
+
 
 
 /*
@@ -410,13 +368,7 @@ lab var vita_fruit_veg "6: Vitamin A rich fruits and vegetables"
 lab var fruit_veg "7: Other fruits and vegetables"
 
 
-lab var cont_bf "8: Breastmilk"
-lab define cont_bf 0 "No" 1 "yes" 
-tab cont_bf,m
-
-
-
-foreach var of varlist water juice  broth milk  formula other_liq carb dairy all_meat egg vita_fruit_veg fruit_veg cont_bf semisolid {
+foreach var of varlist water juice  broth milk  formula other_liq carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
 	lab val `var' no_yes
 }
 * Test all liquids
@@ -424,7 +376,7 @@ foreach var of varlist water juice  broth milk  formula other_liq {
 	tab `var' , m
 }
 * Test all 8 food groups 
-foreach var of varlist carb dairy all_meat egg vita_fruit_veg fruit_veg cont_bf semisolid {
+foreach var of varlist carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
 	tab `var' , m
 }
 
@@ -437,34 +389,16 @@ lab val agegroup agegroup
 
 * Number of food groups out of eight
 cap drop sumfoodgrp
-egen sumfoodgrp = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg cont_bf)
+egen sumfoodgrp = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg currently_bf)
 tabulate sumfoodgrp, generate(fg)
 rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 ) ///
 	   (fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 )		
-* No data collcted on oil, ghee, butter consumption in RSOC
-* Not included in RSOC
-	
-* Child Illness
-* Diarrhea
-tab q257
-recode q257 (1=1)(2 8=0), gen(diar)
-tab diar q257
-* Fever
- tab q263
-recode q263 (1=1)(2 8=0), gen(fever)
-tab fever q263	
-* Cough with rapid breathing excluding those with only nasal breathing problems
-* q266 q267 q268
-recode q266 (1=1)(2 8=0), gen(ari)
-lab val diar fever ari no_yes
-tab q267 ari
-replace ari=0 if q267!=1
-replace ari=0 if q268==2 | q268==96 | q268==98
-tab ari q267
-tab ari q268
-tab ari, m 
 
-
+* Any solid/semi-solid food consumption -  Does NOT include currently breastfeeding
+cap drop any_solid_semi_food
+egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
+replace any_solid_semi_food = 1 if any_solid_semi_food >1
+tab any_solid_semi_food, m 
 
 
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
@@ -488,6 +422,75 @@ la var intro_compfood "Intro to complementary food 6-8 months of age"
 tab intro_compfood
 // this indicator is always 6-8 m 
 
+
+
+
+
+*EXCLUSIVE BREASTFEEDING
+*Exclusive breastfeeding is defined as breastfeeding with no other food or drink, not even water.
+*Using the WHO guideline for defining ebf variable - create a condition variable based on 
+*if the child received any other food items (liquid/solids/semi-solids) on previous day
+
+cap drop ebf
+* Create ebf variable - 1 yes 0 no
+// no liquids besides breastmilk
+// no food groups consumed - any_solid_semi_food==0 
+gen ebf=0 
+replace ebf =1 if currently_bf ==1
+replace ebf =0 if water      ==1 | ///
+                  juice      ==1 | ///
+				  broth      ==1 | ///			
+                  milk       ==1 | ///
+                  formula    ==1 | ///
+                  other_liq  ==1 | ///
+                  any_solid_semi_food ==1 
+replace ebf =. if age_days >182
+la var ebf "Exclusive breasfeeding"
+tab ebf
+tab ebf agemos
+
+
+* We have already reviewed and converted the vars below into new vars.  Use new vars for definition
+// cap drop condition 					   
+// gen condition = 0	if age_days<183				   
+// replace condition = 1 if q310a==2 & q310b==2 & q310c==2 & q310d1==2  & q310e1==2  & q310f==2 & q310g1==2  & q310h==2 ///
+//                        & q310i==2 & q310j==2 & q310k==2 & q310l==2 & q310m==2 & q310n==2 & q310o==2 & q310p==2 & q310q==2 & q310r==2 & q310s==2 & q310t==2 ///
+// 					   & q310u==2 & q310v==2 & q310w==2 & q311==2
+// tab condition, m
+
+// cap drop exbf
+// gen exbf = 0 if age_days<183
+// * cont_bf is wrong here
+// replace exbf = 1 if condition == 1 & cont_bf==1 & age_days<183 
+// tab exbf
+
+
+* MEDIAN duration of exclusive breastfeeding
+cap drop age_ebf
+gen age_ebf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
+replace age_ebf = . if age_days >183
+*set agemos_ebf to missing if exbf=no
+replace age_ebf=. if ebf==0
+la var age_ebf "Median age of exclusive breasfeeding in months"
+sum age_ebf [aw=N_WT] , d
+
+* MEDIAN duration of continued breastfeeding
+gen age_cbf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
+replace age_cbf=. if currently_bf !=1
+la var age_cbf "Median age of continued breasfeeding in months"
+sum age_cbf [aw=N_WT] , d
+
+
+*Continued breastfeeding
+tab q190
+gen cont_bf = 0
+replace cont_bf = 1 if q190 == 1 
+tab cont_bf q190
+
+gen cont_bf_12_23 = cont_bf if age_days>335 &age_days<730 
+tab cont_bf_12_23, m
+
+
 *Minimum Dietary Diversity- code for new indicator definition 
 * currently_bf - identifies children still breastfeeding
 * Following new definition MDD is met if child fed 5 out 8 food groups regardless of breastfeeding status *
@@ -498,11 +501,6 @@ replace mdd=. if age_days<=183 | age_days>=730
 la var mdd "Minimum Dietary Diversity (2020)"
 tab mdd, m 
 
-
-* Currently Breastfeeding
-tab q192
-recode q192 (1=1)(2 8 98=0)(missing=.), gen(currently_bf)
-tab currently_bf q192, m 
 
 *Minimum Meal Frequency (MMF) 
 *For currently breastfeeding children: MMF is met if child 6-8 months of age receives solid, semi-solid or soft foods at least 2 times and a child 9-23 months of age receives solid, semi-solid or soft foods at least 3 times*******
@@ -646,7 +644,6 @@ replace zero_fv =1 if vita_fruit_veg==0  & fruit_veg ==0
 replace zero_fv =. if age_days<=183 | age_days>=730
 tab zero_fv, m 
 
-
 *Unhealthy food consumption
 *consumption of sugar sweetened beverages by child agemons 6 to 23
 
@@ -754,49 +751,147 @@ clonevar wi = wealth_index
 //also available, wealth index factor score
 tab wi
 
-* Include state, district and other identification variables
-clonevar state = q1a 
 
-gen statecode = .
-replace statecode =2  if state ==28
-replace statecode =3  if state ==12
-replace statecode =4  if state ==18
-replace statecode =5  if state ==10
-replace statecode =7  if state ==22
-replace statecode =10  if state ==30
-replace statecode =11  if state ==24
-replace statecode =12  if state ==6
-replace statecode =13  if state ==2
-replace statecode =14  if state ==1
-replace statecode =15  if state ==20
-replace statecode =16  if state ==29
-replace statecode =17  if state ==32
-replace statecode =19  if state ==23
-replace statecode =20  if state ==27
-replace statecode =21  if state ==14
-replace statecode =22  if state ==17
-replace statecode =23  if state ==15
-replace statecode =24  if state ==13
-replace statecode =25  if state ==7
-replace statecode =26  if state ==21
-replace statecode =28  if state ==3
-replace statecode =29  if state ==8
-replace statecode =30  if state ==11
-replace statecode =31  if state ==33
-replace statecode =32  if state ==16
-replace statecode =33  if state ==9
-replace statecode =34  if state ==5
-replace statecode =35  if state ==19
+
+* Sex of child 
+* 1 = male / 2 = female
+tab q135_1 // pregnancy number
+gen sex=.
+replace sex = q129_1 if q135_1==1
+replace sex = q129_2 if q135_1==2
+replace sex = q129_3 if q135_1==3
+replace sex = q129_4 if q135_1==4
+replace sex = q129_5 if q135_1==5
+replace sex = q129_6 if q135_1==6
+// q129_1 q129_2 q129_3 q129_4 q129_5 q129_6
+la val sex q280
+tab sex, m 
+tab sex q280, m  // q280 is only for section B2.0 vaccination /child ilness
+
+* Survey Weights
+gen national_wgt = N_WT 
+gen state_wgt =S_WT
+
+
+
+
+* Child Illness
+* Diarrhea
+tab q257
+recode q257 (1=1)(2 8=0), gen(diar)
+tab diar q257
+* Fever
+ tab q263
+recode q263 (1=1)(2 8=0), gen(fever)
+tab fever q263	
+* Cough with rapid breathing excluding those with only nasal breathing problems
+* q266 q267 q268
+recode q266 (1=1)(2 8=0), gen(ari)
+lab val diar fever ari no_yes
+tab q267 ari
+replace ari=0 if q267!=1
+replace ari=0 if q268==2 | q268==96 | q268==98
+tab ari q267
+tab ari q268
+tab ari, m 
+
+
+
+
+
+
+
+* Include state, district and other identification variables
+clonevar state_rsoc = q1a 
+gen state = .
+// 1 "A&N islands"
+replace state =2  if state_rsoc ==28
+replace state =3  if state_rsoc ==12
+replace state =4  if state_rsoc ==18
+replace state =5  if state_rsoc ==10
+// 6 Chandigarh
+replace state =7  if state_rsoc ==22
+// 8 "Dadra and Nagar Haveli"
+// 9 "Daman and Div"
+replace state =10  if state_rsoc ==30
+replace state =11  if state_rsoc==24
+replace state =12  if state_rsoc==6
+replace state =13  if state_rsoc==2
+replace state =14  if state_rsoc==1
+replace state =15  if state_rsoc==20
+replace state =16  if state_rsoc==29
+replace state =17  if state_rsoc==32
+// 18 Lakshadweep
+replace state =19  if state_rsoc==23
+replace state =20  if state_rsoc==27
+replace state =21  if state_rsoc==14
+replace state =22  if state_rsoc==17
+replace state =23  if state_rsoc==15
+replace state =24  if state_rsoc==13
+replace state =25  if state_rsoc==7
+replace state =26  if state_rsoc==21
+// 27 Puducherry
+replace state =28  if state_rsoc==3
+replace state =29  if state_rsoc==8
+replace state =30  if state_rsoc==11
+replace state =31  if state_rsoc==33
+replace state =32  if state_rsoc==16
+replace state =33  if state_rsoc==9
+replace state =34  if state_rsoc==5
+replace state =35  if state_rsoc==19
+
+
+cap la drop state_name
+la def state_name			   1 "A&N islands"
+la def state_name			   2 "Andhra Pradesh", add
+la def state_name			   3 "Arunachal Pradesh" , add
+la def state_name			   4 Assam , add
+la def state_name			   5 Bihar , add
+la def state_name			   6 Chandigarh, add
+la def state_name			   7 Chattisgarh, add
+la def state_name			   8 "Dadra and Nagar Haveli", add
+la def state_name			   9 "Daman and Diu", add
+la def state_name			  10 Goa, add
+la def state_name			  11 Gujarat, add
+la def state_name			  12 Haryana, add
+la def state_name			  13 "Himachal Pradesh", add
+la def state_name			  14 "Jammu and Kashmir", add
+la def state_name			  15 Jharkhand, add
+la def state_name			  16 Karnataka, add
+la def state_name			  17 Kerala, add
+la def state_name			  18 Lakshadweep, add
+la def state_name			  19 "Madhya Pradesh", add
+la def state_name			  20 Maharashtra, add
+la def state_name			  21 Manipur, add
+la def state_name			  22 Meghalaya, add
+la def state_name			  23 Mizoram, add
+la def state_name			  24 Nagaland, add
+la def state_name			  25 Delhi, add
+la def state_name			  26 Odisha, add
+la def state_name			  27 Puducherry, add
+la def state_name			  28 Punjab, add
+la def state_name			  29 Rajasthan, add
+la def state_name			  30 Sikkim, add
+la def state_name			  31 "Tamil Nadu", add
+la def state_name			  32 Tripura, add
+la def state_name			  33 "Uttar Pradesh", add
+la def state_name			  34 Uttarakhand, add
+la def state_name			  35 "West Bengal", add
+la def state_name			  36 Telangana, add
+la val state state_name
+
+tab state, m 
+
 
 
 * Generate 'region' variable
 gen double region:region=0
-replace region=1 if statecode==25 |  statecode==12 | statecode==13 | statecode==14 | statecode==28 | statecode==29 | statecode==34
-replace region=2 if statecode==7 |  statecode==19 | statecode==33
-replace region=3 if statecode==5 |  statecode==35 | statecode==15 | statecode==26
-replace region=4 if statecode==3 |  statecode==30 | statecode==32 | statecode==22 | statecode==4 | statecode==24 | statecode==21 | statecode==23
-replace region=5 if statecode==11 |  statecode==20 | statecode==10
-replace region=6 if statecode==2 |  statecode==16 | statecode==17 | statecode==31 | statecode==36
+replace region=1 if state==25 |  state==12 | state==13 | state==14 | state==28 | state==29 | state==34
+replace region=2 if state==7 |  state==19 | state==33
+replace region=3 if state==5 |  state==35 | state==15 | state==26
+replace region=4 if state==3 |  state==30 | state==32 | state==22 | state==4 | state==24 | state==21 | state==23
+replace region=5 if state==11 |  state==20 | state==10
+replace region=6 if state==2 |  state==16 | state==17 | state==31 | state==36
 
 lab define region 1 "North" 2 "Central" 3 "East" 4 "Northeast" 5 "West" 6 "South"
 lab var region "Region" 
@@ -822,38 +917,20 @@ region 6       South           Andhra Pradesh(2),  Karnataka(16),  Kerala(17),  
 */
 
 
-* Sex of child 
-* 1 = male / 2 = female
-tab q135_1 // pregnancy number
-gen sex=.
-replace sex = q129_1 if q135_1==1
-replace sex = q129_2 if q135_1==2
-replace sex = q129_3 if q135_1==3
-replace sex = q129_4 if q135_1==4
-replace sex = q129_5 if q135_1==5
-replace sex = q129_6 if q135_1==6
-// q129_1 q129_2 q129_3 q129_4 q129_5 q129_6
-la val sex q280
-tab sex, m 
-tab sex q280, m  // q280 is only for section B2.0 vaccination /child ilness
-
-* Survey Weights
-gen national_wgt = N_WT 
-gen state_wgt =S_WT
 
 gen round =2
 
 keep one birthday birthmonth birthyear int_y int_m int_d int_date age_days agemos ///
-evbf eibf eibf_timing agemos_ebf agemos_round exbf ebf2d prelacteal_milk prelacteal_water prelacteal_sugarwater ///
+evbf eibf eibf_timing ebf age_cbf age_ebf ebf2d prelacteal_milk prelacteal_water prelacteal_sugarwater ///
 prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey ///
 prelacteal_janamghuti prelacteal_other colostrum bottle water juice broth milk ///
 formula other_liq yogurt fortified_food bread legume vita_veg potato leafy_green ///
-vita_fruit fruit_veg organ meat egg fish cont_bf semisolid carb leg_nut dairy ///
+vita_fruit fruit_veg organ meat egg fish cont_bf semisolid carb leg_nut dairy any_solid_semi_food ///
 all_meat vita_fruit_veg cont_bf agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
-intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk freq_formula freq_yogurt ///
+any_solid_semi_food intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk freq_formula freq_yogurt ///
 milk_feeds feeds mmf_nobf min_milk_freq_nbf mmf_all mixed_milk mad_all egg_meat ///
 zero_fv sugar_bev unhealthy_food birth_weight c_birth_wt lbw anc4plus csection earlyanc ///
-mum_educ caste rururb wi state statecode region sex national_wgt state_wgt round
+mum_educ caste rururb wi state state region sex national_wgt state_wgt ebf age_ebf age_cbf round
 
 * Save data with name of survey
 save iycf_rsoc, replace 
