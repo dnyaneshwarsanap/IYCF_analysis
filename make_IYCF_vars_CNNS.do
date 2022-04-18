@@ -4,9 +4,6 @@
 version 16
 
 
-* CHECK FINAL N of CNNS 
-
-
 cd "C:/Temp"
 use "C:\TEMP\CNNS_04_Cleaned_21MAY_final_with_constructed_var.dta", clear
 * use "C:\Temp\CNNS_04_Cleaned_3JUNE_final.dta", clear
@@ -29,6 +26,7 @@ gen one=1
 
 * CHECK FINAL N of CNNS 
 tab result
+drop if result !=1
 * Complete N  38,060  
 
 * Change from age in months to age in days
