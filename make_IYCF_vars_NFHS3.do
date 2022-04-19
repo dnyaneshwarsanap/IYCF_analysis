@@ -864,20 +864,22 @@ la val state state_name
 
 tab state, m 
 
-
 gen round=1
 
 keep one int_date age_days agemos ///
-evbf eibf eibf_timing ebf age_cbf age_ebf ebf2d prelacteal_milk prelacteal_water prelacteal_sugarwater ///
-prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey ///
-prelacteal_janamghuti prelacteal_other prelacteal_otherthanmilk bottle water juice milk any_solid_semi_food ///
-formula other_liq yogurt fortified_food bread legume vita_veg potato leafy_green ///
-any_solid_semi_food vita_fruit fruit_veg organ meat egg fish nut cont_bf semisolid carb leg_nut dairy ///
-all_meat vita_fruit_veg agegroup sumfoodgrp diar fever ari cont_bf_12_23 ///
-intro_compfood mdd currently_bf freq_solids mmf_bf  ///
-mmf_all mad_all egg_meat ///
-zero_fv sugar_bev  lbw anc4plus csection earlyanc ///
-mum_educ caste rururb wi state region sex national_wgt state_wgt round
+	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
+	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
+	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
+	prelacteal_janamghuti prelacteal_other bottle water juice milk ///
+	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
+	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
+	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
+	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
+	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
+	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
+	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
+	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
+	sex nat_wgt state_wgt round  
 
 	
 * Save data with name of survey

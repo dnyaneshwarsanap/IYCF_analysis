@@ -888,40 +888,23 @@ replace region =. if region==0
 tab state region
 
 
-/*
-------------------------------------------------------------------------------------------------------------------------------------------------
-region       Region Name       states included in the region (statecode)
--------------------------------------------------------------------------------------------------------------------------------------------------
-region 1       North           NCT of Delhi(25), Haryana(12), Himachal Pradesh(13), Jammu and Kashmir(14), Punjab(28), Rajasthan(29), Uttarakhand(34)
-				        	   						 							   
-region 2	   Central		   Chhattisgarh(7), Madhya Pradesh(19), Uttar Pradesh(33)
-									
-region 3	   East			   Bihar(5), West Bengal(35), Jharkhand(15), Odisha(26)	 							
-
-region 4       NorthEast       Arunachal Pradesh(3), Sikkim(30), Tripura(32),  Meghalaya(22), Assam(4), Nagaland(24), Manipur(21), Mizoram(23)
-
-region 5       West            Gujarat(11), Maharshtra (20), Goa(10)
-
-region 6       South           Andhra Pradesh(2),  Karnataka(16),  Kerala(17),  Tamil Nadu(31),  Telangana(36) 
---------------------------------------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------------------------------------
-*/
-
-
-
 gen round =2
 
-keep one birthday birthmonth birthyear int_y int_m int_d int_date age_days agemos ///
-evbf eibf eibf_timing ebf age_cbf age_ebf ebf2d prelacteal_milk prelacteal_water prelacteal_sugarwater ///
-prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey ///
-prelacteal_janamghuti prelacteal_other colostrum bottle water juice broth milk ///
-formula other_liq yogurt fortified_food bread legume vita_veg potato leafy_green ///
-vita_fruit fruit_veg organ meat egg fish cont_bf semisolid carb leg_nut dairy any_solid_semi_food ///
-all_meat vita_fruit_veg cont_bf agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
-any_solid_semi_food intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk freq_formula freq_yogurt ///
-milk_feeds feeds mmf_nobf min_milk_freq_nbf mmf_all mixed_milk mad_all egg_meat ///
-zero_fv sugar_bev unhealthy_food birth_weight c_birth_wt lbw anc4plus csection earlyanc ///
-mum_educ caste rururb wi state state region sex national_wgt state_wgt ebf age_ebf age_cbf round
+keep one int_date age_days agemos ///
+	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
+	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
+	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
+	prelacteal_janamghuti prelacteal_other bottle water juice milk ///
+	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
+	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
+	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
+	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
+	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
+	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
+	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
+	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
+	sex nat_wgt state_wgt round  
+
 
 * Save data with name of survey
 save iycf_rsoc, replace 

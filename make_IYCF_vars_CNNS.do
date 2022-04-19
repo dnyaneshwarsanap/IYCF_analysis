@@ -812,14 +812,9 @@ keep one int_date age_days agemos ///
 	sex nat_wgt state_wgt round  
 
 
-
 * Save data with name of survey
 save iycf_cnns, replace 
 
 
 // end
 
-// use "C:\TEMP\CNNS_04_regional_weights.dta", clear
-// rename caseid case_id
-// sum case_id
-// save "C:\TEMP\CNNS_04_regional_weights.dta", replace 
