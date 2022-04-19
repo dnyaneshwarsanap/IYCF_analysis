@@ -55,6 +55,10 @@ tab hw16
 * We have created heaping on 15th of month
 kdensity hw16 if b5==1
 
+gen birthday =  hw16
+gen birthmonth = b1
+gen birthyear = b2
+
 cap drop dob_date
 gen dob_date = mdy(b1, hw16, b2)
 format dob_date %td
@@ -689,7 +693,7 @@ replace mad_all=1 if (mdd==1 & mmf_all==1) & (currently_bf==1 | min_milk_freq_nb
 replace mad_all=. if age_days<=183 | age_days>=730 
 tab mad_all, m 
 
-*Egg and/or Flesh food consumption - % of children 6-23months of age who consumed egg and/or flesh food during the previous day*
+*Egg and/or Flesh food consumption - % of children 6-23 months of age who consumed egg and/or flesh food during the previous day*
 gen egg_meat=0
 replace egg_meat=1 if all_meat ==1 | egg==1            //& agemons>=6 & agemons<=23
 replace egg_meat =. if age_days<=183 | age_days>=730
@@ -855,19 +859,8 @@ tab ari, m
 gen state = v101
 *state_nfhs4 and state are same
 		
-* Generate 'region' variable
-gen double region:region=0
-replace region=1 if state==25 |  state==12 | state==13 | state==14 | state==28 | state==29 | state==34
-replace region=2 if state==7 |  state==19 | state==33
-replace region=3 if state==5 |  state==35 | state==15 | state==26
-replace region=4 if state==3 |  state==30 | state==32 | state==22 | state==4 | state==24 | state==21 | state==23
-replace region=5 if state==11 |  state==20 | state==10
-replace region=6 if state==2 |  state==16 | state==17 | state==31 | state==36
 
 * In NFHS use national weights for region
-lab define region 1 "North" 2 "Central" 3 "East" 4 "Northeast" 5 "West" 6 "South"
-lab var region "Region" 
-lab val region region
 
 
 /*

@@ -4,6 +4,9 @@
 
 version 16
 
+ERROR - fix all varnames - not  RECODE of |v413 (gave child other liquid) 
+
+
 * KEEP COLLEAGUES FOLDER REFERENCES - Comment out when not used. 
 // cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
 // use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\IAKR52FL.dta", clear
@@ -15,6 +18,7 @@ use "C:\TEMP\IAKR52FL.dta"
 *------------------------------
 
 gen one=1
+
 lab define no_yes 0 "No" 1 "Yes"
 
 *tab result
@@ -60,6 +64,10 @@ tab hw16
 * in theory 15th is middle of the month.
 * We have created heaping on 15th of month
 kdensity hw16 if b5==1
+
+gen birthday =  hw16
+gen birthmonth = b1
+gen birthyear = b2
 
 cap drop dob_date
 gen dob_date = mdy(b1, hw16, b2)
@@ -857,43 +865,6 @@ la val state state_name
 tab state, m 
 
 
-
-* Generate 'region' variable
-gen double region:region=0
-replace region=1 if state==25 |  state==12 | state==13 | state==14 | state==28 | state==29 | state==34
-replace region=2 if state==7 |  state==19 | state==33
-replace region=3 if state==5 |  state==35 | state==15 | state==26
-replace region=4 if state==3 |  state==30 | state==32 | state==22 | state==4 | state==24 | state==21 | state==23
-replace region=5 if state==11 |  state==20 | state==10
-replace region=6 if state==2 |  state==16 | state==17 | state==31 | state==36
-
-
-* In NFHS use national weights for region
-lab define region 1 "North" 2 "Central" 3 "East" 4 "Northeast" 5 "West" 6 "South"
-lab var region "Region" 
-lab val region region
-
-
-/*
-------------------------------------------------------------------------------------------------------------------------------------------------
-region       Region Name       states included in the region (state)
--------------------------------------------------------------------------------------------------------------------------------------------------
-region 1       North           NCT of Delhi(25), Haryana(12), Himachal Pradesh(13), Jammu and Kashmir(14), Punjab(28), Rajasthan(29), Uttarakhand(34)
-				        	   						 							   
-region 2	   Central		   Chhattisgarh(7), Madhya Pradesh(19), Uttar Pradesh(33)
-									
-region 3	   East			   Bihar(5), West Bengal(35), Jharkhand(15), Odisha(26)	 							
-
-region 4       NorthEast       Arunachal Pradesh(3), Sikkim(30), Tripura(32),  Meghalaya(22), Assam(4), Nagaland(24), Manipur(21), Mizoram(23)
-
-region 5       West            Gujarat(11), Maharshtra (20), Goa(10)
-
-region 6       South           Andhra Pradesh(2),  Karnataka(16),  Kerala(17),  Tamil Nadu(31),  Telangana(36) 
---------------------------------------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------------------------------------
-*/
-
-	
 gen round=1
 
 keep one int_date age_days agemos ///

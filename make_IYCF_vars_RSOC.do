@@ -39,7 +39,7 @@ tab q136c_1
 gen birthday =  q136a_1
 gen birthmonth = q136b_1
 gen birthyear = q136c_1
-replace birthyear = . if q136c_1<2010 | q136c_1>20114 
+replace birthyear = . if q136c_1<2010 | q136c_1>2014 
 gen dob_date = mdy(birthmonth , birthday , birthyear)
 format dob_date %td
 // kdensity dob_date
@@ -883,19 +883,10 @@ la val state state_name
 tab state, m 
 
 
+* ERROR RSOC region is wrong
+replace region =. if region==0
+tab state region
 
-* Generate 'region' variable
-gen double region:region=0
-replace region=1 if state==25 |  state==12 | state==13 | state==14 | state==28 | state==29 | state==34
-replace region=2 if state==7 |  state==19 | state==33
-replace region=3 if state==5 |  state==35 | state==15 | state==26
-replace region=4 if state==3 |  state==30 | state==32 | state==22 | state==4 | state==24 | state==21 | state==23
-replace region=5 if state==11 |  state==20 | state==10
-replace region=6 if state==2 |  state==16 | state==17 | state==31 | state==36
-
-lab define region 1 "North" 2 "Central" 3 "East" 4 "Northeast" 5 "West" 6 "South"
-lab var region "Region" 
-lab val region region
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------------------------

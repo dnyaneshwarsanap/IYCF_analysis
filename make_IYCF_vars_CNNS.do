@@ -3,6 +3,7 @@
 * Robert updated 9 12 2021 review for EBF 
 version 16
 
+* add ebf3d to all dbs. 
 
 cd "C:/Temp"
 use "C:\TEMP\CNNS_04_Cleaned_21MAY_final_with_constructed_var.dta", clear
@@ -41,11 +42,14 @@ drop if result !=1
 * Underfive (< 1825)
 
 
-
+gen birthday =  q103d
+gen birthmonth = q103m
+gen birthyear = q103y
 
 * Age in days
 gen int_date = mdy(int_m , int_d , int_y)
 format int_date %td
+
 gen dob_date = mdy(q103m , q103d , q103y)
 format dob_date %td
 gen age_days = int_date - dob_date 
@@ -90,6 +94,9 @@ tab  q302u eibf_timing, m
 * Percentage of children born in the last 24 months who were fed exclusively with breast milk for the first two days after birth
 * q303 Was [NAME] given anything to drink other than breast milk within the first three days after delivery?
 * The CNNS did not ask the question in the best method, so we are trying to edit to represent 2 days. 
+
+
+clonevar ebf3d = q303
 
 cap drop ebf2d
 gen ebf2d =0
@@ -636,8 +643,7 @@ tab wi_s,m
 
 
 * Survey Weights
-
-gen nat_wgt =iw_s_pool    //national women's sample weight (6 decimals)
+gen nat_wgt =iw_s_pool   
 
 * Regional weights not added
 merge 1:1 case_id using "C:\TEMP\CNNS_04_regional_weights.dta"
@@ -645,14 +651,13 @@ merge 1:1 case_id using "C:\TEMP\CNNS_04_regional_weights.dta"
 gen reg_wgt = reg_weight_survey
 gen reg_bio_wgt = reg_weight_bio
 
-
-gen state_wgt =iweight_s    // 	state women's sample weight (6 decimals)
+gen state_wgt =iweight_s   
 
 * Sex 
 * 1= male / 2= female 
 gen sex = q102
 tab sex // double check
-
+tab q102
 
 	
 * Child Illness
@@ -746,7 +751,6 @@ replace state =35  if  state_cnns ==19
 replace state =36  if  state_cnns ==99
 
 
-
 cap la drop state_name
 la def state_name			   1 "A&N islands"
 la def state_name			   2 "Andhra Pradesh", add
@@ -793,16 +797,19 @@ gen round=4
 * if doing analysis on only IYCF then drop all other vars. 
 
 keep one int_date age_days agemos ///
-evbf eibf eibf_timing ebf2d ebf age_cbf age_ebf prelacteal_milk prelacteal_water prelacteal_sugarwater ///
-prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey ///
-prelacteal_janamghuti prelacteal_other bottle water juice milk ///
-formula other_liq juice broth yogurt fortified_food bread vita_veg potato leafy_green ///
-any_solid_semi_food vita_fruit fruit_veg organ meat egg fish cont_bf semisolid carb leg_nut dairy ///
-all_meat vita_fruit_veg agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
-intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk freq_formula freq_yogurt ///
-milk_feeds feeds mmf_nobf min_milk_freq_nbf mmf_all mixed_milk mad_all egg_meat ///
-zero_fv sugar_bev unhealthy_food lbw anc4plus csection earlyanc ///
-mum_educ caste rururb wi wi_s state region sex nat_wgt state_wgt round  
+	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
+	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
+	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
+	prelacteal_janamghuti prelacteal_other bottle water juice milk ///
+	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
+	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
+	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
+	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
+	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
+	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
+	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
+	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
+	sex nat_wgt state_wgt round  
 
 
 
