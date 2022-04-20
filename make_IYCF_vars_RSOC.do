@@ -329,7 +329,17 @@ tab water q195a1_1_rec
 clonevar juice			=q195a1_5_rec
 clonevar broth			=q195a1_2_rec
 clonevar milk			=q195a1_4_rec
-replace milk = 1 if      q195a1_6_rec==1 // buttermilk or beaten curd
+* frequency of milk feeds
+
+ERROR
+
+replace milk = 1 if      q196a1_3>=1 & q196a1_3<=12 //  A5.14. POWDER MILK/FORMULA (NUMBER OF TIMES)
+replace milk = 1 if      q196a1_4==1 & q196a1_4<=12 //  A5.14. COWS/BUFFALOS/GOATS/OTHER ANIMAL MILK (NUMBER OF TIMES)
+replace milk = 1 if      q196a1_6==1 & q196a1_6<=12 //  A5.14. BUTTER MILK/BEATEN CURD (NUMBER OF TIMES)
+tab  q196a1_3 milk, m
+tab  q196a1_4 milk, m
+tab  q196a1_6 milk, m
+
 clonevar formula 		=q195a1_3_rec
 clonevar other_liq 		=q195a1_7_rec
 
@@ -579,10 +589,10 @@ tab milk, m
 tab q196a1_4, m 
 
 // q196a1_3 q196a1_4 q196a1_6
-
+cap drop freq_milk
 gen freq_milk = q196a1_4
 replace freq_milk = 7 if q196a1_4 >=7 & q196a1_4 <50
-replace freq_milk = 0 if milk ==0  | q196a1_4 >98 // includes missing
+replace freq_milk = 0 if milk ==0  | q196a1_4 >=98 // includes missing
 tab q196a1_4 freq_milk , m 
 
 tab formula, m
