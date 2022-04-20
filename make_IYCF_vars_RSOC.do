@@ -386,7 +386,10 @@ lab val bread bread
 gen carb = 0
 replace carb = 1 if bread ==1 | potato==1 | fortified_food==1
 lab var carb "1: Bread, rice, grains, roots and tubers"
-double check WHO guidance
+// WHO guidance
+// thin porridge
+// Porridge, bread, rice, noodles, or other foods made from grains
+// White potatoes, white yams, manioc, cassava, or any other foods made from roots
 
 gen leg_nut = 0
 replace leg_nut = 1 if legume ==1 | nut ==1 
@@ -408,7 +411,7 @@ lab var vita_fruit_veg "6: Vitamin A rich fruits and vegetables"
 
 lab var fruit_veg "7: Other fruits and vegetables"
 
-foreach var of varlist water juice  broth milk  formula other_liq carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
+foreach var of varlist water juice  broth milk formula other_liq carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
 	lab val `var' no_yes
 }
 * Test all liquids
@@ -500,22 +503,6 @@ la var ebf "Exclusive breasfeeding"
 tab ebf
 tab ebf agemos
 
-
-* We have already reviewed and converted the vars below into new vars.  Use new vars for definition
-// cap drop condition 					   
-// gen condition = 0	if age_days<183				   
-// replace condition = 1 if q310a==2 & q310b==2 & q310c==2 & q310d1==2  & q310e1==2  & q310f==2 & q310g1==2  & q310h==2 ///
-//                        & q310i==2 & q310j==2 & q310k==2 & q310l==2 & q310m==2 & q310n==2 & q310o==2 & q310p==2 & q310q==2 & q310r==2 & q310s==2 & q310t==2 ///
-// 					   & q310u==2 & q310v==2 & q310w==2 & q311==2
-// tab condition, m
-
-// cap drop exbf
-// gen exbf = 0 if age_days<183
-// * cont_bf is wrong here
-// replace exbf = 1 if condition == 1 & cont_bf==1 & age_days<183 
-// tab exbf
-
-
 * MEDIAN duration of exclusive breastfeeding
 cap drop age_ebf
 gen age_ebf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
@@ -530,7 +517,6 @@ gen age_cbf = round(age_days/30.4375, 0.01)   //exact age in months round of to 
 replace age_cbf=. if currently_bf !=1
 la var age_cbf "Median age of continued breasfeeding in months"
 sum age_cbf [aw=N_WT] , d
-
 
 *Continued breastfeeding
 tab q190
@@ -556,9 +542,7 @@ tab mdd, m
 *Minimum Meal Frequency (MMF) 
 *For currently breastfeeding children: MMF is met if child 6-8 months of age receives solid, semi-solid or soft foods at least 2 times and a child 9-23 months of age receives solid, semi-solid or soft foods at least 3 times*******
 * Variable fed_solids identifies the number of times a child was fed solid, semi-solid or soft foods*
-
 * For this variable please remember to set response "don't knows" to zero
-
 
 tab q199_1 
 cap drop freq_solids
@@ -567,13 +551,13 @@ replace freq_solids = q199_1 if q199_1 >0 & q199_1 <22
 tab freq_solids q199_1, m 
 
 * RSOC is different from NFHS - It records # of feeds per day instead of 1-7. 
-replace freq_solids =7 if q312 >=7 & q312 <50
+replace freq_solids =7 if q199_1 >=7 & q199_1 <50
 
 * In RSOC there are ~1000 cases of children who consumed foods yesterday but we don't know frequency - recode as 1 feed
 replace freq_solids=1 if freq_solids==. & sumfoodgrp >=1 & sumfoodgrp <=8
 tab sumfoodgrp freq_solids, m 
 
-* In RSOC there 372 cases of eating 0 food groups but consumed semi-solid 1+ times yesterday, - recode as 1 food group. 
+* In RSOC there 10 cases of eating 0 food groups but consumed semi-solid 1+ times yesterday, - recode as 1 food group. 
 replace sumfoodgrp=1 if sumfoodgrp==0 & freq_solids>=1 & freq_solids<=7
 tab sumfoodgrp freq_solids, m 
 
