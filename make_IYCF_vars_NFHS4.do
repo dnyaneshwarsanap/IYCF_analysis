@@ -49,38 +49,29 @@ tab b5,m
 gen int_date = mdy(v006 , v016 , v007)
 format int_date %td
 
-gen int_m = v006
-gen int_y= v007
-gen int_d = v016
+*to check the date month year datas
+tab v006   // v006 interview month
+tab v016   // v016 interview day
+tab v007   // v007 interview year
 
-tab v006
-tab v016
-tab v007
-
-tab b1, m 
-tab b2, m 
-
-gen birthmonth=b1
-gen birthyear = b2
-
+tab b1, m  //b1 is birth month
+tab b2, m  //b2 is birthyear
+tab hw16, m //hw16 is Day of birth
 *Day of birth
-tab hw16, m
-
 //  don't know (98) |      5,795        2.34       98.31
 //           . (.)  |      4,188        1.69      100.00
 //-------------+-----------------------------------
 	
-gen birthday = hw16
 
 * set missing day of birth to 15th of month. 
-replace birthday = 15 if hw16 > 31
-tab birthday
+replace hw16 = 15 if hw16 > 31
+tab hw16
 * in theory 15th is middle of the month.
 * We have created heaping on 15th of month
-kdensity birthday if b5==1
+kdensity hw16 if b5==1
 
 cap drop dob_date
-gen dob_date = mdy(b1, birthday, b2)
+gen dob_date = mdy(b1, hw16, b2)
 format dob_date %td
 gen age_days = int_date - dob_date 
 * for some children 15th day of birth is after interview date
@@ -137,7 +128,6 @@ tab m34 eibf, m
 	   
 //-------------------------------------------------------------------------------------------------
 
-
 *Timing of initiation of Breastfeeding 
 cap drop eibf_timing
 gen eibf_timing =. 
@@ -154,80 +144,6 @@ kdensity eibf_timing
 //------------------------------------------------------------------------------------------------------
 
 
- *Continued breastfeeding
-
-la list M4
-//  value = 95, indicates still breastfeeding
-recode m4 (95=1)(0/94 96/99=0)(missing=.), gen(cont_bf)
-replace cont_bf=0 if cont_bf==.
-tab m4 cont_bf , m 
-
-gen cont_bf_12_23 = cont_bf if age_days>335 &age_days<730 
-tab cont_bf_12_23, m
-
-//------------------------------------------------------------------------------------------------------
-
-
-*EXCLUSIVE BREASTFEEDING
-*Exclusive breastfeeding is defined as breastfeeding with no other food or drink, not even water.
-* using the WHO guideline for defining exbf variable - 
-*create a condition variable based on weather the child received any other food items (liquid/solids/semi-solids) on previous day
-*Condition = 1 indicates that the child has not received any food items on yesterday
-
-cap drop condition 					   
-gen condition = 0	if age_days<183				   
-replace condition = 1 if v409==0 &  v410==0 & v411==0 & v411a==0 & v412a==0 & v412c==0 & v413==0 & v414a==0 & v414e==0 & v414f==0 & v414g==0 & ///
-                          v414i==0 & v414j==0 & v414k==0 & v414l==0 & v414m==0 & v414n==0 & v414o==0 & v414p==0 & v414s==0 & v414t==0 & v414v==0
-						 
-tab condition, m
-
-cap drop exbf
-gen exbf = 0 if age_days<183
-replace exbf = 1 if condition == 1 & cont_bf==1 & age_days<183 
-tab exbf
-
-/*
-         exbf |      Freq.     Percent        Cum.
-------------+-----------------------------------
-          0 |     11,685       46.96       46.96
-          1 |     13,198       53.04      100.00
-------------+-----------------------------------
-      Total |     24,883      100.00
-*/
-
-//--------------------------------------------------------------------------------------------------------
-
-
-* MEDIAN deuration of exbf for children below six months
-
-gen agemos_round = round(age_days/30.42, 0.01)   //exact age in months round of to 2 digits after decimal
-tab agemos_round, m 
-
-* create a age in months variable for exclusively bf children
-cap drop agemos_ebf
-gen agemos_ebf = agemos_round if age_days<=183
-kdensity agemos_ebf
-
-
-*set agemos_ebf to missing if exbf=no
-replace agemos_ebf=. if exbf==0
-
-
-*median duration of EXBF is the median of agemos_ebf
-univar agemos_ebf
-
-/*
-                                        -------------- Quantiles --------------
-Variable       n       Mean     S.D.      Min      .25      Mdn      .75      Max
--------------------------------------------------------------------------------
-agemos_ebf   13344     2.70     1.66     0.00     1.25     2.60*     4.01     6.02
--------------------------------------------------------------------------------
-
-*/
-
-
-
-
 * Exclusively breastfed for the first two days after birth
 * Percentage of children born in the last 24 months who were fed exclusively with breast milk for the first two days after birth
 * m55z Was [NAME] given nothing to drink other than breast milk within the first three days after delivery?
@@ -242,7 +158,19 @@ replace ebf2d =. if age_days >2
 * 38 children in sample <= 2 days
 tab ebf2d m55z, m 
 
-//------------------------------------------------------------------------------------------------------
+
+* Currently Breastfeeding
+// 1. ever breastfed
+// 2. still breastfeeding
+// 3. breastfed yesterday
+// v404 is a currently breastfeeding var in NFHS 3 can we use this var directly
+
+cap drop currently_bf
+gen currently_bf = v404
+tab currently_bf,m
+
+
+
 
 
 *For prelacteal feed variables are
@@ -271,52 +199,51 @@ m55z                   Given Nothing
 clonevar prelacteal_milk = m55a
 replace prelacteal_milk = 1 if m55g==1 // add formula to prelacteal milk
 replace prelacteal_milk = . if m55a==9
-tab m55a prelacteal_milk
 * Compare to variable - gave nothing
 tab m55z prelacteal_milk
 
-
 clonevar prelacteal_water = m55b
 replace prelacteal_water = . if m55b==9
-tab m55b prelacteal_water
 
 clonevar prelacteal_sugarwater = m55c
 replace prelacteal_sugarwater = . if m55c==9
-tab m55c prelacteal_sugarwater
 
 clonevar prelacteal_gripewater = m55d
 replace prelacteal_gripewater = . if m55d==9
-tab m55d prelacteal_gripewater
 
 clonevar prelacteal_saltwater = m55e
 replace prelacteal_saltwater = . if m55e==9
-tab m55e prelacteal_saltwater
 
 clonevar prelacteal_formula = m55g
 replace prelacteal_formula = . if m55g==9
-tab m55g prelacteal_formula
 
 clonevar prelacteal_honey = m55i
 replace prelacteal_honey = . if m55i==9
-tab m55i prelacteal_honey
 
 clonevar prelacteal_janamghuti = m55k
 replace prelacteal_janamghuti = . if m55k==9
-tab m55k prelacteal_janamghuti
 
+clonevar prelacteal_other = m55x
+replace prelacteal_other = . if m55x==9
 
+local prelacteal_feeds = "prelacteal_milk prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater  prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other"
+foreach var in `prelacteal_feeds' { 
+	replace `var' = . if  age_days>=730
+}
 
-
-cap drop prelacteal_other 
-gen prelacteal_other =0
+cap drop prelacteal_otherthanmilk
+gen prelacteal_otherthanmilk =0
 local prelacteal = "m55b m55c m55d m55e m55f m55h m55i m55j m55k m55l m55m m55n m55o m55x"
 foreach var in `prelacteal' { 
-	replace prelacteal_other = 1 if  `var'==1
+	replace prelacteal_otherthanmilk = 1 if  `var'==1
 }
-tab  prelacteal_other, m
+
+tab prelacteal_milk, m 
+tab  prelacteal_otherthanmilk, m
 * Compare to variable - gave nothing
-tab m55z prelacteal_other
+tab m55z prelacteal_otherthanmilk
 * m55z does faithfully represent children who were given nothing in first 3 days. 
+
 
 
 * Bottle Feeding
@@ -328,6 +255,8 @@ replace bottle = . if age_days>=730
 tab m38 bottle, m
 
 tab m38 v415, m  //v415 drank from bottle with nipple EVER? 
+
+
 	 	   	 
 
 /*
@@ -374,6 +303,14 @@ v414w            V414W           gave child cs foods
 v415		     V415            drank from bottle with nipple
 --------------------------------------------------------------------------
 */
+********************************************************************************
+* Food groups (liquids and solids)
+********************************************************************************
+
+* recode foods into food groups
+* 	yes = 1, 
+* 	no and don't know = 0
+* following global guidance on IYCF analysis, this allows for maximium children to be included in indicator 
 
 
 foreach var of varlist v409- v415 {
@@ -510,18 +447,12 @@ lab var fruit_veg "7: Other fruits and vegetables"
 replace fruit_veg = 0 if fruit_veg==0 | fruit_veg ==9
 
 
-lab var cont_bf "8: Breastmilk"
-lab define cont_bf 0 "No" 1 "yes" 
-tab cont_bf,m
-
-
-
-foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg  {
+foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg currently_bf  {
 	lab val `var' no_yes
 }
 
 	
-foreach var of varlist carb dairy all_meat egg vita_fruit_veg fruit_veg cont_bf {
+foreach var of varlist carb dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
 	tab `var' , m
 }
 		
@@ -533,96 +464,24 @@ lab val agegroup agegroup
 
 * Number of food groups out of eight
 cap drop sumfoodgrp
-egen sumfoodgrp = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg cont_bf)
+egen sumfoodgrp = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg currently_bf)
 tabulate sumfoodgrp, generate(fg)
 rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 fg9) ///
 	   (fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8)		
 
+
+* Any solid/semi-solid food consumption -  Does NOT include currently breastfeeding
+cap drop any_solid_semi_food
+egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
+replace any_solid_semi_food = 1 if any_solid_semi_food >1
+tab any_solid_semi_food, m 	   
+	  
 	   
-*---------------------------------------------------------------------------------------------
-	   
-* Child Illness
-
-* Diarrhea
-* Yes if child had a diarrhea in last 2 weeks
-cap drop diar
-gen diar = .
-replace diar =1 if h11==2
-replace diar =0 if h11==0 | h11==8
-tab diar h11,m
-
-
-* Fever
-* Yes if child had a fever in last 2 weeks
-gen fever =.
-replace fever =1 if h22==1
-replace fever =0 if h22==0 | h22==8
-ta fever h22,m
-
-
-* Cough with rapid breathing excluding those with only nasal breathing problems
-tab h31
-tab h31b 
-tab h31c
-cap drop ari
-recode h31 (2=1)(0 8=0), gen(ari)
-replace ari=0 if h31b!=1
-replace ari=0 if h31c==2 | h31c==6 | h31c==8
-tab ari h31
-tab ari h31b
-tab ari h31c
-tab ari, m 
-
-//-------------------------------------------------------------------------------------------
-
-
-		
-* Generate 'region' variable
-gen double region:region=0
-replace region=1 if v101==25 |  v101==12 | v101==13 | v101==14 | v101==28 | v101==29 | v101==34
-replace region=2 if v101==7 |  v101==19 | v101==33
-replace region=3 if v101==5 |  v101==35 | v101==15 | v101==26
-replace region=4 if v101==3 |  v101==30 | v101==32 | v101==22 | v101==4 | v101==24 | v101==21 | v101==23
-replace region=5 if v101==11 |  v101==20 | v101==10
-replace region=6 if v101==2 |  v101==16 | v101==17 | v101==31 | v101==36
-
-* In NFHS use national weights for region
-lab define region 1 "North" 2 "Central" 3 "East" 4 "Northeast" 5 "West" 6 "South"
-lab var region "Region" 
-lab val region region
-
-
-/*
-------------------------------------------------------------------------------------------------------------------------------------------------
-region       Region Name       states included in the region
--------------------------------------------------------------------------------------------------------------------------------------------------
-region 1       North           NCT of Delhi(25), Haryana(12), Himachal Pradesh(13), Jammu and Kashmir(14), Punjab(28), Rajasthan(29), Uttarakhand(34)
-				        	   						 							   
-region 2	   Central		   Chhattisgarh(7), Madhya Pradesh(19), Uttar Pradesh(33)
-									
-region 3	   East			   Bihar(5), West Bengal(35), Jharkhand(15), Odisha(26)	 							
-
-region 4       NorthEast       Arunachal Pradesh(3), Sikkim(30), Tripura(32),  Meghalaya(22), Assam(4), Nagaland(24), Manipur(21), Mizoram(23)
-
-region 5       West            Gujarat(11), Maharshtra (20), Goa(10)
-
-region 6       South           Andhra Pradesh(2),  Karnataka(16),  Kerala(17),  Tamil Nadu(31),  Telangana(36) 
---------------------------------------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------------------------------------
-*/
-
-
-
-
-
-//--------------------------------------------------------------------------------------------------------
-
-
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
 * based on 
 * v414s: gave child solid, semi solid, soft foods yesterday 
 * sumfoodgrp - number of food groups eaten yesterday
-tab sumfoodgrp v414s, m 
+tab sumfoodgrp v414s, m
 gen intro_compfood = 0
 replace intro_compfood =. if v414s == 9
 replace intro_compfood = 1 if v414s == 1 | sumfoodgrp>=1 
@@ -631,6 +490,63 @@ la var intro_compfood "Intro to complementary food 6-8 months of age"
 tab intro_compfood
 
 //--------------------------------------------------------------------------------------------------------
+*EXCLUSIVE BREASTFEEDING
+*Exclusive breastfeeding is defined as breastfeeding with no other food or drink, not even water.
+*Using the WHO guideline for defining ebf variable - create a condition variable based on 
+*if the child received any other food items (liquid/solids/semi-solids) on previous day
+
+cap drop ebf
+* Create ebf variable - 1 yes 0 no
+// no liquids besides breastmilk
+// no food groups consumed - any_solid_semi_food==0 
+gen ebf=0 
+replace ebf =1 if currently_bf ==1
+replace ebf =0 if water      ==1 | ///
+                  juice      ==1 | ///		
+                  milk       ==1 | ///
+				  tea_coff   ==1 | ///
+                  formula    ==1 | ///
+                  other_liq  ==1 | ///
+                  any_solid_semi_food ==1
+				  
+replace ebf =. if age_days >182
+la var ebf "Exclusive breasfeeding"
+tab ebf
+tab ebf agemos
+
+
+
+* MEDIAN duration of exclusive breastfeeding
+cap drop age_ebf
+gen age_ebf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
+replace age_ebf = . if age_days >183
+*set agemos_ebf to missing if exbf=no
+replace age_ebf=. if ebf==0
+la var age_ebf "Median age of exclusive breasfeeding in months"
+sum age_ebf [aw=v005], d
+
+* MEDIAN duration of continued breastfeeding
+gen age_cbf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
+replace age_cbf=. if currently_bf !=1
+la var age_cbf "Median age of continued breasfeeding in months"
+sum age_cbf [aw=v005], d
+
+
+
+
+ *Continued breastfeeding
+
+la list M4
+//  value = 95, indicates still breastfeeding
+recode m4 (95=1)(0/94 96/99=0)(missing=.), gen(cont_bf)
+replace cont_bf=0 if cont_bf==.
+tab m4 cont_bf , m 
+
+gen cont_bf_12_23 = cont_bf if age_days>335 &age_days<730 
+tab cont_bf_12_23, m
+
+//------------------------------------------------------------------------------------------------------
+
 
 *Minimum Dietary Diversity- code for new indicator definition 
 * currently_bf - identifies children still breastfeeding
@@ -642,12 +558,6 @@ la var mdd "Minimum Dietary Diversity (2020)"
 tab mdd
 
 //-----------------
-
-* Currently Breastfeeding
-cap drop currently_bf
-recode m4 (95=1)(0/94 96/99=0)(missing=.), gen(currently_bf)
-tab m4 currently_bf, m 
-
 
 *Minimum Meal Frequency (MMF) 
 *For currently breastfeeding children: MMF is yes if:
@@ -878,15 +788,16 @@ tab v155 mum_educ, col nofreq
 
 
 * caste
-gen caste = 0 if v130!=.           //caste =0 if religion is missing
+gen caste = . if v130!=.           //caste =0 if religion is missing
 replace caste = 1 if s116 ==1 
 replace caste = 2 if s116 ==2 
 replace caste = 3 if s116 ==3
 replace caste = 4 if s116 ==4
-replace caste = 5 if s116 ==8 
-replace caste = 5 if s116 ==.      // missing values are not assigned to any caste
-lab define caste 1 "Scheduled caste" 2"Scheduled tribe" 3"OBC"  4"Others" 5 "Missing/don't know" 
-lab val caste caste
+replace caste = . if s116 ==8 
+*replace caste = 5 if s116 ==.      // missing values are not assigned to any caste
+lab define caste 1 "Scheduled caste" 2"Scheduled tribe" 3"OBC"  4"Others"
+
+lab val caste caste 
 lab var caste "Caste"
 tab caste, m 
 
@@ -906,31 +817,149 @@ tab wi,m
 		
 		
 * Survey Weights
-gen national_wgt =v005     //national women's sample weight (6 decimals)
+gen nat_wgt =v005     //national women's sample weight (6 decimals)
 gen state_wgt =sv005    // 	state women's sample weight (6 decimals)
 	
 *sex of child
 gen sex=b4
 tab sex b4
 		
+	
 		
-gen statecode = .
-replace statecode=v101
+		
+	
+		
+	   
+*---------------------------------------------------------------------------------------------
+	   
+* Child Illness
+
+* Diarrhea
+* Yes if child had a diarrhea in last 2 weeks
+cap drop diar
+gen diar = .
+replace diar =1 if h11==2
+replace diar =0 if h11==0 | h11==8
+tab diar h11,m
+
+* Fever
+* Yes if child had a fever in last 2 weeks
+gen fever =.
+replace fever =1 if h22==1
+replace fever =0 if h22==0 | h22==8
+ta fever h22,m
+
+* Cough with rapid breathing excluding those with only nasal breathing problems
+tab h31
+tab h31b 
+tab h31c
+cap drop ari
+recode h31 (2=1)(0 8=0), gen(ari)
+replace ari=0 if h31b!=1
+replace ari=0 if h31c==2 | h31c==6 | h31c==8
+tab ari h31
+tab ari h31b
+tab ari h31c
+tab ari, m 
+
+//-------------------------------------------------------------------------------------------
+
+
+*NFHS 4 state codes are considered as standard for other surveys
+gen state = v101
+*state_nfhs4 and state are same
+		
+
+cap la drop state_name
+la def state_name			   1 "A&N islands"
+la def state_name			   2 "Andhra Pradesh", add
+la def state_name			   3 "Arunachal Pradesh" , add
+la def state_name			   4 Assam , add
+la def state_name			   5 Bihar , add
+la def state_name			   6 Chandigarh, add
+la def state_name			   7 Chattisgarh, add
+la def state_name			   8 "Dadra and Nagar Haveli", add
+la def state_name			   9 "Daman and Diu", add
+la def state_name			  10 Goa, add
+la def state_name			  11 Gujarat, add
+la def state_name			  12 Haryana, add
+la def state_name			  13 "Himachal Pradesh", add
+la def state_name			  14 "Jammu and Kashmir", add
+la def state_name			  15 Jharkhand, add
+la def state_name			  16 Karnataka, add
+la def state_name			  17 Kerala, add
+la def state_name			  18 Lakshadweep, add
+la def state_name			  19 "Madhya Pradesh", add
+la def state_name			  20 Maharashtra, add
+la def state_name			  21 Manipur, add
+la def state_name			  22 Meghalaya, add
+la def state_name			  23 Mizoram, add
+la def state_name			  24 Nagaland, add
+la def state_name			  25 Delhi, add
+la def state_name			  26 Odisha, add
+la def state_name			  27 Puducherry, add
+la def state_name			  28 Punjab, add
+la def state_name			  29 Rajasthan, add
+la def state_name			  30 Sikkim, add
+la def state_name			  31 "Tamil Nadu", add
+la def state_name			  32 Tripura, add
+la def state_name			  33 "Uttar Pradesh", add
+la def state_name			  34 Uttarakhand, add
+la def state_name			  35 "West Bengal", add
+la def state_name			  36 Telangana, add
+la val state state_name
+
+tab state, m 
+
+
+* Generate 'region' variable
+gen double region:region=0
+replace region=1 if state==25 |  state==12 | state==13 | state==14 | state==28 | state==29 | state==34
+replace region=2 if state==7 |  state==19 | state==33
+replace region=3 if state==5 |  state==35 | state==15 | state==26
+replace region=4 if state==3 |  state==30 | state==32 | state==22 | state==4 | state==24 | state==21 | state==23
+replace region=5 if state==11 |  state==20 | state==10
+replace region=6 if state==2 |  state==16 | state==17 | state==31 | state==36
+
+* In NFHS use national weights for region
+lab define region 1 "North" 2 "Central" 3 "East" 4 "Northeast" 5 "West" 6 "South"
+lab var region "Region" 
+lab val region region
+
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------------------
+region       Region Name       states included in the region
+-------------------------------------------------------------------------------------------------------------------------------------------------
+region 1       North           NCT of Delhi(25), Haryana(12), Himachal Pradesh(13), Jammu and Kashmir(14), Punjab(28), Rajasthan(29), Uttarakhand(34)
+				        	   						 							   
+region 2	   Central		   Chhattisgarh(7), Madhya Pradesh(19), Uttar Pradesh(33)
+									
+region 3	   East			   Bihar(5), West Bengal(35), Jharkhand(15), Odisha(26)	 							
+
+region 4       NorthEast       Arunachal Pradesh(3), Sikkim(30), Tripura(32),  Meghalaya(22), Assam(4), Nagaland(24), Manipur(21), Mizoram(23)
+
+region 5       West            Gujarat(11), Maharshtra (20), Goa(10)
+
+region 6       South           Andhra Pradesh(2),  Karnataka(16),  Kerala(17),  Tamil Nadu(31),  Telangana(36) 
+--------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------
+*/
 
 
 gen round=3
 
-keep one birthday birthmonth birthyear int_y int_m int_d int_date age_days agemos ///
-evbf eibf eibf_timing exbf ebf2d prelacteal_milk prelacteal_water prelacteal_sugarwater ///
+keep one hw16 int_date age_days agemos ///
+evbf eibf eibf_timing ebf age_cbf age_ebf ebf2d prelacteal_milk prelacteal_water prelacteal_sugarwater ///
 prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey ///
-prelacteal_janamghuti prelacteal_other bottle water juice milk ///
-formula other_liq yogurt fortified_food bread vita_veg potato leafy_green ///
+prelacteal_janamghuti prelacteal_other prelacteal_otherthanmilk bottle water juice milk any_solid_semi_food ///
+formula other_liq yogurt fortified_food bread vita_veg potato leafy_green any_solid_semi_food ///
 vita_fruit fruit_veg organ meat egg fish cont_bf semisolid carb leg_nut dairy ///
 all_meat vita_fruit_veg cont_bf agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
 intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk freq_formula freq_yogurt ///
 milk_feeds feeds mmf_nobf min_milk_freq_nbf mmf_all mixed_milk mad_all egg_meat ///
 zero_fv sugar_bev unhealthy_food lbw anc4plus csection earlyanc ///
-mum_educ caste rururb wi statecode region sex national_wgt state_wgt round
+mum_educ caste rururb wi state region sex nat_wgt state_wgt round
 
 
 		
