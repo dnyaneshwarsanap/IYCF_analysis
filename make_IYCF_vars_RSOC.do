@@ -7,7 +7,7 @@ version 16
 // use "C:\Temp\IYCF\RSOC\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
 * EMW - ever married women
 // use "C:\Temp\IYCF\RSOC\Household_India_RSOC.dta", clear
-* Please note Household data does not include IYCF
+* Please note household data does not include IYCF
 
 cd "C:/Temp"
 use "C:\Temp\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
@@ -18,6 +18,7 @@ use "C:\Temp\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
 
 * make IYCF vars.do
 gen one=1
+lab define no_yes 0 "No" 1 "Yes"
 
 * identify number of living children under five
 * A2.1 number of live births
@@ -27,13 +28,13 @@ tab q134, m
 
 * ever breastfed
 tab q184
-* Children under 3 years of age = 35,035 
+* Children under 3 years of age who were asked about breastfeeding = 35,035 
  
 * Birth date
 tab q136a_1, m 
-tab q136b_1 
-tab q136c_1
-* Children with birth dates -   50,102 
+tab q136b_1, m 
+tab q136c_1, m
+
 
 
 gen birthday =  q136a_1
@@ -43,7 +44,7 @@ replace birthyear = . if q136c_1<2010 | q136c_1>2014
 gen dob_date = mdy(birthmonth , birthday , birthyear)
 format dob_date %td
 // kdensity dob_date
- 
+
 
 * date of interview - Data recorded as string
 tab q106_1
@@ -52,7 +53,6 @@ tab q106_1
 destring q106_1, gen(temp)
 
 gen int_y = (temp/100) - floor(temp/100) 
-
 gen int_m = (temp/10000) - floor(temp/10000) 
 replace int_m = int_m - int_y/100
 
@@ -92,11 +92,16 @@ replace age_days =. if age_days<0 | age_days>1825
 
 gen agemos = floor(age_days/30.42)
 tab agemos, m 
-graph bar (count) one, over(agemos)
 
 * IYCF data collected only for children under 3 years of age
 drop if age_days> 1095  // 3 years = 1096 days 
-* 34,216 children under 3 years of age
+
+tab birthday, m
+tab birthmonth, m
+tab birthyear, m
+* U3 Children with birth dates -   34,217
+
+graph bar (count) one, over(agemos)
 
 * Ever breastfed (children born in past 24 months)
 tab q184, m 
@@ -111,9 +116,11 @@ tab q185a1_1
 tab q185a1_2 
 tab q185a1_3
 
+* Early initiation of breastfeeding (under two years of age)
 gen eibf = 0
 replace eibf = 1 if (q185a1_2 <=1 & q185a1_2 == 1) | (q185a1_1==0)   //here response as "immediately"
 replace eibf =. if age_days>=730 // age in days
+tab  eibf, m
 tab  q185a1_1 eibf, m
 tab  q185a1_2 eibf, m
 
@@ -129,24 +136,36 @@ replace eibf_timing =.  if age_days>=730
 la var eibf_timing "Timing of start of breastfeeding (in hours)"
 la def eibf_timing 48 "48 hours or more"
 la val eibf_timing eibf_timing
-tab eibf_timing
-tab  q185a1_2 eibf_timing, m
-tab  q185a1_3 eibf_timing, m
+tab eibf_timing, m 
+scatter  q185a1_2 eibf_timing
+scatter  q185a1_3 eibf_timing
 
 * Exclusively breastfed for the first two days after birth
 * Percentage of children born in the last 24 months who were fed exclusively with breast milk for the first two days after birth
 * q187 Was [NAME] given anything to drink other than breast milk within the first three days after delivery?
-* The RSOC did not ask the question in the best method, so we are trying to edit to represent 2 	days. 
+* The RSOC did not ask the question in the best method, so we are trying to edit to represent 2 days. 
 
-tab q187
-cap drop ebf2d  //   In the first 3 days after delivery, was child given something other than breastmilk
+tab q187 // In the first 3 days after delivery, was child given something other than breastmilk
+// la list q187
+//            1 Yes
+//            2 No
+//            9 Missing
 
+cap drop ebf2d 
+* only breastfed in first two days
 gen ebf2d =0
-replace ebf2d=1 if q303!=1 // q303 means no other drink was given to the child in 1st three days
+replace ebf2d=1 if q187!=1 //  no other drink was given to the child in 1st three days
 replace ebf2d =. if age_days >2
 * Question was not asked correctly so variable will only be valid at national level 
 * 30 children in sample <= 2 days
 tab ebf2d q187, m 
+
+* only breastfed in first three days
+cap drop ebf3d 
+gen ebf3d =0
+replace ebf3d=1 if q187!=1 //  no other drink was given to the child in 1st three days
+* Question was not asked according to new standards so variable will only be valid at national level 
+tab ebf3d q187, m 
 
 * Currently Breastfeeding
 * Pay attention to order of assignment of currently BF
@@ -154,6 +173,11 @@ tab ebf2d q187, m
 // 2. still breastfeeding
 // 3. breastfed yesterday
 // missing and dont know are considered as No --WHO guidelines
+
+tab q184, m // ever breastfed
+tab q190, m // currently breastfed 
+tab q192, m // breastfed yesterday during the day or at night
+
 cap drop currently_bf
 gen currently_bf = .
 //Ever breastfed
@@ -215,10 +239,8 @@ gen bottle =.
 
 
 
-
 /*
-                     value
-variable name        label      variable label
+variable name       value label      variable label
 --------------------------------------------------------------------------------------------
 
 q184                           A5.2. Did you ever breastfeed <NAME>
@@ -254,6 +276,7 @@ q195a1_7                       A5.13. g) ANY OTHER LIQUIDS
 q196a1_3                       A5.14. POWDER MILK/FORMULA (NUMBER OF TIMES)
 q196a1_4                       A5.14. COWS/BUFFALOS/GOATS/OTHER ANIMAL MILK (NUMBER OF TIMES)
 q196a1_6                       A5.14. BUTTER MILK/BEATEN CURD (NUMBER OF TIMES)
+
 q197a1_1                       A5.15. ANY COMMERCIALLY FORTIFIED BABY FOOD SUCH AS CERELAC ETC.
 q197a1_2                       A5.15. BREAD, ROTI, CHAPATI, RICE, KITCHDI, NOODLES, PORRIDGE,  BISCUITS, IDLI, 
 q197a1_3                       A5.15. PULSES/LENTILS/BEANS OR FOOD PREPARED WITH MIXING PULSES/LENTILS/LEGUMES
@@ -273,8 +296,6 @@ q198                           A5.16. Did eat any solid, semi-solid, or soft foo
 q199_1                         NUMBER OF TIMES (A5.17. How many times did eat solid, semi-solid, or soft foods   
 q199dk_98                      A5.17. Do not know     
 q200                           A6.1. Do you have a Mother Child Protection (MCP) card for this child  where a
-
-
 */
 
 ********************************************************************************
@@ -286,7 +307,7 @@ q200                           A6.1. Do you have a Mother Child Protection (MCP)
 * 	no and don't know = 0
 * following global guidance on IYCF analysis, this allows for maximium children to be included in indicator 
 
-lab define no_yes 0 "No" 1 "Yes"
+
 
 
 
@@ -305,12 +326,14 @@ foreach var of varlist q197a1_1 -  q197a1_15 {
 
 * LIQUIDS
 clonevar water			=q195a1_1_rec
+tab water q195a1_1_rec
 clonevar juice			=q195a1_5_rec
 clonevar broth			=q195a1_2_rec
 clonevar milk			=q195a1_4_rec
-replace milk = 1 if q195a1_6_rec ==1 // buttermilk or beaten curd
+replace milk = 1 if      q195a1_6_rec==1 // buttermilk or beaten curd
 clonevar formula 		=q195a1_3_rec
-clonevar other_liq 		=q195a1_6_rec
+clonevar other_liq 		=q195a1_7_rec
+
 * SOLIDS SEMISOLIDS
 clonevar yogurt			=q197a1_14_rec // any cheese, yogurt or other food made from milk?
 clonevar fortified_food =q197a1_1_rec  // any commercially fortified food
@@ -326,10 +349,19 @@ clonevar organ			=q197a1_9_rec
 clonevar meat			=q197a1_10_rec  // includes poultry
 clonevar egg			=q197a1_11_rec
 clonevar fish			=q197a1_12_rec
-clonevar nut			=q197a1_13_rec  // beans, peas, lentils, nuts
+clonevar nut			=q197a1_13_rec  // ANY FOODS MADE FROM NUTS SUCH AS PEANUTS, CASHEW NUTS, ALMOND ETC.?
 *clonevar cheese		=q197a1_14_rec  included as yogurt above
-*gen fat			= 0              // no data collcted on oil, ghee, butter consumption in RSOC
+*gen fat			= 0              // no data collected on oil, ghee, butter consumption in RSOC
+
+
+Error
 clonevar semisolid		=q197a1_15_rec  // any other solid, semi-solid or soft food
+replace semisolid = 1 if q198==1
+
+tab q198, m // A5.16. Did eat any solid, semi-solid, or soft foods yesterday during the day or night
+tab q197a1_15_rec, m 
+tab semisolid q197a1_15_rec, m 
+tab semisolid q198, m 
 
 lab var water "water"
 lab var juice "juice"
@@ -338,13 +370,16 @@ lab var milk "milk"
 lab var formula "formula"
 lab var other_liq "other_liq"
 
+lab var semisolid "other semi-solids"
+
 lab var bread "Bread, rice, biscuits, idli, porridge"
 lab val bread bread
 
 * Define eight food groups following WHO recommended IYCF indicators
 gen carb = 0
-replace carb = 1 if bread ==1 | potato==1 
+replace carb = 1 if bread ==1 | potato==1 | fortified_food==1
 lab var carb "1: Bread, rice, grains, roots and tubers"
+double check WHO guidance
 
 gen leg_nut = 0
 replace leg_nut = 1 if legume ==1 | nut ==1 
@@ -357,7 +392,6 @@ lab var dairy "3: Dairy - milk, formula, yogurt, cheese"
 gen all_meat = 0
 replace all_meat = 1 if organ ==1 | meat ==1 | fish ==1  
 lab var all_meat "4: Flesh foods(meat, fish, poultry and liver/organ meats)"
-// lab val all_meat all_meat
 
 lab var egg "5: Eggs"
 
@@ -394,34 +428,53 @@ tabulate sumfoodgrp, generate(fg)
 rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 ) ///
 	   (fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 )		
 
-* Any solid/semi-solid food consumption -  Does NOT include currently breastfeeding
+* Any solid/semi-solid food consumption -  includes 8 food groups plus semisolid, fortified_food
+* Does NOT include currently breastfeeding
 cap drop any_solid_semi_food
 egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
 replace any_solid_semi_food = 1 if any_solid_semi_food >1
 tab any_solid_semi_food, m 
+gen any_solid_semi_food_x = any_solid_semi_food*100
+graph bar (mean) any_solid_semi_food_x if agemos<24, over(agemos)
 
 
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
 * based on 
+* q197a1_15_rec :ANY OTHER SOLID OR SEMI-SOLID FOOD?
 * q198: did [name] eat any solid, semisolid, or soft foods yesterday during the day
 * q199_1: number of |times index child ate solid, semi solid, soft foods yesterday 
 * sumfoodgrp - number of food groups eaten yesterday
-tab q198
-* q198 is obviously wrong. it was interpreted as any other feeds not specified above. 
+* any_solid_semi_food- any semi-solids eaten yesterday
 
+* Questionnaire flow
+* if consumption of any semi-solids yesterday
+* filter - yes / no
+* number of times consumed  semi-solids yesterday
+
+tab q197a1_15_rec
+tab q198 // not clear where this comes from in questionnaire
 tab q199_1 
 tab q199_1 q198
-* inconsistency between q198 and q199_1
-tab sumfoodgrp q198, m 
-* inconsistency between q311 and sumfoodgrp
 
+check official WHO definition
+
+cap drop intro_compfood
 gen intro_compfood = 0
-replace intro_compfood = 1 if q199_1 >= 1 | sumfoodgrp>=1 
+replace intro_compfood = 1 if any_solid_semi_food>=1 
+gen freq_solids=0 
+replace freq_solids = q199_1 if q199_1 >0 & q199_1 <22 
+tab  freq_solids intro_compfood, m 
+
+// replace intro_compfood = 1 if q199_1 >= 1 | any_solid_semi_food>=1 
+
 replace intro_compfood =. if age_days<=183 | age_days>=243
 la var intro_compfood "Intro to complementary food 6-8 months of age"
 tab intro_compfood
 // this indicator is always 6-8 m 
 
+cap drop intro_compfood_x
+gen intro_compfood_x = intro_compfood *100
+graph bar (mean) intro_compfood_x if agemos<24, over(age_days)
 
 
 
