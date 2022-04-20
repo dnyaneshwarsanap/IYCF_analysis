@@ -214,7 +214,6 @@ foreach var in `prelacteal_feeds' {
 	replace `var' = . if  age_days>=730
 }
 
-
 cap drop prelacteal_otherthanmilk
 gen prelacteal_otherthanmilk =0
 local prelacteal = "prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_fruitjuice prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other"
@@ -353,16 +352,6 @@ clonevar nut			=q197a1_13_rec  // ANY FOODS MADE FROM NUTS SUCH AS PEANUTS, CASH
 *clonevar cheese		=q197a1_14_rec  included as yogurt above
 *gen fat			= 0              // no data collected on oil, ghee, butter consumption in RSOC
 
-
-Error
-clonevar semisolid		=q197a1_15_rec  // any other solid, semi-solid or soft food
-replace semisolid = 1 if q198==1
-
-tab q198, m // A5.16. Did eat any solid, semi-solid, or soft foods yesterday during the day or night
-tab q197a1_15_rec, m 
-tab semisolid q197a1_15_rec, m 
-tab semisolid q198, m 
-
 lab var water "water"
 lab var juice "juice"
 lab var broth "broth"
@@ -370,7 +359,25 @@ lab var milk "milk"
 lab var formula "formula"
 lab var other_liq "other_liq"
 
-lab var semisolid "other semi-solids"
+cap drop semisolid
+clonevar semisolid		=q197a1_15_rec  // any other solid, semi-solid or soft food
+replace semisolid = 1 if q199_1 >0 & q199_1 <25  // same code as freq_solids
+lab var semisolid "other semi-solids"  // not included in list of foods
+
+// tab q198, m // A5.16. Did eat any solid, semi-solid, or soft foods yesterday during the day or night
+tab q197a1_15_rec, m 
+tab q197a1_15_rec semisolid, m 
+tab q199_1 semisolid, m 
+
+// all 8 food groups 
+// 1: Bread, rice, grains, roots and tubers
+// 2: Legumes and nuts
+// 3: Dairy - milk, formula, yogurt, cheese
+// 4: Flesh foods(meat, fish, poultry and liver/organ meats)
+// 5: Eggs
+// 6: Vitamin A rich fruits and vegetables
+// 7: Other fruits and vegetables
+// 8: Breastmilk
 
 lab var bread "Bread, rice, biscuits, idli, porridge"
 lab val bread bread
@@ -401,7 +408,6 @@ lab var vita_fruit_veg "6: Vitamin A rich fruits and vegetables"
 
 lab var fruit_veg "7: Other fruits and vegetables"
 
-
 foreach var of varlist water juice  broth milk  formula other_liq carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
 	lab val `var' no_yes
 }
@@ -428,15 +434,16 @@ tabulate sumfoodgrp, generate(fg)
 rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 ) ///
 	   (fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 )		
 
-* Any solid/semi-solid food consumption -  includes 8 food groups plus semisolid, fortified_food
+* Any solid/semi-solid food consumption -  includes 8 food groups plus semisolid
 * Does NOT include currently breastfeeding
 cap drop any_solid_semi_food
 egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
 replace any_solid_semi_food = 1 if any_solid_semi_food >1
+replace any_solid_semi_food = 1 if q199_1 >0 & q199_1 <22 // frequency of feeding
 tab any_solid_semi_food, m 
+cap drop any_solid_semi_food_x
 gen any_solid_semi_food_x = any_solid_semi_food*100
 graph bar (mean) any_solid_semi_food_x if agemos<24, over(agemos)
-
 
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
 * based on 
@@ -456,28 +463,19 @@ tab q198 // not clear where this comes from in questionnaire
 tab q199_1 
 tab q199_1 q198
 
-check official WHO definition
+// Official WHO definition
+// Introduction of solid, semi-solid or soft foods: Proportion of infants 6–8 months of age
+// who receive solid, semi-solid or soft foods
 
 cap drop intro_compfood
 gen intro_compfood = 0
 replace intro_compfood = 1 if any_solid_semi_food>=1 
-gen freq_solids=0 
-replace freq_solids = q199_1 if q199_1 >0 & q199_1 <22 
-tab  freq_solids intro_compfood, m 
-
-// replace intro_compfood = 1 if q199_1 >= 1 | any_solid_semi_food>=1 
+tab  q199_1 intro_compfood, m 
 
 replace intro_compfood =. if age_days<=183 | age_days>=243
 la var intro_compfood "Intro to complementary food 6-8 months of age"
 tab intro_compfood
 // this indicator is always 6-8 m 
-
-cap drop intro_compfood_x
-gen intro_compfood_x = intro_compfood *100
-graph bar (mean) intro_compfood_x if agemos<24, over(age_days)
-
-
-
 
 *EXCLUSIVE BREASTFEEDING
 *Exclusive breastfeeding is defined as breastfeeding with no other food or drink, not even water.
