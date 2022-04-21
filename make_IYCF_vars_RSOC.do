@@ -329,11 +329,11 @@ clonevar other_liq 		=q195a1_7_rec
 * Milk represents any milk consumption (animal milk, powder milk/formula and buttermilk/curd)
 clonevar milk = 		 q195a1_4_rec     //  animal milk, powder milk/formula and buttermilk/curd
 clonevar formula = 		 q195a1_3_rec
-clonevar yogurt	= 	     q195a1_6_rec     // BUTTER MILK/BEATEN CURD
+clonevar other_milk = 	 q195a1_6_rec     // BUTTER MILK/BEATEN CURD
 
 clonevar freq_milk = q196a1_4
 clonevar freq_formula = q196a1_3
-clonevar freq_yogurt = q196a1_6
+clonevar freq_other_milk = q196a1_6
 
 * If consumed (=1) & freq=0 then freq=1
 * If not consumed (=0) & freq>0 then freq=0
@@ -342,20 +342,24 @@ replace freq_milk = 0 if milk==0 & q196a1_4>0
 
 replace freq_formula = 1 if formula==1 & q196a1_3==0
 replace freq_formula = 0 if formula==0 & q196a1_3>0
-replace freq_yogurt = 1 if yogurt==1 & q196a1_6==0
-replace freq_yogurt = 0 if yogurt==0 & q196a1_6>0
+replace freq_other_milk = 1 if other_milk==1 & q196a1_6==0
+replace freq_other_milk = 0 if other_milk==0 & q196a1_6>0
+
+lab var water "water"
+lab var juice "juice"
+lab var broth "broth"
+lab var milk "milk"
+lab var formula "formula"
+lab var other_milk "buttermilk/curd"
+lab var other_liq "other_liq"
 
 tab freq_formula formula, m 
 tab freq_milk milk, m 
-tab freq_yogurt yogurt, m 
+tab freq_other_milk other_milk, m 
 
-//  animal milk, powder milk/formula and buttermilk/curd
+* Recode milk to include all animal milk, powder milk/formula and buttermilk/curd
 replace milk =1 if       formula==1  //  powder milk/formula 
-replace milk =1 if       yogurt ==1  //  buttermilk/curd
-
-
-
-
+replace milk =1 if       other_milk ==1  //  buttermilk/curd
 
 
 
@@ -371,20 +375,16 @@ clonevar leafy_green	=q197a1_6_rec
 clonevar vita_fruit		=q197a1_7_rec
 clonevar fruit_veg		=q197a1_8_rec
 clonevar organ			=q197a1_9_rec
-* clonevar poultry		=
+gen poultry =. 
 clonevar meat			=q197a1_10_rec  // includes poultry
 clonevar egg			=q197a1_11_rec
 clonevar fish			=q197a1_12_rec
 clonevar nut			=q197a1_13_rec  // ANY FOODS MADE FROM NUTS SUCH AS PEANUTS, CASHEW NUTS, ALMOND ETC.?
 *clonevar cheese		=q197a1_14_rec  included as yogurt above
 *gen fat = 0                            // no data collected on oil, ghee, butter consumption in RSOC
+gen cheese =. 
+gen fat =. 
 
-lab var water "water"
-lab var juice "juice"
-lab var broth "broth"
-lab var milk "milk"
-lab var formula "formula"
-lab var other_liq "other_liq"
 
 cap drop semisolid
 clonevar semisolid		=q197a1_15_rec  // any other solid, semi-solid or soft food
@@ -423,10 +423,8 @@ replace leg_nut = 1 if legume ==1 | nut ==1
 lab var leg_nut "2: Legumes and nuts"
 
 gen dairy = 0
-replace dairy = 1 if formula ==1 | yogurt==1 | milk==1
-lab var dairy "3: Dairy - milk, formula, yogurt, cheese"
- 
-
+replace dairy = 1 if formula ==1 | yogurt==1 | milk==1 | other_milk==1
+lab var dairy "3: Dairy - milk, buttermilk, formula, yogurt, cheese"
  
  
 gen all_meat = 0
@@ -445,7 +443,7 @@ foreach var of varlist water juice  broth milk formula other_liq carb leg_nut da
 	lab val `var' no_yes
 }
 * Test all liquids
-foreach var of varlist water juice  broth milk  formula other_liq {
+foreach var of varlist water juice  broth milk  formula other_milk other_liq {
 	tab `var' , m
 }
 * Test all 8 food groups 
@@ -491,9 +489,9 @@ graph bar (mean) any_solid_semi_food_x if agemos<24, over(agemos)
 * filter - yes / no
 * number of times consumed  semi-solids yesterday
 
-tab q197a1_15_rec
-tab q198 // not clear where this comes from in questionnaire
-tab q199_1 
+tab q197a1_15_rec // Did child eat any other semi-solid foods
+tab q198 		  // Did child eat any semi-solid in past 24 hours
+tab q199_1        // How many times did child eat  semi-solid in past 24 hours
 tab q199_1 q198
 
 // Official WHO definition
@@ -587,8 +585,8 @@ replace freq_solids =7 if q199_1 >=7 & q199_1 <50
 replace freq_solids=1 if freq_solids==. & sumfoodgrp >=1 & sumfoodgrp <=8
 tab sumfoodgrp freq_solids, m 
 
-* In RSOC there 10 cases of eating 0 food groups but consumed semi-solid 1+ times yesterday, - recode as 1 food group. 
-replace sumfoodgrp=1 if sumfoodgrp==0 & freq_solids>=1 & freq_solids<=7
+* In RSOC there 10 cases of eating 0 food groups but consumed semi-solid 1+ times yesterday, - recode as 0 food group. 
+replace freq_solids=0 if sumfoodgrp==0 & freq_solids>=1 & freq_solids<=7
 tab sumfoodgrp freq_solids, m 
 
 *Minimum Meal Frequency (MMF) Breastfeeding
@@ -606,47 +604,14 @@ tab mmf, m
 
 * Generates the total number of times a non-breastfed child received solid, semi-solid or soft foods or milk feeds*
 tab milk, m
-tab q196a1_4, m 
 
-// replace milk = 1 if      q196a1_3<=12 //  A5.14. POWDER MILK/FORMULA (NUMBER OF TIMES)
-// replace milk = 1 if      q196a1_4<=12 //  A5.14. COWS/BUFFALOS/GOATS/OTHER ANIMAL MILK (NUMBER OF TIMES)
-// replace milk = 1 if      q196a1_6<=12 //  A5.14. BUTTER MILK/BEATEN CURD (NUMBER OF TIMES)
+* Frequency of milk consumption in code above
+tab freq_milk
+tab freq_formula
+tab freq_other_milk
 
-* Frequency of Milk Feeds
-tab  q196a1_4 milk
-tab  q196a1_3 formula
-tab  q196a1_6 yogurt
-
-
-RECODE
-
-
-// q196a1_3 q196a1_4 q196a1_6
-cap drop freq_milk
-gen freq_milk = q196a1_4
-// replace freq_milk = 1 if milk==1 & q196a1_4==0
-replace freq_milk = 7 if q196a1_4 >=7 & q196a1_4 <98
-replace freq_milk = 0 if milk ==0  | q196a1_4 >=98 // includes missing
-tab q196a1_4 freq_milk , m 
-
-tab formula, m
-tab q196a1_3, m 
-gen freq_formula=q196a1_3
-// replace freq_formula = 1 if milk==1 & q196a1_3==0
-replace freq_formula = 7 if q196a1_3 >=7 & q196a1_3 <98
-replace freq_formula = 0 if formula ==0  | q196a1_3 >98 // includes missing
-tab q196a1_3 freq_formula , m 
-
-tab yogurt, m 
-tab q196a1_6, m
-gen freq_yogurt = q196a1_6
-// replace freq_yogurt = 1 if milk==1 & q196a1_6==0
-replace freq_yogurt = 7 if q196a1_6 >=7 & q196a1_6 <98
-replace freq_yogurt = 0 if yogurt ==0  | q196a1_6 >98 // includes missing
-tab q196a1_6 freq_yogurt , m 
-
-* Frequency of Milk and non solid semi-solid dairy feeds in children 0-23 months
-gen milk_feeds= freq_milk + freq_formula + freq_yogurt	
+* Frequency of milk and non solid semi-solid dairy feeds in children 0-23 months
+gen milk_feeds= freq_milk + freq_formula + freq_other_milk	
 replace milk_feeds = 7 if milk_feeds>=7 & milk_feeds !=.
 la val milk_feeds feeds
 replace milk_feeds =. if age_days<0 | age_days>=730
@@ -655,11 +620,13 @@ tab milk_feeds, m
 * all missings have been set to 0 to allow summation across row. 
 
 * OVERALL FREQUENCY FEEDS
-gen feeds= freq_milk + freq_formula + freq_solids	
+gen feeds= milk_feeds + freq_solids	
+* use milk feeds for all liquid milk feeds
+* use freq_solids for all semi-solid feeds
 replace feeds = 7 if feeds>=7 & feeds !=.
 la def feeds 7 "7+ feeds"
 la val feeds feeds
-la var feeds  "Frequency of solid, semi-solid, milk and formula feeds"
+la var feeds  "Frequency of solid, semi-solid, all milk feeds"
 tab feeds, m 	
 * please ensure there are no missings(.) and all missings have been set to 0 in the age group to allow summation across row. 
 * STATA will mark feeds as missings if any of them are missing.
@@ -680,7 +647,7 @@ replace min_milk_freq_nbf =1 if milk_feeds >=2 & currently_bf!=1
 replace min_milk_freq_nbf =. if age_days<=183 | age_days>=730
 la var min_milk_freq_nbf "Minimum Milk Frequency for Non-Breastfed Child"
 tab min_milk_freq_nbf, m 
-* graph bar (mean) min_milk_freq_nbf currently_bf if agemons < 24, over(agemons) 
+// graph bar (mean) min_milk_freq_nbf currently_bf if agemos < 24, over(agemos) 
 
 
 *MMF among all children 6-23 months
@@ -696,13 +663,15 @@ tab mmf_all, m
 * Variable fed_yogurt refers to number of times a child received yogurt*
 
 * For each one please remember to set don't know to zero
-* for NFHS (DHS) replace fed_yogurt=0 if fed_yogurt>7  - In this case don't knows has been assigned the value 8
+* for NFHS (DHS) replace fed_yogurt=0 if fed_yogurt>7  - don't know=8
 
 * Mixed milk feeding 0-5M
 * Mixed milk feeding (<6 months): Percentage of infants 0–5 months of age who 
 * were fed formula and/or animal milk in addition to breast milk during the previous day
 gen mixed_milk = 0 
-replace mixed_milk=1 if (currently_bf==1 & formula==1) | (currently_bf==1 & milk==1) 
+replace mixed_milk=1 if (currently_bf==1 & milk==1)
+replace mixed_milk=1 if (currently_bf==1 & formula==1)
+replace mixed_milk=1 if (currently_bf==1 & other_milk==1)
 replace mixed_milk =. if age_days<0 | age_days>=183 
 tab mixed_milk, m 
 
@@ -750,25 +719,19 @@ replace birth_weight = birth_weight/1000 if birth_weight != 9999
 
 
 egen c_birth_wt = cut(birth_weight), at(0.25,1,2.5,9001,9997,9999,10000) icodes
-label def c_birth_wt 0 "Very low" 1 "Low" 2 "Average or more" 3 "Not weighed" 4 "Don't know" 5 "Missing"
+label def c_birth_wt 0 "Very low <1kg" 1 "Low <2.5kg" 2 "Average or more >=2.5kg" 3 "Not weighed" 4 "Don't know" 5 "Missing"
 label val c_birth_wt c_birth_wt
 label var c_birth_wt "Birth weight category"
+tab c_birth_wt, m 
 
 gen lbw=. 
 replace lbw = 1 if birth_weight<2.5
-replace lbw=0 if birth_weight>=2.5 & birth_weight<9
+replace lbw = 0 if birth_weight>=2.5 & birth_weight<9
 tab lbw,m
 
+up to here
 
-/*
-recode c_birth_wt 2 = 0 0 1 = 2 3=1 4 = 3 5=4, gen(lbw)
-label def lbw 0 "0. Average or more" 1 "1. Not weighed at birth" 2 "2. Low" 3 "3. Don't know" 4 "4. Missing", replace
-label val lbw lbw
-label var lbw "Low birth weight"
-*/
-
-
-* early ANC  <=3 months first trimester
+* early ANC <=3 months first trimester
 tab q144
 tab q145_1
 gen earlyanc = 0
