@@ -101,7 +101,7 @@ tab birthmonth, m
 tab birthyear, m
 * U3 Children with birth dates -   34,217
 
-graph bar (count) one, over(agemos)
+// graph bar (count) one, over(agemos)
 
 * Ever breastfed (children born in past 24 months)
 tab q184, m 
@@ -137,8 +137,8 @@ la var eibf_timing "Timing of start of breastfeeding (in hours)"
 la def eibf_timing 48 "48 hours or more"
 la val eibf_timing eibf_timing
 tab eibf_timing, m 
-scatter  q185a1_2 eibf_timing
-scatter  q185a1_3 eibf_timing
+// scatter  q185a1_2 eibf_timing
+// scatter  q185a1_3 eibf_timing
 
 * Exclusively breastfed for the first two days after birth
 * Percentage of children born in the last 24 months who were fed exclusively with breast milk for the first two days after birth
@@ -237,7 +237,6 @@ tab colostrum q186, m
 gen bottle =. 
 
 
-
 /*
 variable name       value label      variable label
 --------------------------------------------------------------------------------------------
@@ -306,10 +305,6 @@ q200                           A6.1. Do you have a Mother Child Protection (MCP)
 * 	no and don't know = 0
 * following global guidance on IYCF analysis, this allows for maximium children to be included in indicator 
 
-
-
-
-
 * Liquids in past 24 hours
 foreach var of varlist q195a1_1 - q195a1_7 {
 	recode `var' (1=1) (2 8 98 .=0) , gen(`var'_rec)
@@ -326,22 +321,44 @@ foreach var of varlist q197a1_1 -  q197a1_15 {
 * LIQUIDS
 clonevar water			=q195a1_1_rec
 tab water q195a1_1_rec
+
 clonevar juice			=q195a1_5_rec
 clonevar broth			=q195a1_2_rec
-clonevar milk			=q195a1_4_rec
-* frequency of milk feeds
-
-ERROR
-
-replace milk = 1 if      q196a1_3>=1 & q196a1_3<=12 //  A5.14. POWDER MILK/FORMULA (NUMBER OF TIMES)
-replace milk = 1 if      q196a1_4==1 & q196a1_4<=12 //  A5.14. COWS/BUFFALOS/GOATS/OTHER ANIMAL MILK (NUMBER OF TIMES)
-replace milk = 1 if      q196a1_6==1 & q196a1_6<=12 //  A5.14. BUTTER MILK/BEATEN CURD (NUMBER OF TIMES)
-tab  q196a1_3 milk, m
-tab  q196a1_4 milk, m
-tab  q196a1_6 milk, m
-
-clonevar formula 		=q195a1_3_rec
 clonevar other_liq 		=q195a1_7_rec
+
+* Milk represents any milk consumption (animal milk, powder milk/formula and buttermilk/curd)
+clonevar milk = 		 q195a1_4_rec     //  animal milk, powder milk/formula and buttermilk/curd
+clonevar formula = 		 q195a1_3_rec
+clonevar yogurt	= 	     q195a1_6_rec     // BUTTER MILK/BEATEN CURD
+
+clonevar freq_milk = q196a1_4
+clonevar freq_formula = q196a1_3
+clonevar freq_yogurt = q196a1_6
+
+* If consumed (=1) & freq=0 then freq=1
+* If not consumed (=0) & freq>0 then freq=0
+replace freq_milk = 1 if milk==1 & q196a1_4==0
+replace freq_milk = 0 if milk==0 & q196a1_4>0
+
+replace freq_formula = 1 if formula==1 & q196a1_3==0
+replace freq_formula = 0 if formula==0 & q196a1_3>0
+replace freq_yogurt = 1 if yogurt==1 & q196a1_6==0
+replace freq_yogurt = 0 if yogurt==0 & q196a1_6>0
+
+tab freq_formula formula, m 
+tab freq_milk milk, m 
+tab freq_yogurt yogurt, m 
+
+//  animal milk, powder milk/formula and buttermilk/curd
+replace milk =1 if       formula==1  //  powder milk/formula 
+replace milk =1 if       yogurt ==1  //  buttermilk/curd
+
+
+
+
+
+
+
 
 * SOLIDS SEMISOLIDS
 clonevar yogurt			=q197a1_14_rec // any cheese, yogurt or other food made from milk?
@@ -360,7 +377,7 @@ clonevar egg			=q197a1_11_rec
 clonevar fish			=q197a1_12_rec
 clonevar nut			=q197a1_13_rec  // ANY FOODS MADE FROM NUTS SUCH AS PEANUTS, CASHEW NUTS, ALMOND ETC.?
 *clonevar cheese		=q197a1_14_rec  included as yogurt above
-*gen fat			= 0              // no data collected on oil, ghee, butter consumption in RSOC
+*gen fat = 0                            // no data collected on oil, ghee, butter consumption in RSOC
 
 lab var water "water"
 lab var juice "juice"
@@ -408,6 +425,9 @@ lab var leg_nut "2: Legumes and nuts"
 gen dairy = 0
 replace dairy = 1 if formula ==1 | yogurt==1 | milk==1
 lab var dairy "3: Dairy - milk, formula, yogurt, cheese"
+ 
+
+ 
  
 gen all_meat = 0
 replace all_meat = 1 if organ ==1 | meat ==1 | fish ==1  
@@ -588,16 +608,31 @@ tab mmf, m
 tab milk, m
 tab q196a1_4, m 
 
+// replace milk = 1 if      q196a1_3<=12 //  A5.14. POWDER MILK/FORMULA (NUMBER OF TIMES)
+// replace milk = 1 if      q196a1_4<=12 //  A5.14. COWS/BUFFALOS/GOATS/OTHER ANIMAL MILK (NUMBER OF TIMES)
+// replace milk = 1 if      q196a1_6<=12 //  A5.14. BUTTER MILK/BEATEN CURD (NUMBER OF TIMES)
+
+* Frequency of Milk Feeds
+tab  q196a1_4 milk
+tab  q196a1_3 formula
+tab  q196a1_6 yogurt
+
+
+RECODE
+
+
 // q196a1_3 q196a1_4 q196a1_6
 cap drop freq_milk
 gen freq_milk = q196a1_4
-replace freq_milk = 7 if q196a1_4 >=7 & q196a1_4 <50
+// replace freq_milk = 1 if milk==1 & q196a1_4==0
+replace freq_milk = 7 if q196a1_4 >=7 & q196a1_4 <98
 replace freq_milk = 0 if milk ==0  | q196a1_4 >=98 // includes missing
 tab q196a1_4 freq_milk , m 
 
 tab formula, m
 tab q196a1_3, m 
 gen freq_formula=q196a1_3
+// replace freq_formula = 1 if milk==1 & q196a1_3==0
 replace freq_formula = 7 if q196a1_3 >=7 & q196a1_3 <98
 replace freq_formula = 0 if formula ==0  | q196a1_3 >98 // includes missing
 tab q196a1_3 freq_formula , m 
@@ -605,6 +640,7 @@ tab q196a1_3 freq_formula , m
 tab yogurt, m 
 tab q196a1_6, m
 gen freq_yogurt = q196a1_6
+// replace freq_yogurt = 1 if milk==1 & q196a1_6==0
 replace freq_yogurt = 7 if q196a1_6 >=7 & q196a1_6 <98
 replace freq_yogurt = 0 if yogurt ==0  | q196a1_6 >98 // includes missing
 tab q196a1_6 freq_yogurt , m 
