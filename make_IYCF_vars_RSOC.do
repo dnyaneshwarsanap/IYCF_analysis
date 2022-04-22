@@ -17,11 +17,10 @@ tab q1a
 
 // cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
 // use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\EMW_INDIA_RSOC.dta"
-
-
-* make IYCF vars.do
-gen one=1
-lab define no_yes 0 "No" 1 "Yes"
+ 
+gen psu = q5_1
+// scatter q1a q5_1
+gen hh_num q11_1
 
 * identify number of living children under five
 * A2.1 number of live births
@@ -494,7 +493,7 @@ tabulate sumfoodgrp, generate(fg)
 rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 ) ///
 	   (fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 )		
 
-* Any solid/semi-solid food consumption -  includes 8 food groups plus semisolid
+* Any solid/semi-solid food consumption -  includes all food groups plus semisolid
 * Does NOT include currently breastfeeding
 cap drop any_solid_semi_food
 egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
@@ -504,6 +503,7 @@ tab any_solid_semi_food, m
 cap drop any_solid_semi_food_x
 gen any_solid_semi_food_x = any_solid_semi_food*100
 graph bar (mean) any_solid_semi_food_x if agemos<24, over(agemos)
+cap drop any_solid_semi_food_x
 
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
 * based on 
@@ -976,7 +976,7 @@ keep one int_date age_days agemos ///
 	freq_formula freq_other_milk milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex nat_wgt regional_wgt state_wgt round  
+	sex national_wgt regional_wgt state_wgt round  
 
 
 * Save data with name of survey
