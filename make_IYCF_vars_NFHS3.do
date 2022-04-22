@@ -31,6 +31,9 @@ gen one=1
 
 lab define no_yes 0 "No" 1 "Yes"
 
+gen psu = v001
+gen hh_num v002
+
 *tab result
 tab b5, m
 * Complete N living children 48,679  UPDATED
@@ -405,7 +408,6 @@ clonevar semisolid                             = v414s_rec //other solid or semi
 lab var bread "bread, noodles, other grains"  // any bread, roti, chapati, rice, noodles, biscuits, idli, porridge 
 
 
-
 *Define eight food groups following WHO recommended IYCF indicators
 gen carb = 0
 replace carb = 1 if bread ==1 | potato==1 | gruel ==1 | fortified_food ==1
@@ -435,8 +437,6 @@ lab var fruit_veg "7: Other fruits and vegetables"
 replace fruit_veg = 0 if fruit_veg==0 | fruit_veg ==9
 tab fruit_veg, m
 
-
-
 foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg fruit_veg currently_bf {
 	lab val `var' no_yes
 }
@@ -465,8 +465,13 @@ rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 fg9) ///
 cap drop any_solid_semi_food
 egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
 replace any_solid_semi_food = 1 if any_solid_semi_food >1
+tab m39, m
+replace any_solid_semi_food = 1 if m39 >0 & m39 <=7 // frequency of feeding
 tab any_solid_semi_food, m 	   
-	   
+cap drop any_solid_semi_food_x
+gen any_solid_semi_food_x = any_solid_semi_food*100
+graph bar (mean) any_solid_semi_food_x if agemos<24, over(agemos)
+cap drop any_solid_semi_food_x
 
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
 * based on v414s: gave child solid, semi solid, soft foods yesterday 
@@ -474,12 +479,11 @@ tab any_solid_semi_food, m
 tab sumfoodgrp v414s, m 
 cap drop intro_compfood
 gen intro_compfood = 0
-replace intro_compfood =. if v414s == 9
-replace intro_compfood = 1 if v414s == 1 | any_solid_semi_food==1 
-replace intro_compfood =. if age_days<=183 | age_days>=243
+replace intro_compfood = . if v414s == 9
+replace intro_compfood = 1 if v414s == 1    | any_solid_semi_food==1 
+replace intro_compfood = . if age_days<=183 | age_days>=243
 la var intro_compfood "Intro to complementary food 6-8 months of age"
 tab intro_compfood
-
 
 *EXCLUSIVE BREASTFEEDING
 *Exclusive breastfeeding is defined as breastfeeding with no other food or drink, not even water.
@@ -495,7 +499,7 @@ replace ebf =1 if currently_bf ==1
 replace ebf =0 if water      ==1 | ///
                   juice      ==1 | ///		
                   milk       ==1 | ///
-				  tea_coff   ==1 | ///
+				  tea        ==1 | ///
                   formula    ==1 | ///
                   other_liq  ==1 | ///
                   any_solid_semi_food ==1
@@ -522,10 +526,7 @@ replace age_cbf=. if currently_bf !=1
 la var age_cbf "Median age of continued breasfeeding in months"
 sum age_cbf [aw=v005], d
 
-
-
 *Continued breastfeeding / normally presented from 12-15 months or 18-23 months
-
 la list m4
 //  95 still breastfeeding
 recode m4 (95=1)(0/94 96/99=0)(missing=.), gen(cont_bf)
@@ -533,7 +534,6 @@ tab m4 cont_bf , m
 
 gen cont_bf_12_23 = cont_bf if age_days>335 &age_days<730 
 tab cont_bf_12_23, m
-
 
 
 *Minimum Dietary Diversity- code for new indicator definition 
@@ -544,8 +544,6 @@ replace mdd=1 if sumfoodgrp >=5
 replace mdd=. if age_days<=183 | age_days>=730
 la var mdd "Minimum Dietary Diversity (2020)"
 tab mdd
-
-
 
 *Minimum Meal Frequency (MMF) 
 *For currently breastfeeding children: MMF is yes if:
@@ -616,8 +614,6 @@ replace mmf_all_bf =. if currently_bf!=1
 replace mad_all_bf=. if age_days<=183 | age_days>=730 
 tab mad_all_bf, m 
 
-*--------------------------------------------------------------------
-
 
 *Egg and/or Flesh food consumption - % of children 6-23months of age who consumed egg and/or flesh food during the previous day*
 gen egg_meat=0
@@ -641,20 +637,37 @@ gen unhealthy_food = .
 * Need clear definition of unhealthy foods - from WHO guidance. 
 * Low nutrient density liquids
 * juice broth other_liq
-
 *ABOVE VARIABLES ARE NOT POSSIBLE TO MAKE BASED ON THE AVAILABLE NFHS 3 DATA
-
-
 
 * INCLUDE ALL SOCIO-DEMOGRAPHIC data		
 
-// CORRECT THESE VARIABLES BELOW
-		
+* Birth weight
+tab m19, m 
+//         9996 not weighed at birth
+//         9998 don't know
+gen birth_weight = m19
+replace birth_weight = 9999 if birth_weight >9995
+label def bw 9999 "Missing", replace
+label val birth_weight bw
+label var birth_weight "Birth weight"
+replace birth_weight = birth_weight/1000 if birth_weight != 9999
+kdensity birth_weight
+
+recode birth_weight (0/0.249=6)(0.25/1.499=1)(1.5/2.499=2)(2.5/3.999=3)(4/10.999=4)(11/10000=7), gen(cat_birth_wt)
+replace cat_birth_wt = 5 if m19==9996
+replace cat_birth_wt = 6 if m19==9998
+// egen c_birth_wt = cut(birth_weight), at(0.25,1.5,2.5,4,9001,9997,9999,10000) icodes
+label def cat_birth_wt 1 "Very low <1.5kg" 2 "Low <2.5kg" 3 "Average" 4 "High >4kg" 5 "Not weighed" 6 "Don't know" 7 "Missing"
+label val cat_birth_wt cat_birth_wt
+label var cat_birth_wt "Birth weight category"
+tab cat_birth_wt, m 
+
 * LBW  //low birth weight
+cap drop lbw
 gen lbw = . 
 replace lbw = 1 if m19 <=2500
-replace lbw = 0 if m19 >2500 & m19<8000
-tab lbw,m
+replace lbw = 0 if m19 >2500 & m19 <8001
+tab m19 lbw, m
 
 
 * early ANC  <=3 months first trimester (ANC checkup within first 3 months of pregnancy)
@@ -683,6 +696,7 @@ tab v106, m
 tab v107, m
 tab v107 v106, m
 
+* code NFHS data into number of school years completed
 gen mum_educ_years=.
 replace mum_educ_years = 0 if v106==0
 replace mum_educ_years = v107 if v106==1
@@ -705,9 +719,10 @@ tab v155 mum_educ, col nofreq
 
 
 
-
 * caste
-gen caste = 0 if v130!=.                             //caste =0 if religion is missing
+tab v130 s46, m  // caste and religion
+cap drop caste
+gen caste=0 
 replace caste = 1 if s46 ==1 
 replace caste = 2 if s46 ==2 
 replace caste = 3 if s46 ==3
@@ -716,6 +731,7 @@ replace caste = 5 if s46 ==. | s46==9 | s46 ==8      // missing values are not a
 lab define caste 1 "Scheduled caste" 2"Scheduled tribe" 3"OBC"  4"Others" 5 "Missing/don't know" 
 lab val caste caste
 lab var caste "Caste"
+tab caste s46, m 
 tab caste, m 
 
 
@@ -734,6 +750,7 @@ gen wi = v190
 lab define wi 1"poorest" 2"poorer"	3 "middle" 4 "richer" 5 "richest"
 lab val wi wi
 tab wi,m	
+gen wi_s=.
 	
 * Survey Weights
 gen national_wgt = v005    //   national women's weight (6 decimals)
@@ -863,20 +880,33 @@ tab state, m
 
 gen round=1
 
-keep one int_date age_days agemos ///
-	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
-	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
-	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
-	prelacteal_janamghuti prelacteal_other bottle water juice milk ///
-	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
-	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
-	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
-	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
-	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
-	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
-	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
-	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex nat_wgt state_wgt round  
+// keep one int_date age_days agemos ///
+// 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
+// 	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
+// 	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
+// 	prelacteal_janamghuti prelacteal_other bottle water juice milk ///
+// 	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
+// 	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
+// 	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
+// 	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
+// 	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
+// 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
+// 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
+// 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
+// 	sex nat_wgt state_wgt round  
+
+keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos evbf eibf ei
+> bf_timing ebf2d ebf3d currently_bf prelacteal_milk prelacteal_water prelacteal_sugarwater 
+> prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula prelacteal_
+> tea prelacteal_honey prelacteal_janamghuti prelacteal_other prelacteal_otherthanmilk prela
+> cteal_milk_form bottle water juice tea other_liq milk formula freq_milk freq_formula freq_
+> other_milk fortified_food gruel poultry meat legume nuts bread potato vita_veg leafy_green
+>  vita_fruit fruit_veg organ fish leg_nut yogurt semisolid carb dairy all_meat vita_fruit_v
+> eg agegroup sumfoodgrp fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 any_solid_semi_food intro_compf
+> ood ebf age_ebf age_cbf cont_bf cont_bf_12_23 mdd freq_solids mmf_bf mmf_all_bf mad_all_bf
+>  egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus
+>  csection mum_educ_years mum_educ caste rururb wi wi_s national_wgt regional_wgt state_wgt
+>  sex diar fever ari state round
 
 	
 * Save data with name of survey
