@@ -230,9 +230,7 @@ tab m55n
 clonevar prelacteal_other = m55x
 replace prelacteal_other = . if m55x == 9
 
-local prelacteal_feeds = "prelacteal_milk prelacteal_water prelacteal_sugarwater ///
-	prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula ///
-	prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other"
+local prelacteal_feeds = "prelacteal_milk prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other"
 foreach var in `prelacteal_feeds' { 
 	replace `var' = . if  age_days>=730
 }
@@ -240,9 +238,7 @@ foreach var in `prelacteal_feeds' {
 *Prelacteal other than milk
 cap drop prelacteal_otherthanmilk
 gen prelacteal_otherthanmilk =0
-local prelacteal_feeds = "prelacteal_water prelacteal_sugarwater ///
-	prelacteal_gripewater prelacteal_saltwater prelacteal_juice  ///
-	prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other"
+local prelacteal_feeds = "prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other"
 foreach var in `prelacteal' { 
 	replace prelacteal_otherthanmilk = 1 if  `var'==1
 }
@@ -253,7 +249,6 @@ gen prelacteal_milk_form=0
 replace prelacteal_milk_form =1 if prelacteal_milk==1
 replace prelacteal_milk_form =1 if prelacteal_formula==1
 tab prelacteal_milk_form,m
-
 
 tab m55z prelacteal_otherthanmilk
 * m55z does faithfully represent children who were given nothing in first 3 days. 
@@ -267,23 +262,14 @@ replace bottle = . if m38>2       //m38 - did [Name] drink anything from bottle 
 replace bottle = . if age_days>=730
 tab m38 bottle, m
 
+tab m38 v415, m  // v415 does not clearly identify as bottle feeding last 24 hours
 
-tab v410a , m
-//  gave child |
-//      tea or |
-//      coffee |      Freq.     Percent        Cum.
-// ------------+-----------------------------------
-//           0 |     23,937       60.82       60.82
-//           1 |     15,259       38.77       99.60
-//           8 |         94        0.24       99.83
-//           9 |         65        0.17      100.00
-// ------------+-----------------------------------
-//       Total |     39,355      100.00
+tab v410a , m  //  gave child tea or coffee 
+
 
 
 /*
 Var Name    Label
----------------------------------------------------------------------------
 v409		gave child plain water        
 v409a	    gave child sugar water     -na      
 v410		gave child juice 
@@ -320,8 +306,8 @@ v414s 		gave child other solid or semi-solid food
 v414t 		gave child cs foods        -na  // MISSING
 v414u		gave child cs foods        -na  // MISSING
 v415		drank from bottle with nipple
---------------------------------------------------------------------------
 */
+
 ********************************************************************************
 * Food groups (liquids and solids)
 ********************************************************************************
@@ -331,12 +317,10 @@ v415		drank from bottle with nipple
 * 	no and don't know = 0
 * following global guidance on IYCF analysis, this allows for maximium children to be included in indicator 
 
-
 foreach var of varlist v409- v414u {
-	recode `var' (1=1) (2 8 9 .=0) , gen(`var'_rec)
+	recode `var' (1=1) (2 8 9 . =0) , gen(`var'_rec)
 	lab val `var'_rec no_yes
 }
-
 
 * LIQUIDS
 clonevar water					=v409_rec
