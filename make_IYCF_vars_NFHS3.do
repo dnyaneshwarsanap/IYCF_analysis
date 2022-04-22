@@ -325,23 +325,32 @@ foreach var of varlist v409- v414u {
 * LIQUIDS
 clonevar water					=v409_rec
 clonevar juice			        =v410_rec
-clonevar tea_coff			    =v410a_rec 
-clonevar milk			        =v411_rec
-replace  milk = 1 if v412_rec ==1 // fresh milk 
-* fresh milk var was not used. 
-
-clonevar formula 		        =v411a_rec
+clonevar tea			        =v410a_rec 
 clonevar other_liq 		        =v413_rec
 
-*-------------------------------------
-* LIQUIDS from CNNS
-// clonevar water			=q310a_rec
-// clonevar juice			=q310b_rec
-// clonevar broth			=q310c_rec
-// clonevar milk			=q310d1_rec
-// clonevar formula 		=q310e1_rec
-// clonevar other_liq 		=q310f_rec
-*-------------------------------------
+* Milk represents any milk consumption (animal milk, powder milk/formula and buttermilk/curd)
+clonevar milk			        =v411_rec  // tinned/powder or fresh milk
+clonevar formula 		        =v411a_rec
+
+* No frequency of milks, formula, other milks questions were asked. 
+gen freq_milk = .
+gen freq_formula = .
+gen freq_other_milk = .
+
+replace  milk = 1 if v412_rec ==1 // Add formula
+* no fresh milk var was used. 
+
+lab var water "water"
+lab var juice "juice"
+lab var tea "tea coffee"
+lab var milk "milk"
+lab var formula "formula"
+lab var other_liq "other_liq"
+
+tab v412a 		 // from q480 Any commercially fortified baby food such as Cerelac or Farex?
+tab v412b 		 // from q480 Any porridge or gruel?
+
+
 
 * SOLIDS SEMISOLIDS
 clonevar fortified_food                         =v412a_rec // from q480 Any commercially fortified baby food such as Cerelac or Farex?
@@ -349,11 +358,10 @@ clonevar gruel        							=v412b_rec // other porridge/gruel
 // These belong in solid/semi-solid list and will be added to bread, rice other grains
 clonevar poultry                               = v414a_rec //chicken_duck_other birds
 clonevar meat                                  = v414b_rec // gave child other meat
-replace meat =1 if 								 v414h_rec==1 // (beef, pork-na
+replace  meat =1 if 							 v414h_rec==1 // (beef, pork-na
 clonevar legume                                = v414c_rec //foods_of_beans_peas_lentils
 clonevar nuts                                  = v414d_rec
 clonevar bread                                 = v414e_rec  //food_of_bread_noodles_other_grains 
-replace bread =1 if  gruel ==1
 clonevar potato                                = v414f_rec  //potatoes_cassava_other tubers 
 clonevar egg                                   = v414g_rec
 clonevar vita_veg                              = v414i_rec // pumpkin_carrots_squash (yellow or orange inside 
@@ -364,6 +372,9 @@ clonevar organ              		           = v414m_rec //liver, heart, other organ
 clonevar fish                                  = v414n_rec //fresh or dried fish or shellfish
 clonevar leg_nut							   = v414o_rec //food made from beans, peas, lentils, nuts		
 * Double check leg_nut - here the eating of nuts is asked twice in v414o and v414d both
+tab v414d_rec, m
+tab v414o_rec, m
+tab leg_nut v414o_rec
 replace leg_nut = 1 if nuts ==1
 clonevar yogurt                                = v414p_rec //cheese, yogurt , other milk products
 * yogurt and cheese coded together
@@ -391,14 +402,14 @@ clonevar semisolid                             = v414s_rec //other solid or semi
 // clonevar fat			    =q310v_rec  // oil, ghee, butter    -----------------------------------> this is not a food groups
 // clonevar semisolid		=q310w_rec  // any other solid, semi-solid or soft food		
 
-
-lab var bread "bread, noodles, other grains"  // includes cereals, gruel, porridge 
+lab var bread "bread, noodles, other grains"  // any bread, roti, chapati, rice, noodles, biscuits, idli, porridge 
 
 
 
 *Define eight food groups following WHO recommended IYCF indicators
 gen carb = 0
-replace carb = 1 if bread ==1 | potato==1 
+replace carb = 1 if bread ==1 | potato==1 | gruel ==1 | fortified_food ==1
+* Carb includes gruel and fortified food
 lab var carb "1: Bread, rice, grains, roots and tubers"
 
 tab carb, m 
