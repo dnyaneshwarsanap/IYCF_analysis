@@ -4,6 +4,11 @@
 
 * Code Cotributors - Robert, Shekhar, Dnyaneshwar 
 
+check currently BF
+ add ebf3d to all dbs. 
+carb = fortified_food - double check WHO guidance
+Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
+
 version 16 
 
 cd "C:/Temp"
@@ -806,10 +811,7 @@ gen wi = v190
 tab wi,m	
 		
 		
-* Survey Weights
-gen national_wgt =v005     //national women's sample weight (6 decimals)
-gen state_wgt =sv005    // 	state women's sample weight (6 decimals)
-	
+
 *sex of child
 gen sex=b4
 tab sex b4
@@ -860,7 +862,15 @@ gen state = v101
 *state_nfhs4 and state are same
 		
 
-* In NFHS use national weights for region
+
+* Survey Weights
+gen national_wgt = v005 
+* Regional weights 
+gen regional_wgt = sv005 
+
+gen state_wgt =sv005 
+
+
 
 
 cap la drop state_name
