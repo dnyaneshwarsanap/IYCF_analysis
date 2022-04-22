@@ -12,6 +12,9 @@ version 16
 cd "C:/Temp"
 use "C:\Temp\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
 
+* 29 states included 
+tab q1a
+
 // cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
 // use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\EMW_INDIA_RSOC.dta"
 
@@ -92,6 +95,32 @@ replace age_days =. if age_days<0 | age_days>1825
 
 gen agemos = floor(age_days/30.42)
 tab agemos, m 
+
+cap drop ageyears
+gen ageyears = floor(agemos / 12)
+tab q1a ageyears
+
+* IYCF data only collected from following states
+// Jammu & Kashmir
+// Himachal Pradesh
+// Punjab
+// Uttarakhand
+// Haryana
+// Delhi
+// Rajasthan
+// Uttar Pradesh
+// Sikkim
+// Jharkhand
+// Chhattisgarh
+// Madhya Pradesh
+// Gujarat
+// Maharashtra
+// Andhra Pradesh
+// Karnataka
+// Goa
+// Kerala
+// Tamil Nadu
+
 
 * IYCF data collected only for children under 3 years of age
 drop if age_days> 1095  // 3 years = 1096 days 
@@ -727,10 +756,8 @@ tab cat_birth_wt, m
 
 gen lbw=. 
 replace lbw = 1 if birth_weight<2.5
-replace lbw = 0 if birth_weight>=2.5 & birth_weight<9
+replace lbw = 0 if birth_weight>=2.5 & birth_weight<10.9
 tab lbw,m
-
-up to here
 
 * early ANC <=3 months first trimester
 tab q144
@@ -738,14 +765,14 @@ tab q145_1
 gen earlyanc = 0
 replace earlyanc =1 if q145_1 <=3
 replace earlyanc =. if age_days>=730
-tab q145_1 earlyanc
+tab q145_1 earlyanc, m
 
 * ANC 4+ 
 tab q146_1
 gen anc4plus = 0
 replace anc4plus = 1 if q146_1 >=4 & q146_1 <=9
 replace anc4plus =. if age_days>=730
-tab q146_1 anc4plus
+tab q146_1 anc4plus, m
 
 * C-section
 tab q163
@@ -760,7 +787,7 @@ la def mum_educ 1 "No Education" 2 "<5 years completed" 3 "5-9 years completed" 
 	4 "10-11 years completed" 5 "12+ years completed" 99 "Missing"
 label val mum_educ mum_educ
 label var mum_educ "Mother's education"
-tab  mum_educ q113_1
+tab   q113_1 mum_educ
 
 
 
@@ -771,7 +798,7 @@ replace caste = 6 if q45 ==.
 lab define caste 1 "Scheduled caste" 2"Scheduled tribe" 3"OBC"  4"Others" 5 "Missing/don't know" 
 label val caste caste
 label var caste "Caste"
-tab q45 caste
+tab q45 caste, m
 
 * Residence Rural Urban
 *Residence
@@ -808,6 +835,7 @@ replace sex = q129_3 if q135_1==3
 replace sex = q129_4 if q135_1==4
 replace sex = q129_5 if q135_1==5
 replace sex = q129_6 if q135_1==6
+
 // q129_1 q129_2 q129_3 q129_4 q129_5 q129_6
 la val sex q280
 tab sex, m 
@@ -815,9 +843,10 @@ tab sex q280, m  // q280 is only for section B2.0 vaccination /child ilness
 
 * Survey Weights
 gen national_wgt = N_WT 
+* Regional weights 
+gen regional_wgt = S_WT
+
 gen state_wgt =S_WT
-
-
 
 
 * Child Illness
@@ -848,6 +877,9 @@ tab ari, m
 
 * Include state, district and other identification variables
 clonevar state_rsoc = q1a 
+tab q1a
+* Only 19 states. 
+
 gen state = .
 // 1 "A&N islands"
 replace state =2  if state_rsoc ==28
