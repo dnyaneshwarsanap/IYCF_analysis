@@ -1,11 +1,18 @@
-* make_IYCF_vars_NFHS3.do - NAME OF FILE
-* Make IYCF Variables for NFHS3 data - PURPOSE OF FILE
-* USING Updated WHO IYCF guidelines 2020 and recommended IYCF code from UNICEF NY
+* NAME OF FILE
+* 	make_IYCF_vars_NFHS3.do 
+* PURPOSE OF FILE
+* 	Make IYCF Variables for NFHS3 data 
+* REFERENCE USED
+* 	USING Updated WHO IYCF guidelines 2020 and recommended IYCF code from UNICEF NY
 
+clear
 version 16
 
 ERROR - fix all varnames - not  RECODE of |v413 (gave child other liquid) 
-
+check currently BF
+add ebf3d to all dbs. 
+carb = fortified_food - double check WHO guidance
+Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
 
 * KEEP COLLEAGUES FOLDER REFERENCES - Comment out when not used. 
 // cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
@@ -15,14 +22,11 @@ cd "C:/Temp"
 //use "C:\Users\Rojohnston\OneDrive - UNICEF\ECM-Nut OP4 Nutrition Governance, Partnerships, resources M&E\IIT-B\IYCF\NFHS3\IAKR52FL.dta", clear
 use "C:\TEMP\IAKR52FL.dta"
 
-*------------------------------
-
 gen one=1
 
 lab define no_yes 0 "No" 1 "Yes"
 
 *tab result
-*Filter the data of died children
 tab b5, m
 * Complete N living children 48,679  UPDATED
 * remove all children who died (died children = 2876)
@@ -38,7 +42,6 @@ drop if b5 !=1
 * 12 - 23 M (335 - 730)
 * Underfive (   < 1825)
 
-
 * Age in days
 gen int_date = mdy(v006 , v016 , v007)
 format int_date %td
@@ -51,6 +54,7 @@ tab v007   // v007 interview year
 tab b1, m  //b1 is birth month
 tab b2, m  //b2 is birthyear
 tab hw16, m //hw16 is Day of birth
+
 // other than 31 dates of birth
 // inconsistent |         34        0.07       68.97
 //   don't know |     11,036       21.41       90.38
@@ -741,6 +745,7 @@ tab wi,m
 	
 * Survey Weights
 gen national_wgt = v005     //national women's weight (6 decimals)
+gen regional_wgt =v005s    // 	state women's weight (6 decimals)
 gen state_wgt =v005s    // 	state women's weight (6 decimals)
 	
 *sex of child
