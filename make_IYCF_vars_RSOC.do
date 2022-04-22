@@ -822,6 +822,7 @@ clonevar wi = wealth_index
 //            5 Highest
 //also available, wealth index factor score
 tab wi
+gen wi_s=.
 
 
 
@@ -960,11 +961,6 @@ la val state state_name
 tab state, m 
 
 
-* ERROR RSOC region is wrong
-replace region =. if region==0
-tab state region
-
-
 gen round =2
 
 keep one int_date age_days agemos ///
@@ -977,10 +973,10 @@ keep one int_date age_days agemos ///
 	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
 	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
 	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
-	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
+	freq_formula freq_other_milk milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex nat_wgt state_wgt round  
+	sex nat_wgt regional_wgt state_wgt round  
 
 
 * Save data with name of survey
@@ -998,87 +994,3 @@ save iycf_rsoc, replace
 
 
 
-
-
-
-
-
-
-/*
-
-*RSOC
-
-*Seasonality
-*Children under the age of 5 with valid WHZ
-keep if WHZ<9997 & q408_month>=0 & q408_month<60
-*83,504 observations
-
-gen mon = substr(intervwrdetails_startdate, 1, 2)
-destring mon, replace
-gen month12  = mon
-label define m12 1 "J" 2 "F" 3 "M" 4 "A" 5 "M" 6 "J" 7 "J" 8 "A" 9 "S" 10 "O" 11 "N" 12 "D"
-label val month12 m12 
-label var month12 "Month"
-
-
-
-gen zwfh = WHZ if WHZ>= -5 & WHZ <= 5
-gen wasted = 1 if zwfh < -2 & zwfh !=.
-replace wasted = 0 if zwfh >= -2 & zwfh !=.
-
-gen sev_wasted = 1 if zwfh < -3 & zwfh !=.
-replace sev_wasted = 0 if zwfh >= -3 & zwfh !=.
-
-tab wasted [iw=N_Wt_Cata]
-tab sev_wasted [iw=N_Wt_Cata]
-keep if wasted !=. 
-gen male = 1 if q407 ==1
-replace male = 0 if q407 ==2
-
-gen agemons = q408_month if q408_month>=0 & q408_month<=59
-*Age by six month blocks
-cap drop agecat
-gen agecat = floor(agemons/6)+1
-tab agemons agecat, m 
-gen agecat_m = agecat
-replace agecat_m = 11 if agecat ==.
-label def agemo 1 "0-5" 2 "6-11" 3 "12-17" 4 "18-23" 5 "24-29" 6 "30-35" 7 "36-41" 8 "42-47" 9 "48-53" 10 "54-59" 11 "Missing" , replace
-label val agecat_m agemos
-label var agecat_m "Age (in months)"
-
-*religion of the head of the HH
-gen reli = q44 if q44>= 1 & q44<= 4
-replace reli = 5 if q44 == 6
-replace reli = 0 if q44 == 5 | q44 == 7 | q44 == 96
-label define reli  1"1. Hindu" 2"2. Muslim" 3"3. Christian" 4"4. Sikh" 5"5. Buddhist" 0 "0. Other", replace
-label val reli reli
-lab var 	reli "Religion"
-
-
-
-
-
-
-
-gen hhmem = q14_1 
-label var hhmem "Household Size"
-
-
-
-gen mother_working = q114 ==1
-replace mother_working = 2 if q114 ==.
-label define working 0 "not in work force" 1 "in work force" 2 "NA/ Not alive" , replace
-label val mother_working working
-label var mother_working "Working Status"
-
-gen round =2
-
-keep   WHZ 	zwfh round agecat_m reli rural birth_weight c_birth_wt month12 caste wealth mother_working c_m_school  hhmem S_WT N_WT male state N_Wt_Cata S_WT_CATA q408_month wasted sev_wasted LBW mother_school int_y
-*drop if  month12 ==.
-*83,198 Observations
-ren c_m_school education_years
-gen sam_weight_s = S_WT_CATA
-gen sam_weight_n = N_Wt_Cata
-
-
-/*
