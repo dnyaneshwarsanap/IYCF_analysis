@@ -172,7 +172,7 @@ tab currently_bf,m
 *PRELACTEAL Feeds
 /*
 -------------------------------------------------
-m55a      		      milk other than BM
+m55a      		      milk other than breastmilk
 m55b         		  PLAIN WATER
 m55c         		  SUGAR OR GLUCOSE WATER
 m55d         		  GRIPE WATER 
@@ -195,9 +195,6 @@ clonevar prelacteal_milk = m55a
 replace prelacteal_milk = 1 if m55g==1 // added formula to prelacteal milk
 replace prelacteal_milk = . if m55a==9
 
-* Compare to variable - gave nothing
-
-
 clonevar prelacteal_water = m55b
 replace prelacteal_water = . if m55b==9
 
@@ -210,8 +207,14 @@ replace prelacteal_gripewater = . if m55d==9
 clonevar prelacteal_saltwater = m55e
 replace prelacteal_saltwater = . if m55e==9
 
+clonevar prelacteal_juice = m55f
+replace prelacteal_juice = . if m55f==9
+
 clonevar prelacteal_formula = m55g
 replace prelacteal_formula = . if m55g==9
+
+clonevar prelacteal_tea = m55h
+replace prelacteal_tea = . if m55h==9
 
 clonevar prelacteal_honey = m55i
 replace prelacteal_honey = . if m55i==9
@@ -219,25 +222,39 @@ replace prelacteal_honey = . if m55i==9
 clonevar prelacteal_janamghuti = m55j
 replace prelacteal_janamghuti = . if m55j==9
 
+tab m55k
+tab m55l
+tab m55m
+tab m55n
+
 clonevar prelacteal_other = m55x
 replace prelacteal_other = . if m55x == 9
 
-local prelacteal_feeds = "prelacteal_milk prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other"
+local prelacteal_feeds = "prelacteal_milk prelacteal_water prelacteal_sugarwater ///
+	prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula ///
+	prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other"
 foreach var in `prelacteal_feeds' { 
 	replace `var' = . if  age_days>=730
 }
 
+*Prelacteal other than milk
 cap drop prelacteal_otherthanmilk
 gen prelacteal_otherthanmilk =0
-local prelacteal = "m55b m55c m55d m55e m55f m55h m55i m55j m55k m55l m55m m55n m55x"
+local prelacteal_feeds = "prelacteal_water prelacteal_sugarwater ///
+	prelacteal_gripewater prelacteal_saltwater prelacteal_juice  ///
+	prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other"
 foreach var in `prelacteal' { 
 	replace prelacteal_otherthanmilk = 1 if  `var'==1
 }
+tab prelacteal_otherthanmilk,m
 
-tab prelacteal_milk,m
+*Prelacteal milk formula
+gen prelacteal_milk_form=0
+replace prelacteal_milk_form =1 if prelacteal_milk==1
+replace prelacteal_milk_form =1 if prelacteal_formula==1
+tab prelacteal_milk_form,m
 
-tab  prelacteal_otherthanmilk, m
-* Compare to variable - gave nothing
+
 tab m55z prelacteal_otherthanmilk
 * m55z does faithfully represent children who were given nothing in first 3 days. 
  
