@@ -25,7 +25,7 @@ fever RSOC
 LBW
 mum_educ
 caste
-region weight
+region, national, state weights
 
 
 // cd "C:\Users\rober\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
