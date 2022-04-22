@@ -718,11 +718,12 @@ label var birth_weight "Birth weight"
 replace birth_weight = birth_weight/1000 if birth_weight != 9999
 
 
-egen c_birth_wt = cut(birth_weight), at(0.25,1,2.5,9001,9997,9999,10000) icodes
-label def c_birth_wt 0 "Very low <1kg" 1 "Low <2.5kg" 2 "Average or more >=2.5kg" 3 "Not weighed" 4 "Don't know" 5 "Missing"
-label val c_birth_wt c_birth_wt
-label var c_birth_wt "Birth weight category"
-tab c_birth_wt, m 
+recode birth_weight (0/0.249=6)(0.25/1.499=1)(1.5/2.499=2)(2.5/3.999=3)(4/10.999=4)(11/10000=7), gen(cat_birth_wt)
+// egen c_birth_wt = cut(birth_weight), at(0.25,1.5,2.5,4,9001,9997,9999,10000) icodes
+label def cat_birth_wt 1 "Very low <1.5kg" 2 "Low <2.5kg" 3 "Average" 4 "High >4kg" 5 "Not weighed" 6 "Don't know" 7 "Missing"
+label val cat_birth_wt cat_birth_wt
+label var cat_birth_wt "Birth weight category"
+tab cat_birth_wt, m 
 
 gen lbw=. 
 replace lbw = 1 if birth_weight<2.5
