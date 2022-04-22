@@ -8,11 +8,16 @@
 clear
 version 16
 
-ERROR - fix all varnames - not  RECODE of |v413 (gave child other liquid) 
-check currently BF
-add ebf3d to all dbs. 
-carb = fortified_food - double check WHO guidance
-Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
+
+
+// ERROR - fix all varnames - not  RECODE of |v413 (gave child other liquid) 
+// check currently BF
+// add ebf3d to all dbs. 
+// carb = fortified_food - double check WHO guidance
+// Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
+
+
+
 
 * KEEP COLLEAGUES FOLDER REFERENCES - Comment out when not used. 
 // cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
@@ -91,10 +96,11 @@ kdensity age_days if b5==1
 gen agemos = floor(age_days/30.42) if b5==1
 graph bar (count) one, over(agemos)
 
-tab agemos, m 
-cap drop agemos_x
-gen agemos_x = v008 -  b3 if b5==1
-scatter agemos_x agemos
+* Double check agemos 
+// tab agemos, m 
+// cap drop agemos_x
+// gen agemos_x = v008 -  b3 if b5==1
+// scatter agemos_x agemos
 
 
 * Ever breastfed (children born in past 24 months) 
@@ -107,6 +113,7 @@ replace evbf=1 if m4 == 95 // still breastfeeding
 replace evbf=. if age_days>=730 
 la var evbf "Ever breastfed (children born in past 24 months)"
 tab  m4 evbf, m
+tab evbf
 
 *Early initiation of Breastfeeding (children born in last 24 months breastfed within 1hr)
 la list m34
@@ -118,6 +125,7 @@ replace eibf = 1 if m34 == 0 | m34==100 | m34 ==101 ///  0 -immediately, 101 - o
 replace eibf =. if age_days>=730 // age in days
 tab eibf,m
 tab m34 eibf, m
+tab eibf
 
 *Timing of initiation of Breastfeeding 
 cap drop eibf_timing
@@ -128,7 +136,7 @@ replace eibf_timing = mod(m34,100) if m34>=102 & m34<=123
 replace eibf_timing = mod(m34,200)*24 if m34>=201 & m34<=223
 replace eibf_timing =.  if age_days>=730
 la var eibf_timing "Timing of start of breastfeeding (in hours)"
-tab eibf_timing,m
+tab eibf_timing, m
 scatter m34 eibf_timing
 kdensity eibf_timing
 
@@ -147,8 +155,8 @@ replace ebf2d =. if age_days >2
 * Question was not asked correctly so variable will only be valid at national level 
 * 38 children in sample <= 2 days
 tab ebf2d m55z, m 
-
-
+clonevar ebf3d = m55z
+replace ebf3d = . if m55z==9
 
 * Currently Breastfeeding
 // 1. ever breastfed
@@ -158,36 +166,8 @@ tab ebf2d m55z, m
 
 cap drop currently_bf
 gen currently_bf = v404
+tab v404, m 
 tab currently_bf,m
-
-/*
-cap drop currently_bf
-gen currently_bf = .
-replace currently_bf = 0 if m4==99 | m4==98 | m4==94 | m4==0
-replace currently_bf = 1 if m4==95
-replace currently_bf = 1 if v407!=0 | v407!=99 | v408 !=0 | v408 !=99
-replace currently_bf = 0 if v407==0 | v407==99
-replace currently_bf = 0 if v408 ==0 | v408 ==99
-replace currently_bf = 0 if v407 ==. | v408 ==. // 
-la var currently_bf "Currently breastfeeding"
-tab currently_bf, m
-tab currently_bf v407
-tab currently_bf v404,m
-
-
-tab currently_bf v404,m
-
- Currently |       currently
-breastfeed |     breastfeeding (v404)
-       ing |        no        yes |     Total
------------+----------------------+----------
-         0 |    16,500        993 |    17,493 
-         1 |         0     31,186 |    31,186 
------------+----------------------+----------
-     Total |    16,500     32,179 |    48,679 
-*/
-
-
 
 *PRELACTEAL Feeds
 /*
@@ -744,9 +724,9 @@ lab val wi wi
 tab wi,m	
 	
 * Survey Weights
-gen national_wgt = v005     //national women's weight (6 decimals)
+gen national_wgt = v005    //   national women's weight (6 decimals)
 gen regional_wgt =v005s    // 	state women's weight (6 decimals)
-gen state_wgt =v005s    // 	state women's weight (6 decimals)
+gen state_wgt =v005s       // 	state women's weight (6 decimals)
 	
 *sex of child
 gen sex=b4
