@@ -407,6 +407,23 @@ clonevar semisolid                             = v414s_rec //other solid or semi
 
 lab var bread "bread, noodles, other grains"  // any bread, roti, chapati, rice, noodles, biscuits, idli, porridge 
 
+lab var fortified_food  "fortified food"
+lab var gruel gruel
+lab var poultry  poultry
+lab var meat poultry
+lab var legume legume
+lab var nuts nuts
+lab var bread bread
+lab var potato potato
+lab var vita_veg "vitamin A rich veg"
+lab var leafy_green "leafy greens"
+lab var vita_fruit "vitamin A rich fruit"
+lab var yogurt yogurt
+lab var semisolid semisolids
+lab var organ "organ meats"
+lab var fish fish 
+
+
 
 *Define eight food groups following WHO recommended IYCF indicators
 gen carb = 0
