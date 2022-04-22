@@ -25,14 +25,14 @@ version 16
 
 cd "C:/Temp"
 //use "C:\Users\Rojohnston\OneDrive - UNICEF\ECM-Nut OP4 Nutrition Governance, Partnerships, resources M&E\IIT-B\IYCF\NFHS3\IAKR52FL.dta", clear
-use "C:\TEMP\IAKR52FL.dta"
+use "C:\TEMP\IAKR52FL.dta", clear
 
 gen one=1
 
 lab define no_yes 0 "No" 1 "Yes"
 
 gen psu = v001
-gen hh_num v002
+gen hh_num = v002
 
 *tab result
 tab b5, m
@@ -895,18 +895,19 @@ gen round=1
 // 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
 // 	sex nat_wgt state_wgt round  
 
-keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos evbf eibf ei
-> bf_timing ebf2d ebf3d currently_bf prelacteal_milk prelacteal_water prelacteal_sugarwater 
-> prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula prelacteal_
-> tea prelacteal_honey prelacteal_janamghuti prelacteal_other prelacteal_otherthanmilk prela
-> cteal_milk_form bottle water juice tea other_liq milk formula freq_milk freq_formula freq_
-> other_milk fortified_food gruel poultry meat legume nuts bread potato vita_veg leafy_green
->  vita_fruit fruit_veg organ fish leg_nut yogurt semisolid carb dairy all_meat vita_fruit_v
-> eg agegroup sumfoodgrp fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 any_solid_semi_food intro_compf
-> ood ebf age_ebf age_cbf cont_bf cont_bf_12_23 mdd freq_solids mmf_bf mmf_all_bf mad_all_bf
->  egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus
->  csection mum_educ_years mum_educ caste rururb wi wi_s national_wgt regional_wgt state_wgt
->  sex diar fever ari state round
+keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos evbf eibf ///
+	eibf_timing ebf2d ebf3d currently_bf prelacteal_milk prelacteal_water prelacteal_sugarwater ///
+	prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula ///
+	prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other /// 
+	prelacteal_otherthanmilk prelacteal_milk_form bottle water juice tea other_liq milk ///
+	formula freq_milk freq_formula freq_other_milk fortified_food gruel poultry meat legume ///
+	nuts bread potato vita_veg leafy_green vita_fruit fruit_veg organ fish leg_nut yogurt ///
+	semisolid carb dairy all_meat vita_fruit_veg agegroup sumfoodgrp ///
+	fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 any_solid_semi_food intro_compfood ebf age_ebf ///
+	age_cbf cont_bf cont_bf_12_23 mdd freq_solids mmf_bf mmf_all_bf mad_all_bf ///
+	egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus ///
+	csection mum_educ_years mum_educ caste rururb wi wi_s national_wgt regional_wgt state_wgt ///
+	sex diar fever ari state round
 
 	
 * Save data with name of survey
