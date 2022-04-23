@@ -2,17 +2,17 @@
 * Make IYCF Variables for NFHS4 data - PURPOSE OF FILE
 * USING Updated WHO IYCF guidelines 2020 and recommended IYCF code from UNICEF NY
 
-* Code Cotributors - Robert, Shekhar, Dnyaneshwar 
+* Code Robert, Shekhar, Dnyaneshwar 
 
-check currently BF
- add ebf3d to all dbs. 
-carb = fortified_food - double check WHO guidance
-Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
+// check currently BF
+//  add ebf3d to all dbs. 
+// carb = fortified_food - double check WHO guidance
+// Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
 
 version 16 
 
 cd "C:/Temp"
-use "C:\TEMP\IAKR71FL.DTA"
+use "C:\TEMP\IAKR71FL.DTA", clear
 
 *use "D:\unicef\iycf\nfhs4\IAKR71FL.dta"
 // cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
@@ -20,6 +20,12 @@ use "C:\TEMP\IAKR71FL.DTA"
 
 *gen one=1
 lab define no_yes 0 "No" 1 "Yes"
+
+gen psu = v001
+// scatter v024 psu // psu is state specific - no duplication
+gen hh_num = v002
+
+ 
 
 *Exclude all dead children 
 tab b5,m
@@ -58,7 +64,7 @@ replace hw16 = 15 if hw16 > 31
 tab hw16
 * Following WHO recommendations on anthro data
 * We have created heaping on 15th of month
-kdensity hw16 if b5==1
+// kdensity hw16 if b5==1
 
 gen birthday =  hw16
 gen birthmonth = b1
@@ -77,36 +83,35 @@ replace dob_date = int_date -7 if age_days<0
 * 7 days is mid point of 15 days  - subjective decision
 replace age_days = int_date - dob_date 
 
+*check if any age_days are less than zero
 replace age_days =. if age_days>1825
 tab age_days,m 
-kdensity age_days if b5==1
+// kdensity age_days if b5==1
 
 gen agemos = floor(age_days/30.42) if b5==1
-graph bar (count) one, over(agemos)
+// graph bar (count) one, over(agemos)
 
 tab agemos, m 
-cap drop agemos_x
-gen agemos_x = v008 -  b3 if b5==1
-scatter agemos_x agemos
+// cap drop agemos_x
+// gen agemos_x = v008 -  b3 if b5==1
+// scatter agemos_x agemos
 
 
-//----------------------------------------------------------------------------------------------
 
 * Ever breastfed (children born in past 24 months) 
 
 la list M4 //in NFHS4 data value label is M4 for m4
 tab m4
-cap drop evbf
 
+cap drop evbf
 gen evbf = 0
 replace evbf=1 if m4 >=0 &  m4 <60  // duration of breastfeeding in months
 replace evbf=1 if m4 == 95 // still breastfeeding
 
 replace evbf=. if age_days>=730 
 la var evbf "Ever breastfed (children born in past 24 months)"
-tab evbf,m
-tab  m4 evbf, m
-//---------------------------------------------------------------------------------------------
+tab m4 evbf, m
+tab evbf
 
 
 
@@ -121,8 +126,6 @@ replace eibf =. if age_days>=730 // age in days
 tab eibf,m
 tab m34 eibf, m
 
-	   
-//-------------------------------------------------------------------------------------------------
 
 *Timing of initiation of Breastfeeding 
 cap drop eibf_timing
@@ -134,10 +137,8 @@ replace eibf_timing = mod(m34,200)*24 if m34>=201 & m34<=223
 replace eibf_timing =.  if age_days>=730
 la var eibf_timing "Timing of start of breastfeeding (in hours)"
 tab eibf_timing,m
-scatter m34 eibf_timing
-kdensity eibf_timing
-
-//------------------------------------------------------------------------------------------------------
+// scatter m34 eibf_timing
+// kdensity eibf_timing
 
 
 * Exclusively breastfed for the first two days after birth
@@ -153,6 +154,9 @@ replace ebf2d =. if age_days >2
 * Question was not asked correctly so variable will only be valid at national level 
 * 38 children in sample <= 2 days
 tab ebf2d m55z, m 
+
+clonevar ebf3d = m55z
+tab ebf3d m55z, m 
 
 
 * Currently Breastfeeding
@@ -170,8 +174,7 @@ tab currently_bf,m
 
 
 *For prelacteal feed variables are
-/*
--------------------------------------------------
+/* -------------------------------------------------
 m55a      		      milk other than BM
 m55b         		  PLAIN WATER
 m55c         		  SUGAR OR GLUCOSE WATER
@@ -183,18 +186,15 @@ m55h        		  TEA
 m55i        		  Honey
 m55j                  Coffee
 m55K                  Jannam Githi
-m55l,m55m,m55n,m55o    given country na
-m55x                   Given Other
-m55z                   Given Nothing
--------------------------------------------------
-*/
+m55l,m55m,m55n,m55o   given country na
+m55x                  Given Other
+m55z                  Given Nothing
+------------------------------------------------- */
 
 
 * Prelacteal feeds
 * What was [NAME] given to drink? within first three days after delivery
 clonevar prelacteal_milk = m55a
-replace prelacteal_milk = 1 if m55g==1 // add formula to prelacteal milk
-replace prelacteal_milk = . if m55a==9
 * Compare to variable - gave nothing
 tab m55z prelacteal_milk
 
@@ -210,8 +210,14 @@ replace prelacteal_gripewater = . if m55d==9
 clonevar prelacteal_saltwater = m55e
 replace prelacteal_saltwater = . if m55e==9
 
+clonevar prelacteal_juice = m55f
+replace prelacteal_juice = . if m55f==9
+
 clonevar prelacteal_formula = m55g
 replace prelacteal_formula = . if m55g==9
+
+clonevar prelacteal_tea = m55h
+replace prelacteal_tea = . if m55h==9
 
 clonevar prelacteal_honey = m55i
 replace prelacteal_honey = . if m55i==9
@@ -219,22 +225,30 @@ replace prelacteal_honey = . if m55i==9
 clonevar prelacteal_janamghuti = m55k
 replace prelacteal_janamghuti = . if m55k==9
 
+tab m55l
+tab m55m
+tab m55n
+tab m55o 
+tab m55x
+
 clonevar prelacteal_other = m55x
 replace prelacteal_other = . if m55x==9
 
-local prelacteal_feeds = "prelacteal_milk prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater  prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other"
+local prelacteal_feeds = "prelacteal_milk prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater  prelacteal_juice prelacteal_formula prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other"
 foreach var in `prelacteal_feeds' { 
 	replace `var' = . if  age_days>=730
 }
 
 cap drop prelacteal_otherthanmilk
 gen prelacteal_otherthanmilk =0
-local prelacteal = "m55b m55c m55d m55e m55f m55h m55i m55j m55k m55l m55m m55n m55o m55x"
+local prelacteal = "prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater  prelacteal_juice prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other"
 foreach var in `prelacteal' { 
 	replace prelacteal_otherthanmilk = 1 if  `var'==1
 }
+replace prelacteal_otherthanmilk = . if  age_days>=730
 
 tab prelacteal_milk, m 
+tab prelacteal_formula, m 
 tab  prelacteal_otherthanmilk, m
 * Compare to variable - gave nothing
 tab m55z prelacteal_otherthanmilk
@@ -253,6 +267,7 @@ tab m38 bottle, m
 tab m38 v415, m  //v415 drank from bottle with nipple EVER? 
 
 
+up to here
 	 	   	 
 
 /*
