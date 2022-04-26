@@ -3,7 +3,11 @@
 * Robert updated 9 12 2021 review for EBF 
 version 16
 
-* add ebf3d to all dbs. 
+// add ebf3d to all dbs. 
+// check currently BF
+// carb = fortified_food - double check WHO guidance
+// Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
+
 
 cd "C:/Temp"
 use "C:\TEMP\CNNS_04_Cleaned_21MAY_final_with_constructed_var.dta", clear
@@ -23,7 +27,10 @@ group7_cdd childdd childdd_nbf minaccdiet minaccdietbf minaccdietnbf ironfood fo
 * make IYCF vars.do
 
 gen one=1
+lab define no_yes 0 "No" 1 "Yes"
 
+gen psu = v001
+gen hh_num v002
 
 * CHECK FINAL N of CNNS 
 tab result
@@ -677,35 +684,7 @@ tab ari q513
 tab ari q514
 tab ari, m 
 
-
-
-* Generate 'region' variable from the CNNS state variable
-gen double region:region=0
-* double is not really needed here. 
-replace region=1 if state==7  |  state==6  | state==2  | state==1  | state==3  | state==8 | state==5
-replace region=2 if state==22 |  state==23 | state==9
-replace region=3 if state==10 |  state==20 | state==21 | state==19
-replace region=4 if state==12 |  state==18 | state==14 | state==17 | state==15 | state==13 | state==11 | state==16
-replace region=5 if state==30 |  state==24 | state==27
-replace region=6 if state==28 |  state==29 | state==32 | state==33 | state==99
-replace region=. if iw_s_pool==.
-lab define region 1 "North" 2 "Central" 3 "East" 4 "Northeast" 5 "West" 6 "South"
-lab var region "Region" 
-lab val region region
-
-
-/*
-------------------------------------------------------------------------------------------------------------------------------------------------
-region       Region Name       states included in the region
--------------------------------------------------------------------------------------------------------------------------------------------------
-region 1       North           NCT of Delhi(7), Haryana(6), Himachal Pradesh(2), Jammu and Kashmir(1), Punjab(3), Rajasthan(8), Uttarakhand(5)
-region 2	   Central		   Chhattisgarh(22), Madhya Pradesh(23), Uttar Pradesh(9)
-region 3	   East			   Bihar(10), West Bengal(19), Jharkhand(20), Odisha(21)	 							
-region 4       NorthEast       Arunachal Pradesh(12), Sikkim(11), Tripura(16),  Meghalaya(17), Assam(18), Nagaland(13), Manipur(14), Mizoram(15)
-region 5       West            Gujarat(24), Maharshtra (27), Goa(30)
-region 6       South           Andhra Pradesh(28),  Karnataka(29),  Kerala(32),  Tamil Nadu(33),  Telangana(99) 
---------------------------------------------------------------------------------------------------------------------------------------------------
-*/
+* add region variable in master.do
 * UTs are MISSING IN THE REGIONS
 
 

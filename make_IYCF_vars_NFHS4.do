@@ -265,14 +265,15 @@ replace bottle = . if age_days>=730
 tab m38 bottle, m
 
 tab m38 v415, m  //v415 drank from bottle with nipple EVER? 
-
-
-up to here
-	 	   	 
+// M38 Whether the child drank anything from a bottle with a nipple during the previous day and
+// night. BASE: Living children (B5(MIDX) = 1).
+// MIDX = birth history & B5 child is alive
+// V415 Whether the child drank anything from a bottle with a nipple the previous day and night.
+// BASE: Respondents whose last child born in the last three/five years was still alive (V417 > 0 & B5(1) = 1).
+// V417 Number of entries in the maternity history
 
 /*
 Var Name     Value Label         Variable Label
----------------------------------------------------------------------------
 v409		     V409            gave child plain water        gave child plain water
 v409a		     V409A         # gave child sugar water     -na      
 v410		     V410            gave child juice 
@@ -312,8 +313,9 @@ v414u		     V414U         # gave child cs foods        -na
 v414v            V414V           gave child yogurt
 v414w            V414W           gave child cs foods
 v415		     V415            drank from bottle with nipple
---------------------------------------------------------------------------
 */
+
+
 ********************************************************************************
 * Food groups (liquids and solids)
 ********************************************************************************
@@ -334,23 +336,14 @@ foreach var of varlist v409- v415 {
 
 clonevar water					=v409_rec
 clonevar juice			        =v410_rec
-clonevar broth                  =v412c_rec
-clonevar tea_coff			    =v410a_rec
-clonevar milk			        =v411_rec
-replace  milk = 1   if v412_rec ==1           // fresh milk 
+clonevar broth                  =v412c_rec // gave child soup/clear broth
+clonevar tea				    =v410a_rec
+clonevar milk			        =v411_rec // tinned, powder or fresh milk
+tab v412_rec, m  // fresh milk all missing data
+
 clonevar formula 		        =v411a_rec
 clonevar other_liq 		        =v413_rec
 
-
-*----------------------------------------
-* LIQUIDS from CNNS
-// clonevar water			=q310a_rec
-// clonevar juice			=q310b_rec
-// clonevar broth			=q310c_rec
-// clonevar milk			=q310d1_rec
-// clonevar formula 		=q310e1_rec
-// clonevar other_liq 		=q310f_rec
-*------------------------------------------
 
 * SOLIDS SEMISOLIDS
 clonevar fortified_food                         =v412a_rec // from q480 Any commercially fortified baby food such as Cerelac or Farex?
@@ -359,10 +352,9 @@ clonevar gruel        							=v412b_rec // other porridge/gruel
 
 clonevar poultry                               = v414a_rec //chicken_duck_other birds
 clonevar meat                                  = v414t_rec // gave child other meat
-replace meat =1 if 							 v414h_rec==1 // (beef, pork-na
+replace meat =1 if 							     v414h_rec==1 // (beef, pork, lamb
 
 clonevar bread                                 = v414e_rec  //food_of_bread_noodles_other_grains 
-replace bread =1 if gruel ==1
 
 clonevar potato                                = v414f_rec  //potatoes_cassava_other tubers 
 clonevar egg                                   = v414g_rec
@@ -379,13 +371,11 @@ clonevar fish                                  = v414n_rec //fresh or dried fish
 clonevar leg_nut							   = v414o_rec //food made from beans, peas, lentils, nuts		
 
 clonevar yogurt                                = v414p_rec //cheese, yogurt , other milk products
-replace yogurt =1 if v414v==1
+replace yogurt =1 if                             v414v==1
 * yogurt and cheese coded together
+clonevar fat 									= v414q //oil, fats, butter, products made of them  	
+clonevar sweets   								= v414r
 
-
-*clonevar fat                                   = v414q_rec //oil, fats, butter, products made of them  	
-*	replace fat =0
-	
 clonevar semisolid                             = v414s_rec //other solid or semi-solid food	
 
 
@@ -412,9 +402,7 @@ clonevar semisolid                             = v414s_rec //other solid or semi
 // clonevar semisolid		   =q310w_rec  // any other solid, semi-solid or soft food		
 *---------------------------------------------------------------------------------------------------------------
 
-
 lab var bread "bread, noodles, other grains"  // includes cereals, gruel, porridge 
-
 
 *FOLLOWING ARE THE NEW FOOD GROUPS AS PER WHO GUIDELINES
 /*
@@ -432,7 +420,7 @@ lab var bread "bread, noodles, other grains"  // includes cereals, gruel, porrid
 
 *Define eight food groups following WHO recommended IYCF indicators
 gen carb = 0
-replace carb = 1 if bread ==1 | potato==1 | gruel==1   //also added gruel to this category
+replace carb = 1 if bread ==1 | potato==1 | gruel==1 | fortified_food==1  //also added gruel to this category
 lab var carb "1: Bread, rice, grains, roots and tubers"
 
 tab carb, m 
@@ -440,7 +428,7 @@ tab carb, m
 lab var leg_nut "2: Legumes and nuts"
 
 gen dairy = 0
-replace dairy = 1 if formula ==1 | yogurt==1 | milk==1	
+replace dairy = 1 if formula ==1 | yogurt==1 | milk==1
 lab var dairy "3: Dairy - milk, formula, yogurt, cheese"
 
 gen all_meat = 0
@@ -456,7 +444,6 @@ lab var vita_fruit_veg "6: Vitamin A rich fruits and vegetables"
 
 lab var fruit_veg "7: Other fruits and vegetables"
 replace fruit_veg = 0 if fruit_veg==0 | fruit_veg ==9
-
 
 foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg currently_bf  {
 	lab val `var' no_yes
@@ -486,19 +473,21 @@ cap drop any_solid_semi_food
 egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
 replace any_solid_semi_food = 1 if any_solid_semi_food >1
 tab any_solid_semi_food, m 	   
-	  
+
 	   
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
 * based on 
 * v414s: gave child solid, semi solid, soft foods yesterday 
-* sumfoodgrp - number of food groups eaten yesterday
-tab sumfoodgrp v414s, m
+tab v414s any_solid_semi_food, m 
+
+cap drop intro_compfood
 gen intro_compfood = 0
 replace intro_compfood =. if v414s == 9
-replace intro_compfood = 1 if v414s == 1 | sumfoodgrp>=1 
+replace intro_compfood = 1 if v414s == 1 | any_solid_semi_food>=1 
 replace intro_compfood =. if age_days<=183 | age_days>=243
 la var intro_compfood "Intro to complementary food 6-8 months of age"
 tab intro_compfood
+tab intro_compfood any_solid_semi_food
 
 //--------------------------------------------------------------------------------------------------------
 *EXCLUSIVE BREASTFEEDING
