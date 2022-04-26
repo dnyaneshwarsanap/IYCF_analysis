@@ -8,17 +8,6 @@
 clear
 version 16
 
-
-
-// ERROR - fix all varnames - not  RECODE of |v413 (gave child other liquid) 
-// check currently BF
-// add ebf3d to all dbs. 
-// carb = fortified_food - double check WHO guidance
-// Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
-
-
-
-
 * KEEP COLLEAGUES FOLDER REFERENCES - Comment out when not used. 
 // cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
 // use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\IAKR52FL.dta", clear
@@ -492,8 +481,7 @@ cap drop any_solid_semi_food_x
 
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
 * based on v414s: gave child solid, semi solid, soft foods yesterday 
-* sumfoodgrp - number of food groups eaten yesterday
-tab sumfoodgrp v414s, m 
+
 cap drop intro_compfood
 gen intro_compfood = 0
 replace intro_compfood = . if v414s == 9
