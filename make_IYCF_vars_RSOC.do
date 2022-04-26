@@ -99,7 +99,7 @@ cap drop ageyears
 gen ageyears = floor(agemos / 12)
 tab q1a ageyears
 
-* IYCF data only collected from following states
+* IYCF data (under 3 years of age) only collected from following states
 // Jammu & Kashmir
 // Himachal Pradesh
 // Punjab
@@ -130,6 +130,8 @@ tab birthyear, m
 * U3 Children with birth dates -   34,217
 
 // graph bar (count) one, over(agemos)
+
+
 
 * Ever breastfed (children born in past 24 months)
 tab q184, m 
