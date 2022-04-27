@@ -4,6 +4,8 @@
 
 * Code Robert, Shekhar, Dnyaneshwar 
 
+// freq_solids 
+// milk_feeds
 // check currently BF
 //  add ebf3d to all dbs. 
 // carb = fortified_food - double check WHO guidance
@@ -315,7 +317,6 @@ v414w            V414W           gave child cs foods
 v415		     V415            drank from bottle with nipple
 */
 
-
 ********************************************************************************
 * Food groups (liquids and solids)
 ********************************************************************************
@@ -504,7 +505,7 @@ replace ebf =1 if currently_bf ==1
 replace ebf =0 if water      ==1 | ///
                   juice      ==1 | ///		
                   milk       ==1 | ///
-				  tea_coff   ==1 | ///
+				  tea        ==1 | ///
                   formula    ==1 | ///
                   other_liq  ==1 | ///
                   any_solid_semi_food ==1
@@ -512,7 +513,7 @@ replace ebf =0 if water      ==1 | ///
 replace ebf =. if age_days >182
 la var ebf "Exclusive breasfeeding"
 tab ebf
-tab ebf agemos
+tab agemos ebf 
 
 
 
@@ -545,7 +546,6 @@ tab m4 cont_bf , m
 gen cont_bf_12_23 = cont_bf if age_days>335 &age_days<730 
 tab cont_bf_12_23, m
 
-//------------------------------------------------------------------------------------------------------
 
 
 *Minimum Dietary Diversity- code for new indicator definition 
@@ -557,7 +557,6 @@ replace mdd=. if age_days<=183 | age_days>=730
 la var mdd "Minimum Dietary Diversity (2020)"
 tab mdd
 
-//-----------------
 
 *Minimum Meal Frequency (MMF) 
 *For currently breastfeeding children: MMF is yes if:
@@ -573,26 +572,28 @@ tab mdd
 * Q482 How many times did (NAME) eat solid, semisolid, or soft foods other than liquids yesterday during the day or at night? 
 
 tab m39, m
-gen freq_solids=m39
-replace freq_solids =0 if m39==8 & sumfoodgrp==0 // Don't know = Child did not consume any solid semi-solid foods yesterday
-replace freq_solids =0 if m39==0 & sumfoodgrp==0 // 0 frequency and 0 food groups 
-replace freq_solids =1 if m39==. & sumfoodgrp>=1 // missing frequency and 1+ food groups
-replace freq_solids =1 if m39==8 & sumfoodgrp>=1 // don't know frequency and 1+ food groups  
-replace freq_solids =0 if m39==. & sumfoodgrp==0 // missing frequency and 0 
-
+cap drop freq_solids
+clonevar freq_solids=m39
+* Number of freq_solids, don't know and missing
+* There 7000 cases of yes any_solid_semi_food but 0 freq_feeds
+* Cannot give any # of freq_feeds to those yes any_solid_semi_food cannot be coded. 
+replace freq_solids =9 if m39==. & any_solid_semi_food==1 // missing frequency and 1+ food groups
+la list M39
+la def M39 9 missing, add
+la val freq_solids M39
 
 tab m39 freq_solids,m
-tab m39 sumfoodgrp,m
-tab sumfoodgrp freq_solids, m 
+tab freq_solids any_solid_semi_food, m 
 
-*Replacing freq_solids =1 if freq_solids is missing and sumfoodgrp is more than one
-replace freq_solids=1 if freq_solids==. & sumfoodgrp >=1 & sumfoodgrp <=8
-tab sumfoodgrp freq_solids, m 
-
-*changing sumfoodgrp to 1 if freq_feeds is more than once 
-replace sumfoodgrp=1 if sumfoodgrp==0 & freq_solids>=1 & freq_solids<=7
-tab sumfoodgrp freq_solids, m 
-
+* Quality of freq solids indicators
+clonevar qual_freq_solids = freq_solids
+replace qual_freq_solids =10 if freq_solids>=0 & freq_solids<=7
+replace qual_freq_solids =99 if any_solid_semi_food==1 & freq_solids==0
+la def M39 10 "from 0 to 7x", add
+la def M39 99 "missing freq & yes semi-solids", add
+la val freq_solids M39
+tab qual_freq_solids,m
+tab qual_freq_solids
 
 *Minimum Meal Frequency (MMF) Breastfeeding
 gen mmf_bf=0
@@ -633,14 +634,11 @@ replace freq_yogurt=0 if freq_yogurt>7
 tab freq_yogurt,m
 
 
-
 *Frequency of Milk and Milk Products 
 *Frequency of Milk and Dairy feeds in children 0-23 months
 gen milk_feeds = freq_milk + freq_formula + freq_yogurt 
-tabulate milk_feeds,m
-
+replace milk_feeds = 7 if milk_feeds>7 & milk_feeds !=.
 tab milk_feeds, m 
-
 
 
 * OVERALL FREQUENCY FEEDS
@@ -676,18 +674,17 @@ tab min_milk_freq_nbf, m
 
 *MMF among all children 6-23 months
 gen mmf_all=0
-replace mmf_all=1 if mmf_bf==1 | mmf_bf==2 | mmf_nobf==1
+replace mmf_all=1 if mmf_bf==1 | mmf_bf==2 | mmf_nobf==1  // 6-8M 2x 9-23M 3x & nobf>=2
 replace mmf_all =. if age_days<=183 | age_days>=730
 la var mmf_all "Minimum meal frequency for all children 6-23M"
 tab mmf_all, m 
-
-//-------------------------------------------------------------------------------------------
+tab mmf_all
 
 
 **Minimum Acceptable Diet (MAD) 
 
-
-* Mixed milk feeding (<6 months): Percentage of infants 0–5 months of age who were fed formula and/or animal milk in addition to breast milk during the previous day
+* Mixed milk feeding (<6 months): Percentage of infants 0–5 months of age who were
+* fed formula and/or animal milk in addition to breast milk during the previous day
 
 gen mixed_milk = 0 
 replace mixed_milk=1 if (currently_bf==1 & formula==1) | (currently_bf==1 & milk==1)
@@ -704,19 +701,21 @@ tab mad_all, m
 
 *Egg and/or Flesh food consumption - % of children 6-23 months of age who consumed egg and/or flesh food during the previous day*
 gen egg_meat=0
-replace egg_meat=1 if all_meat ==1 | egg==1            //& agemons>=6 & agemons<=23
-replace egg_meat =. if age_days<=183 | age_days>=730
+replace egg_meat=1 if all_meat ==1 | egg==1            
+replace egg_meat =. if age_days<=183 | age_days>=730 // agemons>=6 & agemons<=23
 tab egg_meat, m 
 
 *Zero fruit or veg consumption - % of children 6-23months of age who did not consume any fruits or vegetables during the previous day**
 gen zero_fv=0
 replace zero_fv =1 if vita_fruit_veg==0  & fruit_veg ==0
-replace zero_fv =. if age_days<=183 | age_days>=730
+replace zero_fv =. if age_days<=183 | age_days>=730 // agemons>=6 & agemons<=23
 tab zero_fv, m 
 
-*--------------------
 *Unhealthy food consumption
 *consumption of sugar sweetened beverages by child agemons 6 to 23
+
+tab v414q
+tab v414r
 
 gen sugar_bev = .
 gen unhealthy_food = .
@@ -725,9 +724,8 @@ gen unhealthy_food = .
 * juice broth other_liq
 
 *data for above indicators is not available
-*-----------------------
 
-
+up to here
 
 * SOCIO-DEMOGRAPHIC data		
 
