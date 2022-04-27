@@ -20,7 +20,7 @@ tab q1a
  
 gen psu = q5_1
 // scatter q1a q5_1
-gen hh_num q11_1
+gen hh_num = q11_1
 
 * identify number of living children under five
 * A2.1 number of live births
@@ -603,22 +603,51 @@ tab mdd, m
 * Variable fed_solids identifies the number of times a child was fed solid, semi-solid or soft foods*
 * For this variable please remember to set response "don't knows" to zero
 
-tab q199_1 
+tab q197a1_15  , m 
+tab q198   , m 
+tab q199_1 , m 
+tab q199dk_98  , m 
+
+tab q199_1 q198, m 
+
 cap drop freq_solids
-gen freq_solids=0 
-replace freq_solids = q199_1 if q199_1 >0 & q199_1 <22 
-tab freq_solids q199_1, m 
+gen freq_solids =0 if q198==2  // zero freq_feeds
+replace freq_solids = q199_1 if q199_1 <=7 
+replace freq_solids = 7 if q199_1 >7 & q199_1 <=22 
 
-* RSOC is different from NFHS - It records # of feeds per day instead of 1-7. 
-replace freq_solids =7 if q199_1 >=7 & q199_1 <50
+* Number of freq_solids, don't know and missing
+replace freq_solids =9 if freq_solids>7 & q198==.  // missing
+replace freq_solids =9 if freq_solids==.  // don't know
+replace freq_solids =8 if q198==3  // don't know
+replace freq_solids =8 if q199dk_98 ==1  // don't know
 
-* In RSOC there are ~1000 cases of children who consumed foods yesterday but we don't know frequency - recode as 1 feed
-replace freq_solids=1 if freq_solids==. & sumfoodgrp >=1 & sumfoodgrp <=8
-tab sumfoodgrp freq_solids, m 
+tab freq_solids, m
 
-* In RSOC there 10 cases of eating 0 food groups but consumed semi-solid 1+ times yesterday, - recode as 0 food group. 
-replace freq_solids=0 if sumfoodgrp==0 & freq_solids>=1 & freq_solids<=7
-tab sumfoodgrp freq_solids, m 
+* Cannot give any # of freq_feeds to those yes any_solid_semi_food cannot be coded. 
+* There 1251 cases of yes any_solid_semi_food but 0 freq_feeds
+// replace freq_solids =9 if q199_1==. & any_solid_semi_food==1 // missing frequency and 1+ food groups
+tab freq_solids any_solid_semi_food, m 
+
+la def freq_solids 0 none, add 
+la def freq_solids 7 "7+", add 
+la def freq_solids 8 "don't know", add 
+la def freq_solids 9 missing, add 
+la val freq_solids freq_solids
+
+tab q199_1 freq_solids,m
+tab freq_solids any_solid_semi_food, m 
+
+* Quality of freq solids indicators
+clonevar qual_freq_solids = freq_solids
+replace qual_freq_solids =10 if freq_solids>=0 & freq_solids<=7
+replace qual_freq_solids =99 if any_solid_semi_food==1 & freq_solids==0
+la def freq_solids 10 "from 0 to 7x", add
+la def freq_solids 99 "missing freq & yes semi-solids", add
+la val qual_freq_solids freq_solids
+tab qual_freq_solids,m
+tab qual_freq_solids
+
+
 
 *Minimum Meal Frequency (MMF) Breastfeeding
 gen mmf_bf=0

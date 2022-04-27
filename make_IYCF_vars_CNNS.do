@@ -29,8 +29,8 @@ group7_cdd childdd childdd_nbf minaccdiet minaccdietbf minaccdietnbf ironfood fo
 gen one=1
 lab define no_yes 0 "No" 1 "Yes"
 
-gen psu = v001
-gen hh_num v002
+gen psu = psu_no_ov
+gen hh_num = hh_no
 
 * CHECK FINAL N of CNNS 
 tab result
@@ -240,8 +240,6 @@ q319                 q319       q319. was a dose of deworming given to [name] in
 * 	no and don't know = 0
 * following global guidance on IYCF analysis, this allows for maximium children to be included in indicator 
 
-lab define no_yes 0 "No" 1 "Yes"
-
 // list all variables excluding frequencies put in varlist
 // local varlist = 
 
@@ -425,22 +423,61 @@ tab mdd, m
 
 * For this variable please remember to set response "don't knows" to zero
 * IN NFHS (DHS) replace fed_solids=0 if fed_solids is don't know  - In this case don't know has been assigned the value 8
-
+tab q311
 tab q312
-gen freq_solids=q312
-replace freq_solids =0 if q311==2 & sumfoodgrp==0  // Child did not consume any solid semi-solid foods yesterday
+tab q312 q311, m 
 
-* CNNS is different from NFHS - It records # of feeds per day instead of 1-7. 
-replace freq_solids =7 if q312 >=7 & q312 <50
-replace freq_solids =0 if q312 ==98 
-tab q312 freq_solids, m 
-tab sumfoodgrp freq_solids, m 
-* In CNNS there are 902 cases of children who consumed foods yesterday but we don't know frequency - recode as 1 feed
-replace freq_solids=1 if freq_solids==. & sumfoodgrp >=1 & sumfoodgrp <=8
-tab sumfoodgrp freq_solids, m 
-* In CNNS there 102 cases of eating 0 food groups but consumed semi-solid 1+ times yesterday, - recode as 1 food group. 
-replace sumfoodgrp=1 if sumfoodgrp==0 & freq_solids>=1 & freq_solids<=7
-tab sumfoodgrp freq_solids, m 
+// gen freq_solids=q312
+// replace freq_solids =0 if q311==2 & sumfoodgrp==0  // Child did not consume any solid semi-solid foods yesterday
+//
+// * CNNS is different from NFHS - It records # of feeds per day instead of 1-7. 
+// replace freq_solids =7 if q312 >=7 & q312 <50
+// replace freq_solids =0 if q312 ==98 
+
+
+
+
+
+
+cap drop freq_solids
+gen freq_solids =0 if q311==2  // zero freq_feeds
+replace freq_solids = q312 if q312 <=7 
+replace freq_solids = 7 if q312 >7 & q312 <=44 
+
+* Number of freq_solids, don't know and missing
+replace freq_solids =9 if freq_solids>7 & q311==.  // missing
+replace freq_solids =9 if freq_solids==.  // don't know
+replace freq_solids =8 if q312==98  // don't know
+// replace freq_solids =8 if q311 ==  // don't know
+
+tab freq_solids, m
+
+* Cannot give any # of freq_feeds to those yes any_solid_semi_food cannot be coded. 
+* There 992 cases of yes any_solid_semi_food but 0 freq_feeds
+// replace freq_solids =9 if q199_1==. & any_solid_semi_food==1 // missing frequency and 1+ food groups
+tab freq_solids any_solid_semi_food, m 
+
+la def freq_solids 0 none, add 
+la def freq_solids 7 "7+", add 
+la def freq_solids 8 "don't know", add 
+la def freq_solids 9 missing, add 
+la val freq_solids freq_solids
+
+tab freq_solids q311 ,m
+tab  q312 freq_solids ,m
+tab freq_solids any_solid_semi_food, m 
+
+* Quality of freq solids indicators
+clonevar qual_freq_solids = freq_solids
+replace qual_freq_solids =10 if freq_solids>=0 & freq_solids<=7
+replace qual_freq_solids =99 if any_solid_semi_food==1 & freq_solids==0
+la def freq_solids 10 "from 0 to 7x", add
+la def freq_solids 99 "missing freq & yes semi-solids", add
+la val qual_freq_solids freq_solids
+tab qual_freq_solids,m
+tab qual_freq_solids
+
+
 
 *Minimum Meal Frequency (MMF) Breastfeeding
 gen mmf_bf=0

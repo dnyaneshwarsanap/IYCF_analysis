@@ -5,6 +5,10 @@
 * Code Robert, Shekhar, Dnyaneshwar 
 
 // freq_solids 
+// replace freq_solids =9 if q199_1==. & any_solid_semi_food==1 // missing frequency and 1+ food groups
+
+don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
+
 // milk_feeds
 // check currently BF
 //  add ebf3d to all dbs. 

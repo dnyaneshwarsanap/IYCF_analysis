@@ -560,29 +560,36 @@ tab mdd
 
 * For this variable please remember to set response "don't knows" to zero
 * IN NFHS (DHS) replace fed_solids=0 if fed_solids is don't know  - don't know = 8
+tab m39, m
 
 * Q482 How many times did (NAME) eat solid, semisolid, or soft foods other than liquids yesterday during the day or at night? 
 
-tab m39, m
-gen freq_solids=m39
-replace freq_solids =0 if m39==8 & sumfoodgrp==0 // Don't know = Child did not consume any solid semi-solid foods yesterday
-replace freq_solids =0 if m39==0 & sumfoodgrp==0 // 0 frequency and 0 food groups 
-replace freq_solids =1 if m39==. & sumfoodgrp>=1 // missing frequency and 1+ food groups
-replace freq_solids =1 if m39==8 & sumfoodgrp>=1 // don't know frequency and 1+ food groups  
-replace freq_solids =0 if m39==. & sumfoodgrp==0 // missing frequency and 0 
-replace freq_solids =0 if m39==9
+cap drop freq_solids
+clonevar freq_solids=m39
+* Number of freq_solids, don't know and missing
+* There 1000 cases of yes any_solid_semi_food but 0 freq_feeds
+* Cannot give any # of freq_feeds to those yes any_solid_semi_food cannot be coded. 
+replace freq_solids =9 if m39==. & any_solid_semi_food==1 // missing frequency and 1+ food groups
+la list m39
+la def m39 9 missing, add
+la val freq_solids M39
 
 tab m39 freq_solids,m
-tab m39 sumfoodgrp,m
-tab sumfoodgrp freq_solids, m 
+tab freq_solids any_solid_semi_food, m 
 
-*Replacing freq_solids =1 if freq_solids is missing and sumfoodgrp is more than one
-replace freq_solids=1 if freq_solids==. & sumfoodgrp >=1 & sumfoodgrp <=8
-tab sumfoodgrp freq_solids, m 
+* Quality of freq solids indicators
+clonevar qual_freq_solids = freq_solids
+replace qual_freq_solids =10 if freq_solids>=0 & freq_solids<=7
+replace qual_freq_solids =99 if any_solid_semi_food==1 & freq_solids==0
+la def m39 10 "from 0 to 7x", add
+la def m39 99 "missing freq & yes semi-solids", add
+la val qual_freq_solids m39
+tab qual_freq_solids,m
+tab qual_freq_solids
 
-*changing sumfoodgrp to 1 if freq_feeds is more than once 
-replace sumfoodgrp=1 if sumfoodgrp==0 & freq_solids>=1 & freq_solids<=7
-tab sumfoodgrp freq_solids, m 
+
+
+
 
 
 *Minimum Meal Frequency (MMF) Breastfeeding
