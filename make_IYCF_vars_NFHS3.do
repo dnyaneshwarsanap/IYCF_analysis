@@ -607,6 +607,7 @@ tab mmf_bf,m
 
 
 *AS Frequency of Milk feeds is not in NFHS 3 DATA, WE ARE UNABLE TO CREATE THE MMF for Non_BF CHILDREN  VARIABLE
+* Yogurt is not double counted 
 
 
 *MMF among all children 6-23 months    //for NFHS 3 we can only consider MMF for BF children, so this var is only for BF children
@@ -677,9 +678,11 @@ tab cat_birth_wt, m
 * LBW  //low birth weight
 cap drop lbw
 gen lbw = . 
-replace lbw = 1 if m19 <=2500
-replace lbw = 0 if m19 >2500 & m19 <8001
+replace lbw = 1 if m19 <2500
+replace lbw = 0 if m19 >=2500 
+replace lbw = . if cat_birth_wt >=5
 tab m19 lbw, m
+tab lbw
 
 
 * early ANC  <=3 months first trimester (ANC checkup within first 3 months of pregnancy)
@@ -762,7 +765,7 @@ gen wi = v190
 lab define wi 1"poorest" 2"poorer"	3 "middle" 4 "richer" 5 "richest"
 lab val wi wi
 tab wi,m	
-gen wi_s=.
+gen wi_s=v190
 	
 * Survey Weights
 gen national_wgt = v005    //   national women's weight (6 decimals)

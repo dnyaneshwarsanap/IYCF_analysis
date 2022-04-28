@@ -1,6 +1,5 @@
 * Make IYCF Variables for CNNS data
 
-* Robert updated 9 12 2021 review for EBF 
 version 16
 
 // add ebf3d to all dbs. 
@@ -8,7 +7,7 @@ version 16
 // carb = fortified_food - double check WHO guidance
 // Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
 
-
+ 
 cd "C:/Temp"
 use "C:\TEMP\CNNS_04_Cleaned_21MAY_final_with_constructed_var.dta", clear
 * use "C:\Temp\CNNS_04_Cleaned_3JUNE_final.dta", clear
@@ -518,18 +517,19 @@ tab q310e2 freq_yogurt , m
 
 * Frequency of Milk and non solid semi-solid dairy feeds in children 0-23 months
 
-* DOUBLE CHECK THAT YOGURT INCLUDED IN MILK FEEDS  / See NY guidance and WHO docs
-
-/* As per WHO guidelines Milk feeds include any formula (e.g. infant formula, follow-on formula, “toddler milk”) or any animal milk other than human breast milk, (e.g. cow milk, goat milk, evaporated milk or reconstituted powdered milk) as well as semi-solid and fluid/drinkable yogurt and other
-fluid/drinkable fermented products made with animal milk.
-*/
+//  Milk feeds include any formula (e.g. infant formula, follow-on formula, "toddler milk") or
+// any animal milk other than human breast milk, (e.g. cow milk, goat milk, evaporated milk
+// or reconstituted powdered milk) as well as semi-solid and fluid/drinkable yogurt and other
+// fluid/drinkable fermented products made with animal milk.
+// Page 9 WHO IYCF 2020
 
 gen milk_feeds= freq_milk + freq_formula + freq_yogurt	
 replace milk_feeds = 7 if milk_feeds>=7 & milk_feeds !=.
 la val milk_feeds feeds
 replace milk_feeds =. if age_days<0 | age_days>=730
 tab milk_feeds, m 
-* combines number of times fed milk, infant formula and yogurt. Please ensure there are no missings(.) 
+
+* combines number of times fed milk, infant formula and yogurt. 
 * all missings have been set to 0 to allow summation across row. 
 
 * OVERALL FREQUENCY FEEDS
@@ -687,13 +687,13 @@ tab wi_s,m
 
 
 * Survey Weights
-gen nat_wgt =iw_s_pool   
+gen national_wgt =iw_s_pool   
 
 * Regional weights not added
 merge 1:1 case_id using "C:\TEMP\CNNS_04_regional_weights.dta"
 
-gen reg_wgt = reg_weight_survey
-gen reg_bio_wgt = reg_weight_bio
+gen regional_wgt = reg_weight_survey
+gen regional_bio_wgt = reg_weight_bio
 
 gen state_wgt =iweight_s   
 
@@ -825,7 +825,7 @@ keep one int_date age_days agemos ///
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex nat_wgt state_wgt round  
+	sex national_wgt regional_wgt regional_bio_wgt state_wgt round  
 
 
 * Save data with name of survey

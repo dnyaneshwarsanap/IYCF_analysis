@@ -4,6 +4,7 @@
 
 version 16 
 
+
 // use "C:\Temp\IYCF\RSOC\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
 * EMW - ever married women
 // use "C:\Temp\IYCF\RSOC\Household_India_RSOC.dta", clear
@@ -679,6 +680,10 @@ tab milk_feeds, m
 * combines number of times fed milk, buttermilk, infant formula and yogurt. Please ensure there are no missings(.) 
 * all missings have been set to 0 to allow summation across row. 
 
+// make sure to not double count yogurt
+// it is included in solids
+
+
 * OVERALL FREQUENCY FEEDS
 gen feeds= milk_feeds + freq_solids	
 * use milk feeds for all liquid milk feeds
@@ -704,6 +709,8 @@ tab mmf_nobf, m
 * include milk, formula and yogurt
 gen min_milk_freq_nbf =0
 replace min_milk_freq_nbf =1 if milk_feeds >=2 & currently_bf!=1 
+replace min_milk_freq_nbf =1 if yogurt_freq >=2 & currently_bf!=1 
+
 replace min_milk_freq_nbf =. if age_days<=183 | age_days>=730
 la var min_milk_freq_nbf "Minimum Milk Frequency for Non-Breastfed Child"
 tab min_milk_freq_nbf, m 
@@ -720,7 +727,8 @@ tab mmf_all, m
 **Minimum Acceptable Diet (MAD) 
 *** Generates milk feeds for non-breastfed infants ***
 *** Milk feeds include milk other than breastmilk, infant formula and yogurt*
-* Variable fed_yogurt refers to number of times a child received yogurt*
+
+* Variable freq_yogurt refers to number of times a child received yogurt*
 
 * For each one please remember to set don't know to zero
 * for NFHS (DHS) replace fed_yogurt=0 if fed_yogurt>7  - don't know=8
@@ -785,10 +793,13 @@ label val cat_birth_wt cat_birth_wt
 label var cat_birth_wt "Birth weight category"
 tab cat_birth_wt, m 
 
-gen lbw=. 
-replace lbw = 1 if birth_weight<2.5
-replace lbw = 0 if birth_weight>=2.5 & birth_weight<10.9
-tab lbw,m
+cap drop lbw
+gen lbw = . 
+replace lbw = 1 if m19 <2500
+replace lbw = 0 if m19 >=2500 
+replace lbw = . if cat_birth_wt >=5
+tab m19 lbw, m
+tab lbw
 
 * early ANC <=3 months first trimester
 tab q144

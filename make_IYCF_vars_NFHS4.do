@@ -4,16 +4,16 @@
 
 * Code Robert, Shekhar, Dnyaneshwar 
 
-// freq_solids 
-// replace freq_solids =9 if q199_1==. & any_solid_semi_food==1 // missing frequency and 1+ food groups
 
-don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
 
-// milk_feeds
+
+
+* don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
+
 // check currently BF
-//  add ebf3d to all dbs. 
-// carb = fortified_food - double check WHO guidance
-// Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
+
+
+
 
 version 16 
 
@@ -101,8 +101,6 @@ tab agemos, m
 // cap drop agemos_x
 // gen agemos_x = v008 -  b3 if b5==1
 // scatter agemos_x agemos
-
-
 
 * Ever breastfed (children born in past 24 months) 
 
@@ -330,14 +328,12 @@ v415		     V415            drank from bottle with nipple
 * 	no and don't know = 0
 * following global guidance on IYCF analysis, this allows for maximium children to be included in indicator 
 
-
 foreach var of varlist v409- v415 {
 	recode `var' (1=1) (2 8 9 .=0) , gen(`var'_rec)
 	lab val `var'_rec no_yes
 }
 
 * LIQUIDS
-
 
 clonevar water					=v409_rec
 clonevar juice			        =v410_rec
@@ -519,8 +515,6 @@ la var ebf "Exclusive breasfeeding"
 tab ebf
 tab agemos ebf 
 
-
-
 * MEDIAN duration of exclusive breastfeeding
 cap drop age_ebf
 gen age_ebf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
@@ -535,8 +529,6 @@ gen age_cbf = round(age_days/30.4375, 0.01)   //exact age in months round of to 
 replace age_cbf=. if currently_bf !=1
 la var age_cbf "Median age of continued breasfeeding in months"
 sum age_cbf [aw=v005], d
-
-
 
 
  *Continued breastfeeding
@@ -585,6 +577,9 @@ replace freq_solids =9 if m39==. & any_solid_semi_food==1 // missing frequency a
 la list M39
 la def M39 9 missing, add
 la val freq_solids M39
+
+* freq_solids includes number of times consumed yogurt
+* if frequency of yogurt is added to milk_feeds, then it could be double counted
 
 tab m39 freq_solids,m
 tab freq_solids any_solid_semi_food, m 
@@ -637,8 +632,13 @@ replace freq_yogurt = v469x if yogurt==1
 replace freq_yogurt=0 if freq_yogurt>7
 tab freq_yogurt,m
 
-
 *Frequency of Milk and Milk Products 
+//  Milk feeds include any formula (e.g. infant formula, follow-on formula, "toddler milk") or
+// any animal milk other than human breast milk, (e.g. cow milk, goat milk, evaporated milk
+// or reconstituted powdered milk) as well as semi-solid and fluid/drinkable yogurt and other
+// fluid/drinkable fermented products made with animal milk.
+// Page 9 WHO IYCF 2020
+
 *Frequency of Milk and Dairy feeds in children 0-23 months
 gen milk_feeds = freq_milk + freq_formula + freq_yogurt 
 replace milk_feeds = 7 if milk_feeds>7 & milk_feeds !=.
@@ -646,6 +646,8 @@ tab milk_feeds, m
 
 
 * OVERALL FREQUENCY FEEDS
+* This is where double counting of yogurt can happen - only for non-breastfed children
+
 * Variable feeds = freq of all feeds --> includes (solids) + (milks, formula, yogurt)
 gen feeds= freq_solids + milk_feeds
 replace feeds= freq_solids if milk_feeds ==. // if milk_feeds is missing
@@ -655,6 +657,9 @@ la def feeds 7 "7+ feeds"
 la val feeds feeds
 la var feeds  "Frequency of solid, semi-solid, milk and formula feeds"
 tab feeds, m 	
+* Feeds is only used for non-breastfed children. 
+// four feedings of solid, semi-solid or soft foods or milk feeds for non-breastfed children aged
+// 6–23 months whereby at least one of the four feeds must be a solid, semi-solid or soft feed.
 
 
 *Minimum Meal Frequency (MMF) NON Breastfeeding
@@ -729,23 +734,53 @@ gen unhealthy_food = .
 
 *data for above indicators is not available
 
-up to here
 
 * SOCIO-DEMOGRAPHIC data		
-
-
 		
 		
 * LBW (low birth weight)
-tab lbw,m
+
+* Birth weight
+tab m19, m 
+//         9996 not weighed at birth
+//         9998 don't know
+cap drop birth_weight
+gen birth_weight = m19
+replace birth_weight = 9999 if m19 >9995
+label def bw 9999 "Missing", replace
+label val birth_weight bw
+label var birth_weight "Birth weight"
+replace birth_weight = birth_weight/1000 if birth_weight != 9999
+kdensity birth_weight if birth_weight<9995
+
+cap drop cat_birth_wt
+recode birth_weight (0/0.249=6)(0.25/1.499=1)(1.5/2.499=2)(2.5/3.999=3)(4/10.999=4)(11/10000=7), gen(cat_birth_wt)
+replace cat_birth_wt = 5 if m19==9996
+replace cat_birth_wt = 6 if m19==9998
+// egen c_birth_wt = cut(birth_weight), at(0.25,1.5,2.5,4,9001,9997,9999,10000) icodes
+label def cat_birth_wt 1 "Very low <1.5kg" 2 "Low <2.5kg" 3 "Average" 4 "High >4kg" 5 "Not weighed" 6 "Don't know" 7 "Missing"
+label val cat_birth_wt cat_birth_wt
+label var cat_birth_wt "Birth weight category"
+tab cat_birth_wt, m 
+
+* LBW  //low birth weight
+cap drop lbw
+gen lbw = . 
+replace lbw = 1 if m19 <2500
+replace lbw = 0 if m19 >=2500 
+replace lbw = . if cat_birth_wt >=5
+tab m19 lbw, m
+tab lbw
+
 
 * early ANC  <=3 months first trimester (ANC checkup within first 3 months of pregnancy)
+tab m13, m 
 gen earlyanc = 0
 replace earlyanc = 1 if m13<=3
 
 replace earlyanc =. if age_days>=730
-tab m13 earlyanc
-tab m13,m
+tab m13 earlyanc, m 
+
  
 * ANC 4+ (Pregnent women receiving more than 4 ANC check-ups)
 gen anc4plus = 0
@@ -754,8 +789,10 @@ replace anc4plus =. if age_days>=730
 tab m14 anc4plus
 
 * C-section  (pregnancy - weather cesarion cesarean section or not)
+cap drop csection
 gen csection = 0
 replace csection = 1 if m17 == 1
+la val csection no_yes
 tab m17 csection, m 
 
 
@@ -815,21 +852,15 @@ tab rururb, m
 * Wealth index
 gen wi = v190
 tab wi,m	
-		
+gen wi_s= v190
+			
 		
 
 *sex of child
 gen sex=b4
 tab sex b4
 		
-	
 		
-		
-	
-		
-	   
-*---------------------------------------------------------------------------------------------
-	   
 * Child Illness
 
 * Diarrhea
@@ -935,8 +966,7 @@ keep one int_date age_days agemos ///
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex nat_wgt state_wgt round  
-
+	sex national_wgt regional_wgt state_wgt round  
 
 		
 * Save data with name of survey
