@@ -5,6 +5,17 @@
 version 16 
 
 
+
+***************************
+* DOUBLE CHECK IF YOGURT IS INCLUDED HERE
+*replace min_milk_freq_nbf =1 if yogurt_freq >=2 & currently_bf!=1 
+**********************************
+
+
+
+
+
+
 // use "C:\Temp\IYCF\RSOC\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
 * EMW - ever married women
 // use "C:\Temp\IYCF\RSOC\Household_India_RSOC.dta", clear
@@ -709,7 +720,13 @@ tab mmf_nobf, m
 * include milk, formula and yogurt
 gen min_milk_freq_nbf =0
 replace min_milk_freq_nbf =1 if milk_feeds >=2 & currently_bf!=1 
-replace min_milk_freq_nbf =1 if yogurt_freq >=2 & currently_bf!=1 
+
+***************************
+* DOUBLE CHECK IF YOGURT IS INCLUDED HERE
+*replace min_milk_freq_nbf =1 if yogurt_freq >=2 & currently_bf!=1 
+**********************************
+
+
 
 replace min_milk_freq_nbf =. if age_days<=183 | age_days>=730
 la var min_milk_freq_nbf "Minimum Milk Frequency for Non-Breastfed Child"
@@ -1005,7 +1022,7 @@ tab state, m
 
 gen round =2
 
-keep one int_date age_days agemos ///
+keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos  ///
 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
 	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
 	prelacteal_saltwater prelacteal_formula prelacteal_honey ///

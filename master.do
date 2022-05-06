@@ -4,28 +4,37 @@
 version 16
 
 * To change
-ebf3d
-colostrum
-RSOC state
-RSOC region
-broth NFHS
-bread
-water CNNS
-juice CNNS
-milk CNNS
-potato CNNS
-leafy_green CNNS
-vita_fruit CNNS
-fruit_veg CNNS
-egg CNNS
-semisolid CNNS
-carb CNNS
-leg_nut CNNS
-fever RSOC
-LBW
-mum_educ
-caste
-region, national, state weights
+
+// does bread include gruel? no
+// carb includes gruel
+
+// colostrum
+// RSOC state
+// RSOC region
+
+// birthday, month year	
+
+
+
+
+// broth NFHS
+// bread
+// water CNNS
+// juice CNNS
+// milk CNNS
+// potato CNNS
+// leafy_green CNNS
+// vita_fruit CNNS
+// fruit_veg CNNS
+// egg CNNS
+// semisolid CNNS
+// carb CNNS
+// leg_nut CNNS
+// fever RSOC
+// LBW
+// mum_educ
+// caste
+// region, national, state weights
 
 
 // cd "C:\Users\rober\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
@@ -64,8 +73,9 @@ tab round, m
 append using "iycf_rsoc"
 tab round, m 
 append using "iycf_cnns"
-tab round, m 
 
+la def round 1 "NFHS-3" 2 RSOC 3 "NFHS-4" 4 CNNS
+la val round round
 
 
 * Generate 'region' variable
@@ -226,12 +236,7 @@ round                                         Round indicates the survey Round1 
 */
 
 
-currently_bf any_solid_semi_food intro_compfood ebf age_ebf age_cbf cont_bf cont_bf_12_23 freq_solids freq_milk freq_milk freq_formula freq_yogurt milk_feeds feeds colostrum
-
-
 * Round
-la def round 1 "NFHS-3" 2 "RSOC"  3 "NFHS-4" 4 "CNNS"
-la val round round
 tab round, m 
 
 *Double check all vars 

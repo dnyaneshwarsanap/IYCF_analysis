@@ -2,11 +2,11 @@
 
 version 16
 
-// add ebf3d to all dbs. 
 // check currently BF
 // carb = fortified_food - double check WHO guidance
 // Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age - check official WHO definition
-
+* LBW
+* Mothers education 
  
 cd "C:/Temp"
 use "C:\TEMP\CNNS_04_Cleaned_21MAY_final_with_constructed_var.dta", clear
@@ -103,6 +103,7 @@ tab  q302u eibf_timing, m
 
 
 clonevar ebf3d = q303
+tab ebf3d, m
 
 cap drop ebf2d
 gen ebf2d =0
@@ -133,6 +134,7 @@ tab currently_bf, m
 tab currently_bf q307, m 
 tab currently_bf q306, m 
 tab currently_bf q301, m 
+
 
 * Prelacteal feeds
 * What was [NAME] given to drink? within first three days after delivery
@@ -277,9 +279,14 @@ lab val bread bread
 
 * Define eight food groups following WHO recommended IYCF indicators
 gen carb = 0
-replace carb = 1 if bread ==1 | potato==1 
+replace carb = 1 if bread ==1 | potato==1 | fortified_food==1
 lab var carb "1: Bread, rice, grains, roots and tubers"
 // lab val carb carb1
+
+// WHO guidance
+// thin porridge
+// Porridge, bread, rice, noodles, or other foods made from grains
+// White potatoes, white yams, manioc, cassava, or any other foods made from roots
 
 lab var leg_nut "2: Legumes and nuts"
 // lab val leg_nut leg_nut1
@@ -315,7 +322,6 @@ foreach var of varlist carb dairy all_meat vita_fruit_veg {
 foreach var of varlist carb dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
 	tab `var' , m
 }
-
 
 * Age groups in blocks of 6 months
 gen agegroup = floor(age_days/183 +1)   // agemons/6 +1
@@ -378,7 +384,7 @@ replace ebf =0 if water      ==1 | ///
 replace ebf =. if age_days >182
 la var ebf "Exclusive breasfeeding"
 tab ebf
-tab ebf agemos
+tab agemos ebf 
 
 
 * MEDIAN duration of exclusive breastfeeding
@@ -399,7 +405,6 @@ sum age_cbf [aw=iw_s_pool] , d
 *Continued breastfeeding 12-23 months 
 gen cont_bf = 0
 replace cont_bf = 1 if q307 == 1 
-
 gen cont_bf_12_23 = cont_bf if age_days>335 & age_days<730 
 tab cont_bf_12_23, m
 
@@ -424,6 +429,7 @@ tab mdd, m
 * IN NFHS (DHS) replace fed_solids=0 if fed_solids is don't know  - In this case don't know has been assigned the value 8
 tab q311
 tab q312
+la list q312
 tab q312 q311, m 
 
 // gen freq_solids=q312
@@ -432,11 +438,6 @@ tab q312 q311, m
 // * CNNS is different from NFHS - It records # of feeds per day instead of 1-7. 
 // replace freq_solids =7 if q312 >=7 & q312 <50
 // replace freq_solids =0 if q312 ==98 
-
-
-
-
-
 
 cap drop freq_solids
 gen freq_solids =0 if q311==2  // zero freq_feeds
@@ -447,7 +448,6 @@ replace freq_solids = 7 if q312 >7 & q312 <=44
 replace freq_solids =9 if freq_solids>7 & q311==.  // missing
 replace freq_solids =9 if freq_solids==.  // don't know
 replace freq_solids =8 if q312==98  // don't know
-// replace freq_solids =8 if q311 ==  // don't know
 
 tab freq_solids, m
 
@@ -493,7 +493,7 @@ tab mmf, m
 
 * Generates the total number of times a non-breastfed child received solid, semi-solid or soft foods or milk feeds*
 tab milk, m
-tab q310d2, m 
+tab q310d2, m // times drank milk
 
 gen freq_milk = q310d2
 replace freq_milk=freq_milk*-1 if q310d2<0  // negatives converted to positive
@@ -523,24 +523,33 @@ tab q310e2 freq_yogurt , m
 // fluid/drinkable fermented products made with animal milk.
 // Page 9 WHO IYCF 2020
 
-gen milk_feeds= freq_milk + freq_formula + freq_yogurt	
+gen milk_feeds= freq_milk + freq_formula 
 replace milk_feeds = 7 if milk_feeds>=7 & milk_feeds !=.
 la val milk_feeds feeds
 replace milk_feeds =. if age_days<0 | age_days>=730
 tab milk_feeds, m 
 
+// Do not double count yogurt
+// it is included in solids
+
 * combines number of times fed milk, infant formula and yogurt. 
+* Check code from Richard in NY
 * all missings have been set to 0 to allow summation across row. 
 
 * OVERALL FREQUENCY FEEDS
-gen feeds= freq_milk + freq_formula + freq_solids	
+gen feeds= milk_feeds + freq_solids	
+* use milk feeds for all liquid milk feeds
+* use freq_solids for all semi-solid feeds
 replace feeds = 7 if feeds>=7 & feeds !=.
 la def feeds 7 "7+ feeds"
 la val feeds feeds
-la var feeds  "Frequency of solid, semi-solid, milk and formula feeds"
+la var feeds  "Frequency of solid, semi-solid, all milk feeds"
 tab feeds, m 	
 * please ensure there are no missings(.) and all missings have been set to 0 in the age group to allow summation across row. 
 * STATA will mark feeds as missings if any of them are missing.
+
+
+
 
 *Minimum Meal Frequency (MMF) NON Breastfeeding
 *  For currently non-breastfed children: Children 6-23 months of age who received solid, semi-solid or soft foods or milk feeds at least 4 times 
@@ -558,7 +567,7 @@ replace min_milk_freq_nbf =1 if milk_feeds >=2 & currently_bf!=1
 replace min_milk_freq_nbf =. if age_days<=183 | age_days>=730
 la var min_milk_freq_nbf "Minimum Milk Frequency for Non-Breastfed Child"
 tab min_milk_freq_nbf, m 
-* graph bar (mean) min_milk_freq_nbf currently_bf if agemons < 24, over(agemons) 
+// graph bar (mean) min_milk_freq_nbf currently_bf if agemons < 24, over(agemons) 
 
 
 *MMF among all children 6-23 months
@@ -614,24 +623,68 @@ gen unhealthy_food = .
 * juice broth other_liqs
 
 * LBW
+
+// cap drop lbw
+// gen birthweight = q645wght if q645wght < 8
+// tab birthweight
+// // kdensity birthweight
+// recode birthweight (0/2.499999=1)(2.5/8=0), gen(lbw)
+// tab lbw, m
+
+
+
+* LBW              (low birth weight)
+tab q644  //  q644. was [name] weighed at birth? 
+tab q645wght
+cap drop birth_weight
+gen birth_weight = q645wght
+replace birth_weight = .  if birth_weight >9
+
+label var birth_weight "Birth weight"
+sum birth_weight
+
+recode birth_weight (0/0.249=6)(0.25/1.499=1)(1.5/2.499=2)(2.5/3.999=3)(4/10.999=4)(. = 7), gen(cat_birth_wt)
+replace cat_birth_wt =  6 if birth_weight ==9.998
+replace cat_birth_wt =  5 if q644 ==2
+replace cat_birth_wt =  6 if q644 ==8
+label def cat_birth_wt 1 "Very low <1.5kg" 2 "Low <2.5kg" 3 "Average" 4 "High >4kg" 5 "Not weighed" 6 "Don't know" 7 "Missing"
+
+* SHOULD RECODE TO 8 = don't know 9 = Missing
+
+* Should always set birth_weight to grams 
+
+label val cat_birth_wt cat_birth_wt
+label var cat_birth_wt "Birth weight category"
+tab cat_birth_wt, m 
+
 cap drop lbw
-gen birthweight = q645wght if q645wght < 8
-tab birthweight
-// kdensity birthweight
-recode birthweight (0/2.499999=1)(2.5/8=0), gen(lbw)
-tab lbw, m
+replace birth_weight = birth_weight*1000
+gen lbw = . 
+replace lbw = 1 if birth_weight <2500
+replace lbw = 0 if birth_weight >=2500 
+replace lbw = . if cat_birth_wt >=5
+tab birth_weight lbw, m
+tab lbw
+
+
+
+
+
+
 
 * early ANC  <=3 months first trimester
+tab q614, m 
+tab q617 q614, m 
 gen earlyanc = 0
 replace earlyanc =1 if q617 <=3
-*replace earlyanc =. if age_days>=730
+replace earlyanc =. if age_days>=730
 tab earlyanc,m
 tab q617 earlyanc
 
 * ANC 4+ 
 gen anc4plus = 0
 replace anc4plus = 1 if q618 >=4 & q618 <=9
-*replace anc4plus =. if age_days>=730
+replace anc4plus =. if age_days>=730
 tab anc4plus,m
 tab q618 anc4plus
 
@@ -642,24 +695,43 @@ tab q639 csection, m
 
 * mothers education
 * Recode of q116/117
+tab  q116, m
+tab  q117, m
 tab  q117 q116, m
-recode q117 (0=0)(1/4=1)(5/9=2)(10/11=3)(12/25=4)(26/max=99), gen(mum_educ)
-* no education if mother did not attend school or don't know
-replace mum_educ=0 if q116==2 | q116==8
+// recode q117 (0=0)(1/4=1)(5/9=2)(10/11=3)(12/25=4)(26/max=99), gen(mum_educ)
+// * no education if mother did not attend school or don't know
+// replace mum_educ=0 if q116==2 | q116==8
+//
+// lab var mum_educ "Maternal Education"
+// la def mum_educ 0 "No Education" 1 "5 years completed" 2 "5-9 years completed" ///
+// 	3 "10-11 years completed" 4  "12+ years completed" 99 "Missing"
+// la val mum_educ mum_educ
+// tab mum_educ,m
+// tab q117 mum_educ, m 
 
+cap drop mum_educ
+cap drop mum_educ_years
+gen mum_educ_years=.
+replace mum_educ_years = q117 
+replace mum_educ_years = 0 if q116==2
+tab mum_educ_years, m 
+replace mum_educ_years=. if q117==98
+ * Only 34 cases of don't know in mum_educ - set missing to . 
+
+recode mum_educ_years (0=1)(1/4=2)(5/9=3)(10/11=4)(12/25=5)(26/max=99), gen(mum_educ)
+replace mum_educ = 99 if mum_educ_years==.
 lab var mum_educ "Maternal Education"
-la def mum_educ 0 "No Education" 1 "5 years completed" 2 "5-9 years completed" ///
-	3 "10-11 years completed" 4  "12+ years completed" 99 "Missing"
+la def mum_educ 1 "No Education" 2 "<5 years completed" 3 "5-9 years completed" ///
+	4 "10-11 years completed" 5  "12+ years completed" 99 "Missing"
 la val mum_educ mum_educ
-tab mum_educ,m
-tab q117 mum_educ, m 
+tab mum_educ_years mum_educ, m
 
- * Only 34 cases of missing in mum_educ - set missing to . 
-*replace mum_educ=. if mum_educ==99
+tab wi mum_educ, m 
+
 
 * caste
 cap drop caste
-gen caste = 0 if q113!=.
+gen caste = 0 if q113!=.    //caste =0 if religion is missing
 replace caste = 1 if q115 ==1 
 replace caste = 2 if q115 ==2 
 replace caste = 3 if q115 ==3
@@ -812,7 +884,7 @@ gen round=4
 
 * if doing analysis on only IYCF then drop all other vars. 
 
-keep one int_date age_days agemos ///
+keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos ///
 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
 	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
 	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
@@ -820,7 +892,7 @@ keep one int_date age_days agemos ///
 	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
 	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
 	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
-	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
+	agegroup sumfoodgrp diar fever ari cont_bf_12_23 ///
 	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///

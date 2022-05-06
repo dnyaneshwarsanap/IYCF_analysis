@@ -4,14 +4,17 @@
 
 * Code Robert, Shekhar, Dnyaneshwar 
 
-
-
-
-
 * don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
 
-// check currently BF
 
+
+
+
+
+
+*********************
+*check currently BF !!!
+********************
 
 
 
@@ -828,6 +831,7 @@ tab v155 mum_educ, col nofreq
 
 * caste
 gen caste = 0 if v130!=.           //caste =0 if religion is missing
+* Check if religion is missing
 replace caste = 1 if s116 ==1 
 replace caste = 2 if s116 ==2 
 replace caste = 3 if s116 ==3
@@ -891,8 +895,6 @@ tab ari h31b
 tab ari h31c
 tab ari, m 
 
-//-------------------------------------------------------------------------------------------
-
 
 *NFHS 4 state codes are considered as standard for other surveys
 gen state = v101
@@ -952,8 +954,7 @@ la val state state_name
 tab state, m 
 
 gen round=3
-
-keep one int_date age_days agemos ///
+keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos ///
 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
 	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
 	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
