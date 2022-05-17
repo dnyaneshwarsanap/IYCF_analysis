@@ -77,7 +77,7 @@ replace hw16 = 15 if hw16 > 31
 tab hw16
 * Following WHO recommendations on anthro data
 * We have created heaping on 15th of month
-// kdensity hw16 if b5==1
+// kdensity hw16 
 
 gen birthday =  hw16
 gen birthmonth = b1
@@ -99,7 +99,7 @@ replace age_days = int_date - dob_date
 *check if any age_days are less than zero
 replace age_days =. if age_days>1825
 tab age_days,m 
-// kdensity age_days if b5==1
+// kdensity age_days
 
 gen agemos = floor(age_days/30.42) if b5==1
 // graph bar (count) one, over(agemos)
@@ -114,9 +114,18 @@ tab agemos, m
 la list M4 //in NFHS4 data value label is M4 for m4
 tab m4
 
+// M4:
+//           93 ever breastfed, not currently breastfeeding
+//           94 never breastfed
+//           95 still breastfeeding
+//           96 breastfed until died
+//           97 inconsistent
+//           98 don't know
+
 cap drop evbf
 gen evbf = 0
 replace evbf=1 if m4 >=0 &  m4 <60  // duration of breastfeeding in months
+replace evbf=1 if m4 == 93   // ever breastfed, not currently breastfeeding
 replace evbf=1 if m4 == 95 // still breastfeeding
 
 replace evbf=. if age_days>=730 
@@ -125,9 +134,15 @@ tab m4 evbf, m
 tab evbf
 
 
-
 *Early initiation of Breastfeeding (children born in last 24 months breastfed within 1hr)
 la list M34
+// M34:
+//            0 immediately
+//          100 within first hour
+//          101 hours: 1
+//          199 hours: number missing
+//          201 days: 1
+//          299 days: number missing
 tab m34, m 
 
 gen eibf = 0
@@ -145,6 +160,7 @@ replace eibf_timing = 0 if m34==0
 replace eibf_timing = 1 if m34==101 | m34 ==100
 replace eibf_timing = mod(m34,100) if m34>=102 & m34<=123
 replace eibf_timing = mod(m34,200)*24 if m34>=201 & m34<=223
+replace eibf_timing =.  if m34 ==199 | m34 ==299 
 replace eibf_timing =.  if age_days>=730
 la var eibf_timing "Timing of start of breastfeeding (in hours)"
 tab eibf_timing,m
@@ -154,6 +170,7 @@ tab eibf_timing,m
 
 * Exclusively breastfed for the first two days after birth
 * Percentage of children born in the last 24 months who were fed exclusively with breast milk for the first two days after birth
+* Q499D - Was [NAME] given nothing to drink other than breast milk within the first three days after delivery?
 * m55z Was [NAME] given nothing to drink other than breast milk within the first three days after delivery?
 * The NFHS4 did not ask the question in the best method, so we are trying to edit to represent 2 days. 
 
@@ -174,12 +191,15 @@ tab ebf3d m55z, m
 // 1. ever breastfed
 // 2. still breastfeeding
 // 3. breastfed yesterday
-// v404 is a currently breastfeeding var in NFHS 3 can we use this var directly
+// v404 is a currently breastfeeding var in NFHS can we use this var directly
+tab v404, m 
 
 cap drop currently_bf
 gen currently_bf = v404
 tab currently_bf,m
 
+tab m4 currently_bf,m
+* there are some incompatible answers - never breastfed & currently_bf
 
 
 
@@ -241,6 +261,7 @@ tab m55m
 tab m55n
 tab m55o 
 tab m55x
+tab m55z
 
 clonevar prelacteal_other = m55x
 replace prelacteal_other = . if m55x==9
@@ -260,12 +281,10 @@ replace prelacteal_otherthanmilk = . if  age_days>=730
 
 tab prelacteal_milk, m 
 tab prelacteal_formula, m 
-tab  prelacteal_otherthanmilk, m
+tab prelacteal_otherthanmilk, m
 * Compare to variable - gave nothing
 tab m55z prelacteal_otherthanmilk
 * m55z does faithfully represent children who were given nothing in first 3 days. 
-
-
 
 * Bottle Feeding
 * for variables that are stand alone, missing vars are coded as missing. 
@@ -285,15 +304,15 @@ tab m38 v415, m  //v415 drank from bottle with nipple EVER?
 
 /*
 Var Name     Value Label         Variable Label
-v409		     V409            gave child plain water        gave child plain water
+v409		     V409            gave child plain water      gave child plain water
 v409a		     V409A         # gave child sugar water     -na      
 v410		     V410            gave child juice 
-v410a		     V410a           gave child tea or coffee 
+v410a		     V410a           gave child tea or coffee  - na
 v411 		     V411            gave child tinned/powder or fresh milk
 v411a		     V411a           gave child baby formula 
 v412 		     V412          # gave child fresh milk      -na
-v412a 		     V412A           gave child baby cerealac etc
-v412b 		     V412B           gave child other porridge/gruel
+v412a 		     V412A           gave child baby cerelac etc
+v412b 		     V412B           gave child other porridge/gruel - na
 v412c            V412C           gave child soup/clear broth
 v413 		     V413            gave child other liquid
 v413a		     V413A         # gave child cs liquid       -na 
@@ -307,7 +326,7 @@ v414d 		     V414D           gave child child cs foods
 v414e 		     V414E           gave child bread, noodles, other made from grains
 v414f 		     V414F           gave child potatoes, cassava, or other tubers
 v414g 		     V414G           gave child eggs
-v414h 		     V414H           gave child meat (beef, pork, lamb, chicken, etc)
+v414h 		     V414H           gave child meat (beef, pork, lamb, chicken, etc)  -na
 v414i 		     V414I           gave child pumpkin, carrots, squash (yellow or orange inside
 v414j 		     V414J           gave child any dark green leafy vegetables
 v414k 		     V414K           gave child mangoes, papayas, other vitamin a fruits
@@ -316,8 +335,8 @@ v414m 		     V414M           gave child liver, heart, other organs
 v414n 		     V414N           gave child fresh or dried fish or shellfish
 v414o 		     V414O           gave child food made from beans, peas, lentils, nuts
 v414p 		     V414P           gave child cheese, yogurt , other milk products
-v414q 		     V414Q           gave child oil, fats, butter, products made of them	
-v414r 		     V414R           gave child chocolates, sweets,  candies, pastries, etc
+v414q 		     V414Q           gave child oil, fats, butter, products made of them	 - na
+v414r 		     V414R           gave child chocolates, sweets,  candies, pastries, etc  - na
 v414s 		     V414S           gave child other solid or semi-solid food
 v414t 		     V414T           gave child any other meat
 v414u		     V414U         # gave child cs foods        -na
@@ -347,7 +366,7 @@ clonevar juice			        =v410_rec
 clonevar broth                  =v412c_rec // gave child soup/clear broth
 clonevar tea				    =v410a_rec
 clonevar milk			        =v411_rec // tinned, powder or fresh milk
-tab v412_rec, m  // fresh milk all missing data
+tab v412_rec, m                           // fresh milk all missing data
 
 clonevar formula 		        =v411a_rec
 clonevar other_liq 		        =v413_rec
@@ -459,7 +478,7 @@ foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg currently_bf  
 
 	
 foreach var of varlist carb dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
-	tab `var' , m
+		tab `var' if age_days<= 730, m
 }
 		
 * Age groups in blocks of 6 months
@@ -480,7 +499,7 @@ rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 fg9) ///
 cap drop any_solid_semi_food
 egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
 replace any_solid_semi_food = 1 if any_solid_semi_food >1
-tab any_solid_semi_food, m 	   
+tab any_solid_semi_food if age_days<= 730, m 	   
 
 	   
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
@@ -529,7 +548,7 @@ replace age_ebf = . if age_days >183
 *set agemos_ebf to missing if exbf=no
 replace age_ebf=. if ebf==0
 la var age_ebf "Median age of exclusive breasfeeding in months"
-sum age_ebf [aw=v005], d
+sum age_ebf, d
 
 * MEDIAN duration of continued breastfeeding
 gen age_cbf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal

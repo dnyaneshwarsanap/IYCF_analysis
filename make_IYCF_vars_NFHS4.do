@@ -36,11 +36,12 @@ gen hh_num = v002
 
  
 
-*Exclude all dead children 
+* Do NOT exclude dead children. 
+// Note: Table is based on last-born children born in the 2 years preceding the survey regardless of whether the children are living or dead at
+// the time of the interview
+// Same child sample for EIBF and EBF
 tab b5,m
-*Drop out 11,884 dead children from data
-drop if b5!=1
-tab b5,m
+
 
 * Change from age in months to age in days for all IYCF categories
 * Ages in month by day ranges
@@ -170,7 +171,7 @@ tab ebf3d m55z, m
 // 1. ever breastfed
 // 2. still breastfeeding
 // 3. breastfed yesterday
-// v404 is a currently breastfeeding var in NFHS 3 can we use this var directly
+// v404 is a currently breastfeeding var in NFHS can we use this var directly
 
 cap drop currently_bf
 gen currently_bf = v404
@@ -525,13 +526,13 @@ replace age_ebf = . if age_days >183
 *set agemos_ebf to missing if exbf=no
 replace age_ebf=. if ebf==0
 la var age_ebf "Median age of exclusive breasfeeding in months"
-sum age_ebf [aw=v005], d
+sum age_ebf, d
 
 * MEDIAN duration of continued breastfeeding
 gen age_cbf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
 replace age_cbf=. if currently_bf !=1
 la var age_cbf "Median age of continued breasfeeding in months"
-sum age_cbf [aw=v005], d
+sum age_cbf, d
 
 
  *Continued breastfeeding
