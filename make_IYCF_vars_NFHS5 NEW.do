@@ -2,45 +2,47 @@
 * Make IYCF Variables for NFHS4 data - PURPOSE OF FILE
 * USING Updated WHO IYCF guidelines 2020 and recommended IYCF code from UNICEF NY
 
-* Code Robert, Shekhar, Dnyaneshwar 
+* Code Robert, Dnyaneshwar 
 
+
+* Review and correct
+********************
 * don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
-
-
-
-
-
-
-
-*********************
-*check currently BF !!!
+* check currently BF !!!
+* Harmonize the states/ut's to NHFS4
 ********************
 
 
+include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
+// include "dnyaneshwar_paths.do"
 
-version 16 
+* Open NFHS 5
+use `NFHS5', clear
 
-cd "C:/Temp"
-use "C:\TEMP\IAKR71FL.DTA", clear
+tab v007
 
-*use "D:\unicef\iycf\nfhs4\IAKR71FL.dta"
-// cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
-// use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\IAKR71FL.DTA", clear
+cap drop birthweight
+cap drop lbw
 
 *gen one=1
 lab define no_yes 0 "No" 1 "Yes"
 
-gen psu = v001
-// scatter v024 psu // psu is state specific - no duplication
+gen psu = v001  //
+* scatter v024 psu // psu is state specific - no duplication
+
 gen hh_num = v002
 
- 
+* Be very careful when dropping cases in the make_IYCF_vars do files
+* only drop cases for the specific variables. 
+* drop if midx!=1  // considering the last born children only
 
-*Exclude all dead children 
+
+* Do NOT exclude dead children. 
+// Note: Table is based on last-born children born in the 2 years preceding the survey regardless of whether the children are living or dead at
+// the time of the interview
+// Same child sample for EIBF and EBF
 tab b5,m
-*Drop out 11,884 dead children from data
-drop if b5!=1
-tab b5,m
+
 
 * Change from age in months to age in days for all IYCF categories
 * Ages in month by day ranges
@@ -57,7 +59,7 @@ tab b5,m
 gen int_date = mdy(v006 , v016 , v007)
 format int_date %td
 
-*to check the date month year datas
+*to check the date month year data
 tab v006, m   // v006 interview month
 tab v016, m   // v016 interview day
 tab v007, m   // v007 interview year
@@ -900,6 +902,9 @@ tab ari, m
 gen state = v101
 *state_nfhs4 and state are same
 		
+
+
+
 * Survey Weights
 * NFHS4 & 5 are weighted at district level. 
 * all DHS type weights must be divided by million before use
@@ -923,6 +928,7 @@ la def state_name			   5 Bihar , add
 la def state_name			   6 Chandigarh, add
 la def state_name			   7 Chattisgarh, add
 la def state_name			   8 "Dadra and Nagar Haveli", add
+* CORRECT FOR HARMONIZED STATES ACROSS ALL SURVEYS
 la def state_name			   9 "Daman and Diu", add
 la def state_name			  10 Goa, add
 la def state_name			  11 Gujarat, add
@@ -955,32 +961,246 @@ la val state state_name
 
 tab state, m 
 
-gen round=3
-keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos ///
-	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
-	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
-	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
-	prelacteal_janamghuti prelacteal_other bottle water juice milk ///
-	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
-	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
-	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
-	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
-	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
-	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
-	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
-	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex national_wgt regional_wgt state_wgt round  
+gen round=5
+// keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos ///
+// 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
+// 	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
+// 	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
+// 	prelacteal_janamghuti prelacteal_other bottle water juice milk ///
+// 	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
+// 	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
+// 	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
+// 	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
+// 	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
+// 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
+// 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
+// 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
+// 	sex national_wgt regional_wgt state_wgt round  
 
 		
 * Save data with name of survey
-save iycf_NFHS4, replace 
+save iycf_NFHS5, replace 
 
 
 
 
 
+//-----------------------------------------------------------
+
+*Birth Place
+
+tab m15, m
+
+/*
+   place of delivery |      .            value    Freq       Percent      Cum.
+----------------------------------------+-----------------------------------
+                      respondent's home |   11   18,941       10.71       10.71
+                             other home |   12      196        0.11       10.82
+                          parents' home |   13    2,082        1.18       12.00
+
+
+          public: govt./munic. hospital |   21   53,283       30.13       42.13
+               public: govt. dispensary |   22    3,104        1.76       43.88
+                   public: uhc/uhp/ufwc |   23    2,416        1.37       45.25
+   public: chc/rural hospital/block phc |   24   41,151       23.27       68.52
+             public: phc/additional phc |   25   12,621        7.14       75.66
+                     public: sub-centre |   26    2,072        1.17       76.83
+    other public sector health facility |   27      305        0.17       77.00
+
+
+private: hospital/maternity home/clinic |   31   38,480       21.76       98.76
+   other private sector health facility |   32    1,189        0.67       99.43
+           ngo or trust hospital/clinic |   33      611        0.35       99.78
+                                  other |   96      392        0.22      100.00
+----------------------------------------+-----------------------------------
+                                  Total |       176,843      100.00
+
+*/
+
+cap drop birth_place
+gen birth_place = .
+replace birth_place = 1 if m15 >= 11 & m15 <=13
+replace birth_place = 2 if m15 >= 21 & m15 <=27
+replace birth_place = 3 if m15>=31
+lab define birth_place 1 "Home" 2 "Public" 3 "Private"
+tab birth_place,m
+
+
+
+* early ANC  <=3 months first trimester (ANC checkup within first 3 months of pregnancy)
+tab m13, m 
+gen earlyanc = 0
+replace earlyanc = 1 if m13<=3
+tab m13 earlyanc, m 
+
+ 
+* ANC 4+ (Pregnent women receiving more than 4 ANC check-ups)
+gen anc4plus = 0
+replace anc4plus = 1 if m14 >=4 & m14 <=30
+tab m14 anc4plus
+
+* C-section  (pregnancy - weather cesarion cesarean section or not)
+cap drop csection
+gen csection = 0
+replace csection = 1 if m17 == 1
+la val csection no_yes
+tab m17 csection, m 
+
+
+*Antenatal Advice on breastfeeding 
+gen ANC_BF = 1
+replace ANC_BF = 2 if s440c == 1
+replace ANC_BF = . if s440c == .
+lab define ANC_BF 1 "No" 2 "Yes"
+tab ANC_BF, m
+
+
+
+* Post-Natal care Visits
+* Post-natal checkups of baby within 2 months
+gen baby_postnatal = 1
+replace baby_postnatal = 2 if m70 == 1
+lab define baby_postnatal 1 "No" 2 "Yes"
+lab val baby_postnatal baby_postnatal
+lab var baby_postnatal "Weather the child recieved Post-Natal care within 2 months"
+tab baby_postnatal,m
+
+
+*Postnatal care provider
+
+tab m72,m
+/*
+   person who performed postnatal |
+                          checkup |      Freq.     Percent        Cum.
+----------------------------------+-----------------------------------
+                           doctor |     26,117       14.77       14.77
+     anm / nurse / mid-wife / lhv |     22,211       12.56       27.33
+           other health personnel |        450        0.25       27.58
+                             asha |     26,755       15.13       42.71
+dai / traditional birth attendant |      2,836        1.60       44.32
+                            other |        275        0.16       44.47
+                                . |     98,199       55.53      100.00
+----------------------------------+-----------------------------------
+                            Total |    176,843      100.00
+*/
+
+gen postnatal_care_provider = .
+replace postnatal_care_provider = 1 if m72 == 11 
+replace postnatal_care_provider = 2 if m72 == 12
+replace postnatal_care_provider = 3 if m72 == 13
+replace postnatal_care_provider = 4 if m72 == 21
+replace postnatal_care_provider = 5 if m72 == 22
+replace postnatal_care_provider = 6 if m72 == 96
+
+
+lab define postnatal_care_provider 1 "doctor" 2 "ANM/Nurse/Mid-Wife/Lhv" 3 "other health personnel" 4 "ASHA" 5 "dai / traditional birth attendant" 6 "Other"
+lab val postnatal_care_provider postnatal_care_provider
+lab var postnatal_care_provider "Post-Natal Care Provider"
+tab postnatal_care_provider,m
+
+
+* Number of postnatal visits
+* entries in pregnancy and postnatal care roster
+gen no_of_postnatal_visits = v417
+tab no_of_postnatal_visits,m
 
 
 
 
+* Survey Weights
+gen nat_wgt = v005 
+* Regional weights 
+gen regional_wgt = sweight 
+gen state_wgt =sweight 
 
+
+gen state = .
+
+replace state =1  if v101 ==35
+replace state =2  if v101 ==28			 
+replace state =3  if v101 ==12			 
+replace state =4  if v101 ==18			 
+replace state =5  if v101 ==10
+replace state =6  if v101 ==4		 
+replace state =7  if v101 ==22
+replace state =8  if v101 == 25		
+* here in NFHS 5 2 UTS are merged
+replace state =10  if v101 ==30			 
+replace state =11  if v101 ==24			 
+replace state =12  if v101 ==6			 
+replace state =13  if v101 ==2			 
+replace state =14  if v101 ==1			 
+replace state =15  if v101 ==20			 
+replace state =16  if v101 ==29			 
+replace state =17  if v101 ==32
+replace state =18  if v101 ==31			 
+replace state =19  if v101 ==23			 
+replace state =20  if v101 ==27			 
+replace state =21  if v101 ==14			 
+replace state =22  if v101 ==17			 
+replace state =23  if v101 ==15			 
+replace state =24  if v101 ==13			 
+replace state =25  if v101 ==7			 
+replace state =26  if v101 ==21			
+replace state =27  if v101 ==34
+replace state =28  if v101 ==3			 
+replace state =29  if v101 ==8			 
+replace state =30  if v101 ==11			 
+replace state =31  if v101 ==33			 
+replace state =32  if v101 ==16			 
+replace state =33  if v101 ==9			 
+replace state =34  if v101 ==5			 
+replace state =35  if v101 ==19			 
+
+
+cap la drop state_name
+la def state_name			   1 "A&N islands"
+la def state_name			   2 "Andhra Pradesh", add
+la def state_name			   3 "Arunachal Pradesh" , add
+la def state_name			   4 Assam , add
+la def state_name			   5 Bihar , add
+la def state_name			   6 Chandigarh, add
+la def state_name			   7 Chattisgarh, add
+la def state_name			   8 "Dadra and Nagar Haveli & Daman and Diu", add
+*la def state_name			   9 "Daman and Diu", add
+la def state_name			  10 Goa, add
+la def state_name			  11 Gujarat, add
+la def state_name			  12 Haryana, add
+la def state_name			  13 "Himachal Pradesh", add
+la def state_name			  14 "Jammu and Kashmir", add
+la def state_name			  15 Jharkhand, add
+la def state_name			  16 Karnataka, add
+la def state_name			  17 Kerala, add
+la def state_name			  18 Lakshadweep, add
+la def state_name			  19 "Madhya Pradesh", add
+la def state_name			  20 Maharashtra, add
+la def state_name			  21 Manipur, add
+la def state_name			  22 Meghalaya, add
+la def state_name			  23 Mizoram, add
+la def state_name			  24 Nagaland, add
+la def state_name			  25 Delhi, add
+la def state_name			  26 Odisha, add
+la def state_name			  27 Puducherry, add
+la def state_name			  28 Punjab, add
+la def state_name			  29 Rajasthan, add
+la def state_name			  30 Sikkim, add
+la def state_name			  31 "Tamil Nadu", add
+la def state_name			  32 Tripura, add
+la def state_name			  33 "Uttar Pradesh", add
+la def state_name			  34 Uttarakhand, add
+la def state_name			  35 "West Bengal", add
+la def state_name			  36 Telangana, add
+la def state_name             37 ladakh, add
+la val state state_name
+
+tab state, m 
+
+
+* Districts
+gen district = sdist
+*tab district
+
+
+
+* Save data with name of survey
+save iycf_NFHS5, replace 

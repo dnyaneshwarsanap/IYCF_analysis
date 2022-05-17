@@ -23,11 +23,14 @@ lab define no_yes 0 "No" 1 "Yes"
 gen psu = v001
 gen hh_num = v002
 
-*tab result
-tab b5, m
-* Complete N living children 48,679  UPDATED
-* remove all children who died (died children = 2876)
-drop if b5 !=1
+
+* Do NOT exclude dead children. 
+// Note: Table is based on last-born children born in the 2 years preceding the survey regardless of whether the children are living or dead at
+// the time of the interview
+// Same child sample for EIBF and EBF
+tab b5,m
+
+
 
 * Change from age in months to age in days for all IYCF categories
 * Ages in month by day ranges
