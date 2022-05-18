@@ -8,9 +8,8 @@
 clear
 version 16
 
-* KEEP COLLEAGUES FOLDER REFERENCES - Comment out when not used. 
-// cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
-// use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\IAKR52FL.dta", clear
+Check survey weights
+
 
 cd "C:/Temp"
 //use "C:\Users\Rojohnston\OneDrive - UNICEF\ECM-Nut OP4 Nutrition Governance, Partnerships, resources M&E\IIT-B\IYCF\NFHS3\IAKR52FL.dta", clear
@@ -686,7 +685,7 @@ label val birth_weight bw
 label var birth_weight "Birth weight"
 replace birth_weight = birth_weight/1000 if birth_weight != 9999
 
-kdensity birth_weight
+// kdensity birth_weight
 * kdensity misrepresents the spread of birthweights
 
 * Line graph kdensity
@@ -799,9 +798,9 @@ tab wi,m
 gen wi_s=v190
 	
 * Survey Weights
-gen national_wgt = v005    //   national women's weight (6 decimals)
-gen regional_wgt =v005s    // 	state women's weight (6 decimals)
-gen state_wgt =v005s       // 	state women's weight (6 decimals)
+gen national_wgt = v005 /1000000    //   national women's weight (6 decimals)
+gen regional_wgt =v005s /1000000    // 	state women's weight (6 decimals)
+gen state_wgt =v005s /1000000       // 	state women's weight (6 decimals)
 	
 *sex of child
 gen sex=b4

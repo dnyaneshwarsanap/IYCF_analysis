@@ -14,6 +14,8 @@
 
 *********************
 *check currently BF !!!
+state
+ANC counselling on BF
 ********************
 
 
@@ -923,18 +925,44 @@ tab ari, m
 gen state = v101
 *state_nfhs4 and state are same
 		
-* Survey Weights
-* NFHS4 & 5 are weighted at district level. 
-* all DHS type weights must be divided by million before use
-* analysis at state and regional level uses state weights
-
-gen national_wgt = v005 / 1000000
-* Regional weights 
-gen regional_wgt = sv005 / 1000000
-
-gen state_wgt =sv005 / 1000000
 
 
+replace state =1  if v101 ==35		// 1 "A&N islands"
+replace state =2  if v101 ==28		// Andhra Pradesh
+replace state =3  if v101 ==12			 
+replace state =4  if v101 ==18			 
+replace state =5  if v101 ==10		
+replace state =6  if v101 ==4       // 6 Chandigarh	 
+replace state =7  if v101 ==22		
+* merged two UTs in NFHS5
+replace state =8  if v101 ==25       // 8 dadra & nagar haveli and daman & diu 
+// replace state =9
+replace state =10  if v101 ==30			 
+replace state =11  if v101 ==24			 
+replace state =12  if v101 ==6			 
+replace state =13  if v101 ==2			 
+replace state =14  if v101 ==1			 
+replace state =15  if v101 ==20			 
+replace state =16  if v101 ==29			 
+replace state =17  if v101 ==32		
+replace state =18  if v101 ==31       // 18 Lakshadweep	 
+replace state =19  if v101 ==23			 
+replace state =20  if v101 ==27			 
+replace state =21  if v101 ==14			 
+replace state =22  if v101 ==17			 
+replace state =23  if v101 ==15			 
+replace state =24  if v101 ==13			 
+replace state =25  if v101 ==7			 
+replace state =26  if v101 ==21			
+replace state =27  if v101 ==34      // 27 Puducherry 
+replace state =28  if v101 ==3			 
+replace state =29  if v101 ==8			 
+replace state =30  if v101 ==11			 
+replace state =31  if v101 ==33			 
+replace state =32  if v101 ==16			 
+replace state =33  if v101 ==9			 
+replace state =34  if v101 ==5			 
+replace state =35  if v101 ==19		
 
 
 cap la drop state_name
@@ -945,8 +973,10 @@ la def state_name			   4 Assam , add
 la def state_name			   5 Bihar , add
 la def state_name			   6 Chandigarh, add
 la def state_name			   7 Chattisgarh, add
-la def state_name			   8 "Dadra and Nagar Haveli", add
-la def state_name			   9 "Daman and Diu", add
+la def state_name			   8 "Dadra & Nagar Haveli/ Daman & Diu", add
+* CORRECT FOR HARMONIZED STATES ACROSS ALL SURVEYS
+// la def state_name			   9 "Daman and Diu", add
+
 la def state_name			  10 Goa, add
 la def state_name			  11 Gujarat, add
 la def state_name			  12 Haryana, add
@@ -977,6 +1007,20 @@ la def state_name			  36 Telangana, add
 la val state state_name
 
 tab state, m 
+tab state v101, m 
+
+* Survey Weights
+* NFHS4 & 5 are weighted at district level. 
+* all DHS type weights must be divided by million before use
+* analysis at state and regional level uses state weights
+
+gen national_wgt = v005 / 1000000
+
+* Regional weights 
+gen regional_wgt = sv005 / 1000000
+
+gen state_wgt =sv005 / 1000000
+
 
 gen round=3
 keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos ///
