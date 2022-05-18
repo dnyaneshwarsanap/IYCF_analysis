@@ -561,6 +561,7 @@ la var age_cbf "Median age of continued breasfeeding in months"
 
 
  *Continued breastfeeding
+cap drop cont_bf
 la list M4
 // M4:
 //           93 ever breastfed, not currently breastfeeding
@@ -570,11 +571,13 @@ la list M4
 //           97 inconsistent
 //           98 don't know
 recode m4 (95=1)(0/94 96/99=0)(missing=0), gen(cont_bf)
+* From DHS guide on IYCF
+* Missing data on breastfeeding is treated as not currently breastfeeding in numerator and included in the denominator.
 tab m4 cont_bf , m 
 
 gen cont_bf_12_23 = cont_bf if age_days>335 & age_days<730 
 tab cont_bf_12_23, m
-
+tab m4 cont_bf_12_23, m
 
 
 *Minimum Dietary Diversity- code for new indicator definition 
@@ -608,6 +611,11 @@ clonevar freq_solids=m39
 * Cannot give any # of freq_feeds to those yes any_solid_semi_food cannot be coded. 
 replace freq_solids =9 if m39==. & any_solid_semi_food==1 // missing frequency and 1+ food groups
 la list M39
+// M39:
+//            0 none
+//            7 7+
+//            8 don't know
+
 la def M39 9 missing, add
 la val freq_solids M39
 
@@ -615,15 +623,19 @@ la val freq_solids M39
 * if frequency of yogurt is added to milk_feeds, then it could be double counted
 
 tab m39 freq_solids,m
-tab freq_solids any_solid_semi_food, m 
+tab freq_solids any_solid_semi_food, m "
 
 * Quality of freq solids indicators
+cap drop qual_freq_solids
 clonevar qual_freq_solids = freq_solids
-replace qual_freq_solids =10 if freq_solids>=0 & freq_solids<=7
+replace qual_freq_solids =0 if freq_solids>=0 & freq_solids<=7
+
 replace qual_freq_solids =99 if any_solid_semi_food==1 & freq_solids==0
-la def M39 10 "from 0 to 7x", add
-la def M39 99 "missing freq & yes semi-solids", add
-la val freq_solids M39
+la def qual_freq_solids 0 "from 0 to 7x", add
+la def qual_freq_solids 8 "don't know", add
+la def qual_freq_solids 9 missing, add
+la def qual_freq_solids 99 "missing freq & yes semi-solids", add
+la val freq_solids qual_freq_solids
 tab qual_freq_solids,m
 tab qual_freq_solids
 
