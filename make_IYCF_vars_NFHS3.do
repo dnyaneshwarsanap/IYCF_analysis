@@ -601,9 +601,6 @@ tab qual_freq_solids
 
 
 
-
-
-
 *Minimum Meal Frequency (MMF) Breastfeeding
 gen mmf_bf=0
 replace mmf_bf=1 if freq_solids>=2 & currently_bf==1 & age_days>183 & age_days<243 
@@ -613,13 +610,25 @@ replace mmf_bf =. if age_days<=183 | age_days>=730
 tab mmf_bf, m
 
 
-la def mmf_bf  0 "Inadequate MMF" 1 "Adequate freq(2) and BF 6-8M" 2 "Adequate freq(3) and BF 9-23M"
-la val mmf_bf mmf_bf
-tab mmf_bf,m
+// la def mmf  0 "Inadequate MMF" 1 "Adequate freq(2) & BF 6-8M" 2 "Adequate freq(3) and BF 6-8M"
+la def mmf  0 "Inadequate MMF" 1 "Adequate freq(2) & BF 6-8M" 2 "Adequate freq(3) and BF 9-23M"
+la val mmf mmf
+tab mmf
 
 
-*AS Frequency of Milk feeds is not in NFHS 3 DATA, WE ARE UNABLE TO CREATE THE MMF for Non_BF CHILDREN  VARIABLE
+
+
+*For currently non-breastfed children: MMF is met if children 6-23 months of age receive solid, semi-solid or soft foods or milk feeds at least 4 
+* times during the previous day and at least one of the feeds is a solid, semi-solid or soft feed
+* Variable freq_milk refers to number of times a child received milk other than breastmilk i.e. other animal milk*
+* Variable freq_formula refers to number of times a child received infant formula*
+* Variable freq_yogurt refers to number of times a child received yogurt*
+
+* PLEASE NOTE
+* As Frequency of Milk feeds is not in NFHS 3 DATA, WE ARE UNABLE TO CREATE THE MMF for Non_BF CHILDREN  VARIABLE
 * Yogurt is not double counted 
+
+* Generates the total number of times a non-breastfed child received solid, semi-solid or soft foods or milk feeds*
 
 
 *MMF among all children 6-23 months    //for NFHS 3 we can only consider MMF for BF children, so this var is only for BF children
@@ -676,7 +685,17 @@ label def bw 9999 "Missing", replace
 label val birth_weight bw
 label var birth_weight "Birth weight"
 replace birth_weight = birth_weight/1000 if birth_weight != 9999
+
 kdensity birth_weight
+* kdensity misrepresents the spread of birthweights
+
+* Line graph kdensity
+cap drop temp
+gen temp = birth_weight if birth_weight<9995
+cap drop count_birth_weight
+bysort temp: egen count_birth_weight = count(temp) 
+replace temp=. if temp >= 6
+twoway line count_birth_weight temp
 
 recode birth_weight (0/0.249=6)(0.25/1.499=1)(1.5/2.499=2)(2.5/3.999=3)(4/10.999=4)(11/10000=7), gen(cat_birth_wt)
 replace cat_birth_wt = 5 if m19==9996

@@ -645,13 +645,12 @@ replace mmf_bf=1 if freq_solids>=2 & currently_bf==1 & age_days>183 & age_days<2
 replace mmf_bf=2 if freq_solids>=3 & currently_bf==1 & age_days>=243 & age_days<730 
 replace mmf_bf=. if currently_bf!=1
 replace mmf_bf =. if age_days<=183 | age_days>=730
+tab mmf_bf,m
 
-// la def mmf  0 "Inadequate MMF" 1 "Adequate freq(2) and BF 6-8M" 2 "Adequate freq(3) and BF 6-8M"
-la def mmf  0 "Inadequate MMF" 1 "Adequate freq(2) and BF 6-8M" 2 "Adequate freq(3) and BF 9-23M"
+// la def mmf  0 "Inadequate MMF" 1 "Adequate freq(2) & BF 6-8M" 2 "Adequate freq(3) and BF 6-8M"
+la def mmf  0 "Inadequate MMF" 1 "Adequate freq(2) & BF 6-8M" 2 "Adequate freq(3) and BF 9-23M"
 la val mmf mmf
 tab mmf
-
-tab mmf_bf,m
 
 
 *For currently non-breastfed children: MMF is met if children 6-23 months of age receive solid, semi-solid or soft foods or milk feeds at least 4 
@@ -694,6 +693,7 @@ tab milk_feeds, m
 * This is where double counting of yogurt can happen - only for non-breastfed children
 
 * Variable feeds = freq of all feeds --> includes (solids) + (milks, formula, yogurt)
+cap drop feeds
 gen feeds= freq_solids + milk_feeds
 replace feeds= freq_solids if milk_feeds ==. // if milk_feeds is missing
 
@@ -714,6 +714,7 @@ gen mmf_nobf=0
 replace mmf_nobf=1 if feeds>=4 & freq_solids>=1 & currently_bf!=1
 replace mmf_nobf=. if currently_bf==1
 replace mmf_nobf =. if age_days<=183 | age_days>=730 
+la val mmf_nobf no_yes
 tab mmf_nobf, m 
 
 
@@ -731,6 +732,7 @@ gen mmf_all=0
 replace mmf_all=1 if mmf_bf==1 | mmf_bf==2 | mmf_nobf==1  // 6-8M 2x 9-23M 3x & nobf>=2
 replace mmf_all =. if age_days<=183 | age_days>=730
 la var mmf_all "Minimum meal frequency for all children 6-23M"
+la val mmf_all no_yes
 tab mmf_all, m 
 tab mmf_all
 
@@ -752,6 +754,7 @@ gen mad_all=0
 replace mad_all=1 if (mdd==1 & mmf_all==1) & (currently_bf==1 | min_milk_freq_nbf==1) 
 replace mad_all=. if age_days<=183 | age_days>=730 
 tab mad_all, m 
+tab mad_all
 
 *Egg and/or Flesh food consumption - % of children 6-23 months of age who consumed egg and/or flesh food during the previous day*
 gen egg_meat=0
@@ -796,7 +799,18 @@ label def bw 9999 "Missing", replace
 label val birth_weight bw
 label var birth_weight "Birth weight"
 replace birth_weight = birth_weight/1000 if birth_weight != 9999
+
 kdensity birth_weight if birth_weight<9995
+* kdensity misrepresents the spread of birthweights
+
+* Line graph kdensity
+cap drop temp
+gen temp = birth_weight if birth_weight<9995
+cap drop count_birth_weight
+bysort temp: egen count_birth_weight = count(temp) 
+replace temp=. if temp >= 6
+twoway line count_birth_weight temp
+
 
 cap drop cat_birth_wt
 recode birth_weight (0/0.249=6)(0.25/1.499=1)(1.5/2.499=2)(2.5/3.999=3)(4/10.999=4)(11/10000=7), gen(cat_birth_wt)
