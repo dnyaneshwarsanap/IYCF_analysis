@@ -113,7 +113,6 @@ tab agemos, m
 
 la list M4 //in NFHS4 data value label is M4 for m4
 tab m4
-
 // M4:
 //           93 ever breastfed, not currently breastfeeding
 //           94 never breastfed
@@ -548,24 +547,32 @@ replace age_ebf = . if age_days >183
 *set agemos_ebf to missing if exbf=no
 replace age_ebf=. if ebf==0
 la var age_ebf "Median age of exclusive breasfeeding in months"
+* For correct calculation methods of Median age in month of EBF please see
+* https://dhsprogram.com/data/Guide-to-DHS-Statistics/Breastfeeding_and_Complementary_Feeding.htm
+
+* not correct method but can be used for testing
 sum age_ebf, d
 
 * MEDIAN duration of continued breastfeeding
 gen age_cbf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
 replace age_cbf=. if currently_bf !=1
 la var age_cbf "Median age of continued breasfeeding in months"
-sum age_cbf [aw=v005], d
+* not correct method but can be used for testing
 
 
  *Continued breastfeeding
-
 la list M4
-//  value = 95, indicates still breastfeeding
-recode m4 (95=1)(0/94 96/99=0)(missing=.), gen(cont_bf)
-replace cont_bf=0 if cont_bf==.
+// M4:
+//           93 ever breastfed, not currently breastfeeding
+//           94 never breastfed
+//           95 still breastfeeding
+//           96 breastfed until died
+//           97 inconsistent
+//           98 don't know
+recode m4 (95=1)(0/94 96/99=0)(missing=0), gen(cont_bf)
 tab m4 cont_bf , m 
 
-gen cont_bf_12_23 = cont_bf if age_days>335 &age_days<730 
+gen cont_bf_12_23 = cont_bf if age_days>335 & age_days<730 
 tab cont_bf_12_23, m
 
 
@@ -1225,3 +1232,11 @@ gen district = sdist
 
 * Save data with name of survey
 save iycf_NFHS5, replace 
+
+
+end
+gen temp = m4 if m4 < 90
+* Line graph kdensity
+cap drop count_months_bf
+bysort temp: egen count_months_bf = count(temp) 
+twoway line count_months_bf temp

@@ -526,21 +526,24 @@ replace age_ebf = . if age_days >183
 *set agemos_ebf to missing if exbf=no
 replace age_ebf=. if ebf==0
 la var age_ebf "Median age of exclusive breasfeeding in months"
+* For correct calculation methods of Median age in month of EBF please see
+* https://dhsprogram.com/data/Guide-to-DHS-Statistics/Breastfeeding_and_Complementary_Feeding.htm
+
+* not correct method but can be used for testing
 sum age_ebf, d
 
 * MEDIAN duration of continued breastfeeding
 gen age_cbf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
 replace age_cbf=. if currently_bf !=1
 la var age_cbf "Median age of continued breasfeeding in months"
-sum age_cbf, d
+* not correct method but can be used for testing
 
 
  *Continued breastfeeding
 
 la list M4
 //  value = 95, indicates still breastfeeding
-recode m4 (95=1)(0/94 96/99=0)(missing=.), gen(cont_bf)
-replace cont_bf=0 if cont_bf==.
+recode m4 (95=1)(0/94 96/99=0)(missing=0), gen(cont_bf)
 tab m4 cont_bf , m 
 
 gen cont_bf_12_23 = cont_bf if age_days>335 &age_days<730 
