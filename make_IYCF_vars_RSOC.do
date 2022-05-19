@@ -161,6 +161,11 @@ tab q185a1_3
 * Early initiation of breastfeeding (under two years of age)
 gen eibf = 0
 replace eibf = 1 if (q185a1_2 <=1 & q185a1_2 == 1) | (q185a1_1==0)   //here response as "immediately"
+
+* Harmonize to NFHS 
+// replace eibf = 1 if m34 == 0 | m34==100  ///  0 -immediately, 100 - within 30min to 1hr 
+// // 101 =  one hour and more
+
 replace eibf =. if age_days>=730 // age in days
 tab  eibf, m
 tab  q185a1_1 eibf, m

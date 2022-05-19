@@ -7,9 +7,11 @@
 
 * Review and correct
 ********************
+// EIBF - dnya point
 * don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
 * check currently BF !!!
 * Harmonize the states/ut's to NHFS4
+// spelling Chhattisgarh
 ********************
 
 
@@ -59,6 +61,9 @@ tab b5,m
 * Age in days
 gen int_date = mdy(v006 , v016 , v007)
 format int_date %td
+sort int_date
+list int_date in 1/10
+list int_date 
 
 *to check the date month year data
 tab v006, m   // v006 interview month
@@ -145,8 +150,8 @@ la list M34
 tab m34, m 
 
 gen eibf = 0
-replace eibf = 1 if m34 == 0 | m34==100 | m34 ==101 ///  0 -immediately, 101 - one hour, 100 - within 30min to 1hr 
-
+replace eibf = 1 if m34 == 0 | m34==100  ///  0 -immediately, 100 - within 30min to 1hr 
+// 101 =  one hour and more
 replace eibf =. if age_days>=730 // age in days
 tab eibf,m
 tab m34 eibf, m
@@ -785,7 +790,6 @@ gen unhealthy_food = .
 
 * SOCIO-DEMOGRAPHIC data		
 		
-		
 * LBW (low birth weight)
 
 * Birth weight
@@ -841,14 +845,14 @@ replace earlyanc =. if age_days>=730
 tab m13 earlyanc, m 
 
  
-* ANC 4+ (Pregnent women receiving more than 4 ANC check-ups)
+* ANC 4+ (Pregnant women receiving more than 4 ANC check-ups)
 gen anc4plus = 0
 replace anc4plus = 1 if m14 >=4 & m14 <=30
 replace anc4plus =. if age_days>=730
 tab m14 anc4plus
 tab anc4plus
 
-* C-section  (pregnancy - cesarean section or not)
+* C-section  
 cap drop csection
 gen csection = 0
 replace csection = 1 if m17 == 1
@@ -1004,8 +1008,8 @@ la def state_name			   3 "Arunachal Pradesh" , add
 la def state_name			   4 Assam , add
 la def state_name			   5 Bihar , add
 la def state_name			   6 Chandigarh, add
-la def state_name			   7 Chattisgarh, add
-la def state_name			   8 "Dadra & Nagar Haveli/ Daman & Diu", add
+la def state_name			   7 Chhattisgarh, add
+la def state_name			   8 "Dadra & Nagar Haveli/D&D", add
 * CORRECT FOR HARMONIZED STATES ACROSS ALL SURVEYS
 // la def state_name			   9 "Daman and Diu", add
 la def state_name			  10 Goa, add
@@ -1108,15 +1112,21 @@ tab s479 s477, m
 clonevar pnc_child_visit = s477
 
 cap drop pnc_assistance
-gen pnc_assistance = s479
-replace pnc_assistance = 96 if s479 == 13
-// la drop pnc_assistance
-la def pnc_assistance 11 Doctor
-la def pnc_assistance 12 "ANM/ Nurse /Mid-wife", add
-la def pnc_assistance 21 "ASHA", add
-la def pnc_assistance 22 "Dai/ TBA", add
-la def pnc_assistance 96 "Other", add
+gen pnc_assistance = .
+replace pnc_assistance = 1 if s479 == 11
+replace pnc_assistance = 2 if s479 == 12
+replace pnc_assistance = 3 if s479 == 21
+replace pnc_assistance = 4 if s479 == 22
+replace pnc_assistance = 5 if s479 == 13 | s479 == 96
+
+la drop pnc_assistance
+la def pnc_assistance 1 Doctor
+la def pnc_assistance 2 "ANM/ Nurse /Mid-wife", add
+la def pnc_assistance 3 "ASHA", add
+la def pnc_assistance 4 "Dai/ TBA", add
+la def pnc_assistance 5 "Other", add
 la val pnc_assistance pnc_assistance
+tab pnc_assistance s479, m
 
 tab pnc_assistance s477,m 
 
@@ -1154,6 +1164,7 @@ save iycf_NFHS5, replace
 
 
 end
+
 gen temp = m4 if m4 < 90
 * Line graph kdensity
 cap drop count_months_bf

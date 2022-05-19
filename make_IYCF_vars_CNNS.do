@@ -78,6 +78,11 @@ tab evbf q301, m
 *Early initiation of Breastfeeding (children born in last 24 months breastfed within 1hr)
 gen eibf = 0
 replace eibf = 1 if (q302n <=1 & q302u == 1) | (q302u==0)   //here q302u=0 indicates the response as "immediately"
+
+* Harmonize to NFHS
+// replace eibf = 1 if m34 == 0 | m34==100  ///  0 -immediately, 100 - within 30min to 1hr 
+//  101 =  one hour and more
+
 replace eibf =. if age_days>=730 // age in days
 tab  q302n eibf, m
 tab  q302u eibf, m

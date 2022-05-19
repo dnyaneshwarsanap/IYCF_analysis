@@ -130,7 +130,8 @@ la list M34
 tab m34, m 
 
 gen eibf = 0
-replace eibf = 1 if m34 == 0 | m34==100 | m34 ==101 ///  0 -immediately, 101 - one hour, 100 - within 30min to 1hr 
+replace eibf = 1 if m34 == 0 | m34==100  ///  0 -immediately,  100 - within 30min to 1hr 
+// 101 =  one hour plus 
 
 replace eibf =. if age_days>=730 // age in days
 tab eibf,m
@@ -770,7 +771,7 @@ label val birth_weight bw
 label var birth_weight "Birth weight"
 replace birth_weight = birth_weight/1000 if birth_weight != 9999
 
-kdensity birth_weight if birth_weight<9995
+// kdensity birth_weight if birth_weight<9995
 * kdensity misrepresents the spread of birthweights
 
 * Line graph kdensity
