@@ -574,7 +574,7 @@ replace ebf =0 if water      ==1 | ///
                   formula    ==1 | ///
                   other_liq  ==1 | ///
                   any_solid_semi_food ==1 
-replace ebf =. if age_days >182
+replace ebf =. if age_days >730
 la var ebf "Exclusive breasfeeding"
 tab ebf
 tab ebf agemos
@@ -582,7 +582,7 @@ tab ebf agemos
 * MEDIAN duration of exclusive breastfeeding
 cap drop age_ebf
 gen age_ebf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
-replace age_ebf = . if age_days >183
+replace age_ebf = . if age_days >730
 *set agemos_ebf to missing if exbf=no
 replace age_ebf=. if ebf==0
 la var age_ebf "Median age of exclusive breasfeeding in months"

@@ -7,7 +7,6 @@
 
 * Review and correct
 ********************
-// EIBF - dnya point
 * don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
 * check currently BF !!!
 * Harmonize the states/ut's to NHFS4
@@ -295,7 +294,7 @@ tab m55z prelacteal_otherthanmilk
 tab m38, m 
 clonevar bottle = m38
 replace bottle = . if m38>2       //m38 - did [Name] drink anything from bottle yesterday or last light
-replace bottle = . if age_days>=730
+replace bottle = . if age_days>730
 tab m38 bottle, m
 
 tab m38 v415, m  //v415 drank from bottle with nipple EVER? 
@@ -480,7 +479,6 @@ foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg currently_bf  
 	lab val `var' no_yes
 }
 
-	
 foreach var of varlist carb dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
 		tab `var' if age_days<= 730, m
 }
@@ -540,7 +538,7 @@ replace ebf =0 if water      ==1 | ///
                   other_liq  ==1 | ///
                   any_solid_semi_food ==1
 				  
-replace ebf =. if age_days >182
+replace ebf =. if age_days >730
 la var ebf "Exclusive breasfeeding"
 tab ebf
 tab agemos ebf 
@@ -548,7 +546,7 @@ tab agemos ebf
 * MEDIAN duration of exclusive breastfeeding
 cap drop age_ebf
 gen age_ebf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
-replace age_ebf = . if age_days >183
+replace age_ebf = . if age_days >730
 *set agemos_ebf to missing if exbf=no
 replace age_ebf=. if ebf==0
 la var age_ebf "Median age of exclusive breasfeeding in months"
@@ -808,13 +806,13 @@ replace birth_weight = birth_weight/1000 if birth_weight != 9999
 * kdensity misrepresents the spread of birthweights
 
 * Line graph kdensity
-cap drop temp
-gen temp = birth_weight if birth_weight<9995
-cap drop count_birth_weight
-bysort temp: egen count_birth_weight = count(temp) 
-replace temp=. if temp >= 6
-twoway line count_birth_weight temp
-cap drop count_birth_weight
+// cap drop temp
+// gen temp = birth_weight if birth_weight<9995
+// cap drop count_birth_weight
+// bysort temp: egen count_birth_weight = count(temp) 
+// replace temp=. if temp >= 6
+// twoway line count_birth_weight temp
+// cap drop count_birth_weight
 
 cap drop cat_birth_wt
 recode birth_weight (0/0.249=6)(0.25/1.499=1)(1.5/2.499=2)(2.5/3.999=3)(4/10.999=4)(11/10000=7), gen(cat_birth_wt)
@@ -872,7 +870,7 @@ replace mum_educ_years = v107 if v106==1
 replace mum_educ_years = 5 + v107 if v106==2
 replace mum_educ_years = 12 + v107 if v106==3
 tab mum_educ_years
-scatter   mum_educ_years v106
+// scatter   mum_educ_years v106
 
 recode mum_educ_years (0=1)(1/4=2)(5/9=3)(10/11=4)(12/25=5)(26/max=99), gen(mum_educ)
 lab var mum_educ "Maternal Education"
@@ -1119,7 +1117,7 @@ replace pnc_assistance = 3 if s479 == 21
 replace pnc_assistance = 4 if s479 == 22
 replace pnc_assistance = 5 if s479 == 13 | s479 == 96
 
-la drop pnc_assistance
+cap la drop pnc_assistance
 la def pnc_assistance 1 Doctor
 la def pnc_assistance 2 "ANM/ Nurse /Mid-wife", add
 la def pnc_assistance 3 "ASHA", add
