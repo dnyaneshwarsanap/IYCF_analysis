@@ -138,6 +138,12 @@ tab evbf
 
 
 *Early initiation of Breastfeeding (children born in last 24 months breastfed within 1hr)
+// https://dhsprogram.com/data/Guide-to-DHS-Statistics/index.htm#t=Initial_Breastfeeding.htm
+// Numerators:
+// Number of last-born children age 0-23 months (midx = 1 & b19 < 24) who:
+// 1)     Were ever breastfed (m4 ≠ 94,99)
+// 2)     Started breastfeeding within one hour of birth (m4 ≠ 94,99 & m34 in 0,100)
+
 la list M34
 // M34:
 //            0 immediately
@@ -148,12 +154,29 @@ la list M34
 //          299 days: number missing
 tab m34, m 
 
+* There is a difference between age in days and NFHS b19
+tab midx if age_days <=730 
+tab midx if b19<24
+
+* NFHS5 Table 10.4 Number of last born chidlren born in past 2 years 87,267
+cap drop eibf
 gen eibf = 0
-replace eibf = 1 if m34 == 0 | m34==100  ///  0 -immediately, 100 - within 30min to 1hr 
-// 101 =  one hour and more
-replace eibf =. if age_days>=730 // age in days
-tab eibf,m
+//  Started breastfeeding within one hour of birth (m4 ≠ 94,99 & m34 in 0,100)
+replace eibf = 1 if (m4!=94 | m4!=99) & (m34==0 | m34==100)   
+* Note   0 -immediately, 100 - within 30min to 1hr 
+*      101 =  one hour and more
+replace eibf =. if midx>1 | b19>=24 // age in days
+* All cases for EIBF in NFHS-5 are immediately.  There are no cases of within first hour. 
+tab eibf
+version 16: table one   [pw=national_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
+
+
 tab m34 eibf, m
+tab eibf b5  // living and dead children included
+tab eibf b9  // living with respondent
+tab eibf b0  // twins
+tab eibf b10  // completeness of information 
+tab m4 eibf, m
 
 
 *Timing of initiation of Breastfeeding 
