@@ -8,9 +8,10 @@
 * Review and correct
 ********************
 * don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
-* check currently BF !!!
+* check currently BF !!! based on m4
 * Harmonize the states/ut's to NHFS4
 // spelling Chhattisgarh
+// put weights first
 ********************
 
 
@@ -105,13 +106,52 @@ replace age_days =. if age_days>1825
 tab age_days,m 
 // kdensity age_days
 
-gen agemos = floor(age_days/30.42) if b5==1
+gen agemos = b19 if b5==1
+// gen agemos = floor(age_days/30.42) if b5==1
 // graph bar (count) one, over(agemos)
 
 tab agemos, m 
 // cap drop agemos_x
 // gen agemos_x = v008 -  b3 if b5==1
 // scatter agemos_x agemos
+
+
+cap drop age2
+gen age2 = floor(b19/2)+1
+la def age2 1   "0-1"
+la def age2 2   "2-3", add
+la def age2 3   "4-5", add
+la def age2 4   "6-7", add
+la def age2 5   "8-9", add
+la def age2 6 "10-11", add
+la def age2 7 "12-13", add
+la def age2 8 "14-15", add
+la def age2 9 "16-17", add
+la def age2 10 "18-19", add
+la def age2 11 "20-21", add
+la def age2 12 "22-23", add
+la def age2 13 "24-25", add
+la def age2 14 "26-27", add
+la def age2 15 "28-29", add
+la def age2 16 "30-31", add
+la def age2 17 "32-33", add
+la def age2 18 "34-35", add
+la val age2 age2
+replace age2 =. if b19>35
+
+
+* Survey Weights
+* NFHS4 & 5 are weighted at district level. 
+* all DHS type weights must be divided by million before use
+* analysis at state and regional level uses state weights
+
+gen national_wgt = v005 / 1000000
+
+* Regional weights 
+gen regional_wgt = sweight / 1000000
+
+gen state_wgt =sweight / 1000000
+
 
 * Ever breastfed (children born in past 24 months) 
 
@@ -168,7 +208,8 @@ replace eibf = 1 if (m4!=94 | m4!=99) & (m34==0 | m34==100)
 replace eibf =. if midx>1 | b19>=24 // age in days
 * All cases for EIBF in NFHS-5 are immediately.  There are no cases of within first hour. 
 tab eibf
-version 16: table one   [pw=national_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
+// version 16: table v101 [pw=state_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
+// version 16: table one   [pw=national_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
 
 
 tab m34 eibf, m
@@ -217,18 +258,48 @@ tab ebf3d m55z, m
 // 1. ever breastfed
 // 2. still breastfeeding
 // 3. breastfed yesterday
-// v404 is a currently breastfeeding var in NFHS can we use this var directly
+// m4 and v404 is a currently breastfeeding var in NFHS can we use this var directly
+* DHS 7 Statistics recommended to use m4
+tab m4, m
 tab v404, m 
+tab m4 v404
+
+// la list M4
+// M4:
+//           93 ever breastfed, not currently breastfeeding
+//           94 never breastfed
+//           95 still breastfeeding
+//           96 breastfed until died
+//           97 inconsistent
+//           98 don't know
+// 		  .  missing
 
 cap drop currently_bf
-gen currently_bf = v404
+gen currently_bf=0
+replace currently_bf = 1 if m4==95
 tab currently_bf,m
-
 tab m4 currently_bf,m
-* there are some incompatible answers - never breastfed & currently_bf
 
+cap drop not_bf
+gen not_bf=0
+replace not_bf =1 if m4!=95
+sort b5 caseid midx
+// order caseid midx b0 b9 b19 age_days 
+replace not_bf =. if midx>1
+replace not_bf = not_bf[_n-1] if caseid == caseid[_n-1] & b0>0
+replace not_bf =. if b19>=24
+replace not_bf =. if b9!=0
+tab not_bf
+tab age2 not_bf
 
-
+**************************
+// Not getting correct estimates
+// cap drop not_bf_x
+// gen not_bf_x = not_bf *100 
+// version 16: table one   [pw=national_wgt] if b19<6, c(mean not_bf_x  n not_bf_x) format(%8.2f)
+// version 16: table age2 one  [pw=national_wgt] if b19<6, c(mean not_bf_x n not_bf_x) row format(%8.1f)
+// version 16: table age2 one  [aw=national_wgt] if b19<6, c(mean not_bf_x n not_bf_x) row format(%8.1f)
+**************************
 
 *For prelacteal feed variables are
 /* -------------------------------------------------
@@ -336,15 +407,18 @@ v410		     V410            gave child juice
 v410a		     V410a           gave child tea or coffee  - na
 v411 		     V411            gave child tinned/powder or fresh milk
 v411a		     V411a           gave child baby formula 
+
 v412 		     V412          # gave child fresh milk      -na
 v412a 		     V412A           gave child baby cerelac etc
 v412b 		     V412B           gave child other porridge/gruel - na
 v412c            V412C           gave child soup/clear broth
+
 v413 		     V413            gave child other liquid
 v413a		     V413A         # gave child cs liquid       -na 
 v413b 		     V413B         # gave child cs liquid       -na
 v413c 		     V413C         # gave child cs liquid       -na
 v413d 		     V413D         # gave child cs liquid       -na
+
 v414a 		     V414A           gave child chicken, duck or other birds
 v414b 		     V414B           gave child child cs foods
 v414c 		     V414C           gave child child cs foods
@@ -367,21 +441,38 @@ v414s 		     V414S           gave child other solid or semi-solid food
 v414t 		     V414T           gave child any other meat
 v414u		     V414U         # gave child cs foods        -na
 v414v            V414V           gave child yogurt
-v414w            V414W           gave child cs foods
+m39a             M39A            gave child cs foods
 v415		     V415            drank from bottle with nipple
 */
+
+
 
 ********************************************************************************
 * Food groups (liquids and solids)
 ********************************************************************************
 
+
+// Numerators:
+// Number of youngest children under 2 years who are living with their mother (see Calculation below) who were given:
+// 1)     Not breastfeeding (m4 ≠ 95), or
+// Breastfeeding (m4 = 95):
+// 2)     and nothing else in the 24 hours preceding the interview (exclusive breastfeeding) (not in numerators 3-6)
+// 3)     and plain water only in the 24 hours preceding the interview (v409 = 1 & not in numerators 4-6).
+// 4)     and non-milk liquids in the 24 hours preceding the interview ((v409a = 1 or v410 = 1 or v410a = 1 or v412c = 1 or v413 = 1 or any of v413a – d = 1) & not in numerators 5 or 6).
+// 5)     and other milk in the 24 hours preceding the interview ((v411 = 1 or v411a = 1) & not in numerator 6).
+// 6)     and solid or semi-solid foods in the 24 hours preceding the interview. Children may also be given non-breast milk. (v412a = 1 or v412b = 1 or any of v414a – w = 1 or m39a = 1)
+
+
 * recode foods into food groups
 * 	yes = 1, 
 * 	no and don't know = 0
 * following global guidance on IYCF analysis, this allows for maximium children to be included in indicator 
+ * Missing and "don't know" data on foods and liquids given is treated as not given in numerator and included in denominator.
+ 
+ * In NFHS-5 for all vars 409 - 415 0 = no and 1 = yes
 
-foreach var of varlist v409- v415 {
-	recode `var' (1=1) (2 8 9 .=0) , gen(`var'_rec)
+foreach var of varlist v409- v415 m39a {
+	recode `var' (1=1) (0 2 8 . =0) , gen(`var'_rec)
 	lab val `var'_rec no_yes
 }
 
@@ -404,6 +495,9 @@ clonevar gruel        							=v412b_rec // other porridge/gruel
 // These belong in solid/semi-solid list and will be added to bread, rice other grains
 
 clonevar poultry                               = v414a_rec //chicken_duck_other birds
+// 												 v414b 		     V414B           gave child child cs foods
+// 												 v414c 		     V414C           gave child child cs foods
+//                                               v414d 		     V414D           gave child child cs foods
 clonevar meat                                  = v414t_rec // gave child other meat
 replace meat =1 if 							     v414h_rec==1 // (beef, pork, lamb
 
@@ -426,10 +520,12 @@ clonevar leg_nut							   = v414o_rec //food made from beans, peas, lentils, nut
 clonevar yogurt                                = v414p_rec //cheese, yogurt , other milk products
 replace yogurt =1 if                             v414v==1
 * yogurt and cheese coded together
-clonevar fat 									= v414q //oil, fats, butter, products made of them  	
-clonevar sweets   								= v414r
+clonevar fat 									= v414q_rec //oil, fats, butter, products made of them  	
+clonevar sweets   								= v414r_rec
 
-clonevar semisolid                             = v414s_rec //other solid or semi-solid food	
+* don't use v414s - m39a is recommended in DHS statistics guide
+tab m39a v414s, m 
+clonevar semisolid   							= m39a_rec //other solid or semi-solid food	
 
 
 *-----------------------------------------------------------------------------------------------------------
@@ -455,7 +551,7 @@ clonevar semisolid                             = v414s_rec //other solid or semi
 // clonevar semisolid		   =q310w_rec  // any other solid, semi-solid or soft food		
 *---------------------------------------------------------------------------------------------------------------
 
-lab var bread "bread, noodles, other grains"  // includes cereals, gruel, porridge 
+lab var bread "bread, noodles, other grains"  
 
 *FOLLOWING ARE THE NEW FOOD GROUPS AS PER WHO GUIDELINES
 /*
@@ -507,7 +603,7 @@ foreach var of varlist carb dairy all_meat egg vita_fruit_veg fruit_veg currentl
 }
 		
 * Age groups in blocks of 6 months
-gen agegroup = floor(age_days/183 +1)   //agemons/6 +1
+gen agegroup = floor(age_days/182.625 +1)   //agemons/6 +1
 lab def agegroup 1 "0-5m" 2 "6-11m" 3 "12=17m" 4 "18-23m" 5 "24-29m" 6 "30-35m" 7 "36-41m" 8 "42-47m" 9 "48-53m" 10 "54-59m"
 lab val agegroup agegroup
 
@@ -524,6 +620,7 @@ rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 fg9) ///
 cap drop any_solid_semi_food
 egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
 replace any_solid_semi_food = 1 if any_solid_semi_food >1
+replace any_solid_semi_food = 1 if m39a ==1
 tab any_solid_semi_food if age_days<= 730, m 	   
 
 	   
@@ -547,25 +644,158 @@ tab intro_compfood any_solid_semi_food
 *Using the WHO guideline for defining ebf variable - create a condition variable based on 
 *if the child received any other food items (liquid/solids/semi-solids) on previous day
 
+// * keep if under 24 months and living with mother
+//   keep if b19 < 24 & b9 == 0
+// * and keep the last born of those.
+// * if caseid is the same as the prior case, then not the last born
+//   keep if _n == 1 | caseid != caseid[_n-1]
+
+// Percent distribution of youngest children under 2 years who are living with their mother who are:
+// 1)     Not breastfeeding.
+// 2)     Exclusively breastfeeding.
+// 3)     Breastfeeding and consuming plain water only.
+// 4)     Breastfeeding and consuming non-milk liquids.
+// 5)     Breastfeeding and consuming other milk.
+// 6)     Breastfeeding and consuming complementary foods.
+
+gen tag =0
+replace tag=1 if _n == 1 | caseid != caseid[_n-1]
+tab tag midx, m
+* midx and caseid != caseid[_n-1] are the same
+
+
 cap drop ebf
 * Create ebf variable - 1 yes 0 no
 // no liquids besides breastmilk
 // no food groups consumed - any_solid_semi_food==0 
 gen ebf=0 
-replace ebf =1 if currently_bf ==1
+replace ebf =1 if m4 ==95
+// replace ebf =1 if currently_bf ==1
 replace ebf =0 if water      ==1 | ///
                   juice      ==1 | ///		
+				  broth      ==1 | ///
                   milk       ==1 | ///
 				  tea        ==1 | ///
                   formula    ==1 | ///
                   other_liq  ==1 | ///
                   any_solid_semi_food ==1
-				  
-replace ebf =. if age_days >730
+
+* NFHS-5 report ebf 
+* add twins
+// Twins living with their mother are assumed to have the same breastfeeding and complimentary feeding status, and the grouping calculated in Percent distribution of children exclusively breastfeeding, or breastfeeding and consuming plain water only, non-milk liquids, consuming other milk, and consuming complementary foods for the youngest child living with their mother is applied to any twin of that child who is also living with their mother; other children born in the past 3 years are assumed to not be exclusively or predominantly breastfeeding.
+sort b5 caseid midx
+order caseid midx b0 b9 b19 age_days ebf
+replace ebf =. if midx>1
+replace ebf = ebf[_n-1] if caseid == caseid[_n-1] & b0>0 & b5==1
+// replace ebf = . if b5 ==0
+replace ebf =. if b19>=24
+replace ebf =. if b9!=0
+
+
 la var ebf "Exclusive breasfeeding"
 tab ebf
-tab agemos ebf 
+tab ebf b5
+tab b19 ebf 
 
+
+
+
+************************
+cap drop ebf_x
+gen ebf_x = ebf *100 
+// version 16: table state [pw=state_wgt]     if b19<6, c(mean ebf_x n ebf_x)  format(%8.1f)
+version 16: table age2 one  [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row format(%8.1f)
+
+* not a problem with weights * 1000000
+version 16: table age2 one  [pw=v005] if b19<6, c(mean ebf_x n ebf_x) row format(%8.1f)
+
+* NFHS-5 report ebf is not affected by child is alive
+* not a problem with b5
+version 16: table age2 b5  [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row format(%8.1f)
+
+* not a problem with b0
+version 16: table age2 b0  [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row col format(%8.1f)
+
+* not a problem with b9
+version 16: table age2 b9  [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row col format(%8.1f)
+
+* bidx matches midx
+* no relation with bord
+version 16: table bord age2   [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row col format(%8.1f)
+
+* not a problem with b10 complete info
+version 16: table age2 b10   [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row col format(%8.1f)
+
+* b16  child listed in household? 
+version 16: table b16 age2   [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row col format(%8.1f)
+* not issue with listing in household as N by age groups do not match
+version 16: table age2   [pw=national_wgt] if b19<6 & b16>=2, c(mean ebf_x n ebf_x) row col format(%8.1f)
+
+* not issue with v135 resident or visitor 
+version 16: table age2 v135  [pw=national_wgt] if b19<6 , c(mean ebf_x n ebf_x) row col format(%8.1f)
+
+* not issue with v218 number of living children  
+version 16: table v218 age2  [pw=national_wgt] if b19<6 , c(mean ebf_x n ebf_x) row col format(%8.1f)
+
+local feeding_vars = "v409 v410 v411 v411a v412a v412c v413 v414a v414e v414f v414g  v414i v414j v414k v414l v414m v414n v414o v414p v414s v414t v414v m39a"
+
+foreach var of varlist `feeding_vars' {
+	version 16: table one `var'   [pw=national_wgt] if b19<6 , c(mean ebf_x n ebf_x) row col format(%8.1f)
+}
+
+* coding in to diet is not working 
+cap drop diet
+gen diet=9
+replace diet=1 if currently_bf==1 
+replace diet=2 if currently_bf==1 & water==1 
+replace diet=3 if currently_bf==1 & other_liq==1 
+replace diet=3 if currently_bf==1 & juice==1 
+replace diet=3 if currently_bf==1 & broth==1 
+replace diet=3 if currently_bf==1 & tea ==1 
+replace diet=4 if currently_bf==1 & formula==1 
+replace diet=4 if currently_bf==1 & milk==1 
+replace diet=5 if currently_bf==1 & any_solid_semi_food==1 
+replace diet=6 if currently_bf==0 
+
+la def diet 1 "exclusively breastfed" ///
+			2 "plain water & breastmilk" ///
+			3 "non-milk liquids & breastmilk" ///
+			4 "other milks/formula & breastmilk" ///
+			5 "comp foods & breastmilk" ///
+			6 "not breastfed" ///
+			9 "missing"
+
+tab diet, m 
+
+* test diet   
+version 16: table one diet [pw=national_wgt] if b19<6,  format(%8.1f)
+
+
+// foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg currently_bf {
+// 	tab ebf `var',m
+// }
+* b11 b12 b13 b15 b16 b17 b18 b20
+
+tab m39a ebf
+
+
+end
+
+
+
+// NFHS-5 REPORT  EBF<6M  	63.7  	22,406 
+// from data      EBF<6M    63.7    22509.2 with twins sorted  b5 caseid midx
+// from data      EBF<6M    63.7    22525.5
+
+
+// foreach var of varlist v409- v415 {
+// 	tab ebf `var',m
+// }
+// plain water
+
+
+***************************************
+ 
 * MEDIAN duration of exclusive breastfeeding
 cap drop age_ebf
 gen age_ebf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
@@ -1067,17 +1297,6 @@ tab state, m
 tab  state v101, m 
 
 
-* Survey Weights
-* NFHS4 & 5 are weighted at district level. 
-* all DHS type weights must be divided by million before use
-* analysis at state and regional level uses state weights
-
-gen national_wgt = v005 / 1000000
-
-* Regional weights 
-gen regional_wgt = sweight / 1000000
-
-gen state_wgt =sweight / 1000000
 
 
 
