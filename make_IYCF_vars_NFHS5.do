@@ -283,7 +283,7 @@ tab m4 currently_bf,m
 cap drop not_bf
 gen not_bf=0
 replace not_bf =1 if m4!=95
-sort b5 caseid midx
+
 // order caseid midx b0 b9 b19 age_days 
 replace not_bf =. if midx>1
 replace not_bf = not_bf[_n-1] if caseid == caseid[_n-1] & b0>0
@@ -467,29 +467,38 @@ v415		     V415            drank from bottle with nipple
 * 	yes = 1, 
 * 	no and don't know = 0
 * following global guidance on IYCF analysis, this allows for maximium children to be included in indicator 
- * Missing and "don't know" data on foods and liquids given is treated as not given in numerator and included in denominator.
+* Missing and "don't know" data on foods and liquids given is treated as not given in numerator and included in denominator.
  
- * In NFHS-5 for all vars 409 - 415 0 = no and 1 = yes
+* In NFHS-5 for all vars 409 - 415 0 = no and 1 = yes
 
 foreach var of varlist v409- v415 m39a {
-	recode `var' (1=1) (0 2 8 . =0) , gen(`var'_rec)
+	recode `var' (1/7=1) (0=0) , gen(`var'_rec)
 	lab val `var'_rec no_yes
 }
 
+
+
+
 * LIQUIDS
-
 clonevar water					=v409_rec
-clonevar juice			        =v410_rec
-clonevar broth                  =v412c_rec // gave child soup/clear broth
-clonevar tea				    =v410a_rec
-clonevar milk			        =v411_rec // tinned, powder or fresh milk
-tab v412_rec, m                           // fresh milk all missing data
 
-clonevar formula 		        =v411a_rec
+*Child given liquids
+//  varlist v409a v410 v410a v412c v413
+tab v409a
+clonevar juice			        =v410_rec
+clonevar tea				    =v410a_rec
+clonevar broth                  =v412c_rec // gave child soup/clear broth
 clonevar other_liq 		        =v413_rec
 
+* Milks - powder/tinned milk, formula, or fresh milk
+// varlist v411 v411a 
+clonevar milk			        =v411_rec // tinned, powder or fresh milk
+tab v412_rec, m                           // fresh milk all missing data
+clonevar formula 		        =v411a_rec
 
 * SOLIDS SEMISOLIDS
+
+
 clonevar fortified_food                         =v412a_rec // from q480 Any commercially fortified baby food such as Cerelac or Farex?
 clonevar gruel        							=v412b_rec // other porridge/gruel
 // These belong in solid/semi-solid list and will be added to bread, rice other grains
@@ -623,6 +632,16 @@ replace any_solid_semi_food = 1 if any_solid_semi_food >1
 replace any_solid_semi_food = 1 if m39a ==1
 tab any_solid_semi_food if age_days<= 730, m 	   
 
+*Given any solid food
+gen solids=0
+foreach xvar of varlist v414* {
+	replace solids=1 if `xvar'>=1 & `xvar'<=7
+}
+replace solids=1 if v412a==1 | v412b==1 | m39a==1
+
+tab any_solid_semi_food solids
+* Does not match
+
 	   
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
 * based on 
@@ -651,51 +670,71 @@ tab intro_compfood any_solid_semi_food
 //   keep if _n == 1 | caseid != caseid[_n-1]
 
 // Percent distribution of youngest children under 2 years who are living with their mother who are:
-// 1)     Not breastfeeding.
-// 2)     Exclusively breastfeeding.
-// 3)     Breastfeeding and consuming plain water only.
-// 4)     Breastfeeding and consuming non-milk liquids.
-// 5)     Breastfeeding and consuming other milk.
-// 6)     Breastfeeding and consuming complementary foods.
+// 0)     Not breastfeeding.
+// 1)     Exclusively breastfeeding.
+// 2)     Breastfeeding and consuming plain water only.
+// 3)     Breastfeeding and consuming non-milk liquids.
+// 4)     Breastfeeding and consuming other milk.
+// 5)     Breastfeeding and consuming complementary foods.
 
 gen tag =0
 replace tag=1 if _n == 1 | caseid != caseid[_n-1]
 tab tag midx, m
 * midx and caseid != caseid[_n-1] are the same
 
-
-cap drop ebf
-* Create ebf variable - 1 yes 0 no
-// no liquids besides breastmilk
-// no food groups consumed - any_solid_semi_food==0 
-gen ebf=0 
-replace ebf =1 if m4 ==95
-// replace ebf =1 if currently_bf ==1
-replace ebf =0 if water      ==1 | ///
-                  juice      ==1 | ///		
-				  broth      ==1 | ///
-                  milk       ==1 | ///
-				  tea        ==1 | ///
-                  formula    ==1 | ///
-                  other_liq  ==1 | ///
-                  any_solid_semi_food ==1
-
 * NFHS-5 report ebf 
 * add twins
 // Twins living with their mother are assumed to have the same breastfeeding and complimentary feeding status, and the grouping calculated in Percent distribution of children exclusively breastfeeding, or breastfeeding and consuming plain water only, non-milk liquids, consuming other milk, and consuming complementary foods for the youngest child living with their mother is applied to any twin of that child who is also living with their mother; other children born in the past 3 years are assumed to not be exclusively or predominantly breastfeeding.
-sort b5 caseid midx
-order caseid midx b0 b9 b19 age_days ebf
-replace ebf =. if midx>1
-replace ebf = ebf[_n-1] if caseid == caseid[_n-1] & b0>0 & b5==1
-// replace ebf = . if b5 ==0
-replace ebf =. if b19>=24
-replace ebf =. if b9!=0
 
 
-la var ebf "Exclusive breasfeeding"
-tab ebf
-tab ebf b5
-tab b19 ebf 
+// *Assume that living twin of last birth who is living with mother is breastfeeding if the last birth is still breastfeeding
+// replace brstfed = 1 if caseid == caseid[_n-1] & b3 == b3[_n-1] & brstfed[_n-1] == 1 & b0 > 0 & b5==1 & b9[_n-1]==0 & b9==0
+// label values brstfed yesno
+
+
+**********************
+
+//breastfeeding status
+gen diet=1
+replace diet=2 if (v409>=1 & v409<=7) 					// water
+
+foreach xvar of varlist v409a v410 v410a v412c v413*{ 	// other liquids
+	replace diet=3 if `xvar'>=1 & `xvar'<=7
+}
+foreach xvar of varlist v411 v411a {  					// other milks
+	replace diet=4  if `xvar'>=1 & `xvar'<=7
+}
+foreach xvar of varlist v414* { 						// solids
+	replace diet=5 if `xvar'>=1 & `xvar'<=7
+}
+replace diet=5 if v412a==1 | v412b==1 | m39a==1
+replace diet=0 if m4!=95
+
+label define bf_status 0"not bf" 1"exclusively bf" 2"bf & plain water" 3"bf & non-milk liquids" 4"bf & other milk" 5"bf & complementary foods"
+label values diet bf_status
+label var diet "Breastfeeding status for last-born child under 2 years"
+
+//exclusively breastfed
+recode diet (1=1) (else=0) if b19<6, gen(ebf)
+label values ebf yesno
+label var ebf "Exclusively breastfed - last-born under 6 months"
+
+* Note: The following do files select for the youngest child under 2 years living with the mother. Therefore some cases will be dropped. 
+* Selecting for youngest child under 24 months and living with mother
+keep if b19 < 24 & b9 == 0
+* if caseid is the same as the prior case, then not the last born
+keep if _n == 1 | caseid != caseid[_n-1]
+
+
+
+//Exclusive breastfeeding 
+
+*Age under 6
+tab ebf if b19<6 [iw=v005/1000000]
+
+* 22406
+
+****************************
 
 
 
@@ -704,7 +743,7 @@ tab b19 ebf
 cap drop ebf_x
 gen ebf_x = ebf *100 
 // version 16: table state [pw=state_wgt]     if b19<6, c(mean ebf_x n ebf_x)  format(%8.1f)
-version 16: table age2 one  [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row format(%8.1f)
+version 16: table age2 one  [iw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row format(%8.1f)
 
 * not a problem with weights * 1000000
 version 16: table age2 one  [pw=v005] if b19<6, c(mean ebf_x n ebf_x) row format(%8.1f)
@@ -743,33 +782,6 @@ foreach var of varlist `feeding_vars' {
 	version 16: table one `var'   [pw=national_wgt] if b19<6 , c(mean ebf_x n ebf_x) row col format(%8.1f)
 }
 
-* coding in to diet is not working 
-cap drop diet
-gen diet=9
-replace diet=1 if currently_bf==1 
-replace diet=2 if currently_bf==1 & water==1 
-replace diet=3 if currently_bf==1 & other_liq==1 
-replace diet=3 if currently_bf==1 & juice==1 
-replace diet=3 if currently_bf==1 & broth==1 
-replace diet=3 if currently_bf==1 & tea ==1 
-replace diet=4 if currently_bf==1 & formula==1 
-replace diet=4 if currently_bf==1 & milk==1 
-replace diet=5 if currently_bf==1 & any_solid_semi_food==1 
-replace diet=6 if currently_bf==0 
-
-la def diet 1 "exclusively breastfed" ///
-			2 "plain water & breastmilk" ///
-			3 "non-milk liquids & breastmilk" ///
-			4 "other milks/formula & breastmilk" ///
-			5 "comp foods & breastmilk" ///
-			6 "not breastfed" ///
-			9 "missing"
-
-tab diet, m 
-
-* test diet   
-version 16: table one diet [pw=national_wgt] if b19<6,  format(%8.1f)
-
 
 // foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg currently_bf {
 // 	tab ebf `var',m
@@ -777,6 +789,22 @@ version 16: table one diet [pw=national_wgt] if b19<6,  format(%8.1f)
 * b11 b12 b13 b15 b16 b17 b18 b20
 
 tab m39a ebf
+
+cap drop ebf
+* Create ebf variable - 1 yes 0 no
+// no liquids besides breastmilk
+// no food groups consumed - any_solid_semi_food==0 
+gen ebf=0 
+replace ebf =1 if m4 ==95
+// replace ebf =1 if currently_bf ==1
+replace ebf =0 if water      ==1 | ///
+                  juice      ==1 | ///		
+				  broth      ==1 | ///
+                  milk       ==1 | ///
+				  tea        ==1 | ///
+                  formula    ==1 | ///
+                  other_liq  ==1 | ///
+                  any_solid_semi_food ==1
 
 
 end
