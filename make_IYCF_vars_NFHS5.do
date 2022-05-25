@@ -1,8 +1,11 @@
 * make_IYCF_Vars_NFHS4_data.do
 * Make IYCF Variables for NFHS4 data - PURPOSE OF FILE
 * USING Updated WHO IYCF guidelines 2020 and recommended IYCF code from UNICEF NY
-
 * Code Robert, Dnyaneshwar 
+
+* for exact calculations of estimates
+// https://dhsprogram.com/data/Guide-to-DHS-Statistics/index.htm#t=Initial_Breastfeeding.htm
+// https://github.com/DHSProgram/DHS-Indicators-Stata
 
 
 * Review and correct
@@ -14,7 +17,6 @@
 // put weights first
 ********************
 
-
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
 // include "dnyaneshwar_paths.do"
 
@@ -23,26 +25,22 @@ use `NFHS5', clear
 
 tab v007
 
-cap drop birthweight
-cap drop lbw
-
-gen one=1
-lab define no_yes 0 "No" 1 "Yes"
-
 gen psu = v001  //
 * scatter v024 psu // psu is state specific - no duplication
 
 gen hh_num = v002
 
+gen one=1
+lab define no_yes 0 "No" 1 "Yes"
+
 * Be very careful when dropping cases in the make_IYCF_vars do files
 * only drop cases for the specific variables. 
 * drop if midx!=1  // considering the last born children only
 
+* Do NOT exclude dead children from database. 
+// Note: certain tables are based on last-born children born in the 2 years preceding 
+//the survey regardless of whether the children are living or dead at the time of the interview
 
-* Do NOT exclude dead children. 
-// Note: Table is based on last-born children born in the 2 years preceding the survey regardless of whether the children are living or dead at
-// the time of the interview
-// Same child sample for EIBF and EBF
 tab b5,m
 * N = 232,920
 
@@ -57,13 +55,13 @@ tab b5,m
 * 12 - 23 M (335 - 730)
 * Underfive (   < 1825)
 
-
 * Age in days
 gen int_date = mdy(v006 , v016 , v007)
 format int_date %td
-sort int_date
-list int_date in 1/10
-list int_date 
+order caseid int_date
+* the database is not originally in order of date of data collection. 
+* Do not disturb order, or selection of repeating caseid does not work. 
+// list int_date in 1/10
 
 *to check the date month year data
 tab v006, m   // v006 interview month
@@ -72,21 +70,20 @@ tab v007, m   // v007 interview year
 
 tab b1, m  //b1 is birth month
 tab b2, m  //b2 is birthyear
-tab hw16, m //hw16 is Day of birth
+tab hw16, m //hw16 is day of birth
 
 * seasonality of births? and/or errors in birth date records
 * graph bar (count) one, over(b1)
 
 * set missing day of birth to 15th of month. 
-replace hw16 = 15 if hw16 > 31
-tab hw16
-* Following WHO recommendations on anthro data
-* We have created heaping on 15th of month
-// kdensity hw16 
-
 gen birthday =  hw16
 gen birthmonth = b1
 gen birthyear = b2
+
+replace birthday = 15 if hw16 > 31
+tab birthday
+* By following WHO recommendations on anthro data, we have created heaping on 15th of month
+// kdensity hw16 
 
 cap drop dob_date
 gen dob_date = mdy(b1, hw16, b2)
@@ -95,7 +92,6 @@ gen age_days = int_date - dob_date
 * for some children 15th day of birth is after interview date
 
 * If children are less than 1 month old, double check 15th of month as setting for day of birth. 
-
 list age_days dob_date int_date if age_days<0
 replace dob_date = int_date -7 if age_days<0
 * 7 days is mid point of 15 days  - subjective decision
@@ -144,17 +140,14 @@ replace age2 =. if b19>35
 * NFHS4 & 5 are weighted at district level. 
 * all DHS type weights must be divided by million before use
 * analysis at state and regional level uses state weights
-
 gen national_wgt = v005 / 1000000
-
 * Regional weights 
 gen regional_wgt = sweight / 1000000
-
+* State weights
 gen state_wgt =sweight / 1000000
 
 
 * Ever breastfed (children born in past 24 months) 
-
 la list M4 //in NFHS4 data value label is M4 for m4
 tab m4
 // M4:
@@ -175,10 +168,12 @@ replace evbf=. if age_days>=730
 la var evbf "Ever breastfed (children born in past 24 months)"
 tab m4 evbf, m
 tab evbf
-
+gen evbf_x = evbf*100
+version 16: table one  [iw=national_wgt] if b19<6, c(mean evbf_x n evbf) row format(%8.1f)
+* NOT CORRECT
+* 95.9  87,267
 
 *Early initiation of Breastfeeding (children born in last 24 months breastfed within 1hr)
-// https://dhsprogram.com/data/Guide-to-DHS-Statistics/index.htm#t=Initial_Breastfeeding.htm
 // Numerators:
 // Number of last-born children age 0-23 months (midx = 1 & b19 < 24) who:
 // 1)     Were ever breastfed (m4 ≠ 94,99)
@@ -208,8 +203,8 @@ replace eibf = 1 if (m4!=94 | m4!=99) & (m34==0 | m34==100)
 replace eibf =. if midx>1 | b19>=24 // age in days
 * All cases for EIBF in NFHS-5 are immediately.  There are no cases of within first hour. 
 tab eibf
-// version 16: table v101 [pw=state_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
-// version 16: table one   [pw=national_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
+tab eibf [iw=v005/1000000]
+* Early Initiation  41.4  87,267 
 
 
 tab m34 eibf, m
@@ -272,7 +267,7 @@ tab m4 v404
 //           96 breastfed until died
 //           97 inconsistent
 //           98 don't know
-// 		  .  missing
+// 		      . missing
 
 cap drop currently_bf
 gen currently_bf=0
@@ -381,7 +376,7 @@ tab prelacteal_formula, m
 tab prelacteal_otherthanmilk, m
 * Compare to variable - gave nothing
 tab m55z prelacteal_otherthanmilk
-* m55z does faithfully represent children who were given nothing in first 3 days. 
+* m55z faithfully represents children who were given nothing in first 3 days. 
 
 * Bottle Feeding
 * for variables that are stand alone, missing vars are coded as missing. 
@@ -446,7 +441,6 @@ v415		     V415            drank from bottle with nipple
 */
 
 
-
 ********************************************************************************
 * Food groups (liquids and solids)
 ********************************************************************************
@@ -470,7 +464,6 @@ v415		     V415            drank from bottle with nipple
 * Missing and "don't know" data on foods and liquids given is treated as not given in numerator and included in denominator.
  
 * In NFHS-5 for all vars 409 - 415 0 = no and 1 = yes
-
 foreach var of varlist v409- v415 m39a {
 	recode `var' (1/7=1) (0=0) , gen(`var'_rec)
 	lab val `var'_rec no_yes
@@ -693,7 +686,6 @@ tab tag midx, m
 
 
 **********************
-
 //breastfeeding status
 gen diet=1
 replace diet=2 if (v409>=1 & v409<=7) 					// water
@@ -710,6 +702,13 @@ foreach xvar of varlist v414* { 						// solids
 replace diet=5 if v412a==1 | v412b==1 | m39a==1
 replace diet=0 if m4!=95
 
+* Create correct sample
+* Note: The following do files select for the youngest child under 2 years living with the mother. Therefore some cases will be dropped. 
+* Selecting for youngest child under 24 months and living with mother
+// keep if b19 < 24 & b9 == 0
+// * if caseid is the same as the prior case, then not the last born
+// keep if _n == 1 | caseid != caseid[_n-1]
+
 label define bf_status 0"not bf" 1"exclusively bf" 2"bf & plain water" 3"bf & non-milk liquids" 4"bf & other milk" 5"bf & complementary foods"
 label values diet bf_status
 label var diet "Breastfeeding status for last-born child under 2 years"
@@ -719,110 +718,21 @@ recode diet (1=1) (else=0) if b19<6, gen(ebf)
 label values ebf yesno
 label var ebf "Exclusively breastfed - last-born under 6 months"
 
-* Note: The following do files select for the youngest child under 2 years living with the mother. Therefore some cases will be dropped. 
-* Selecting for youngest child under 24 months and living with mother
-keep if b19 < 24 & b9 == 0
-* if caseid is the same as the prior case, then not the last born
-keep if _n == 1 | caseid != caseid[_n-1]
 
-
-
-//Exclusive breastfeeding 
-
+* Exclusive breastfeeding 
 *Age under 6
 tab ebf if b19<6 [iw=v005/1000000]
+// NFHS-5 REPORT  EBF<6M  	63.7  	22,406 
 
-* 22406
+* Double check correct coding with all liquids / food vars
+// local feeding_vars = "v409 v410 v411 v411a v412a v412c v413 v414a v414e v414f v414g v414i v414j v414k v414l v414m v414n v414o v414p v414s v414t v414v m39a"
+// foreach var of varlist `feeding_vars' {
+// 	version 16: table one `var'   [pw=national_wgt] if b19<6 , c(mean ebf_x n ebf_x) row col format(%8.1f)
+// }
 
 ****************************
 
 
-
-
-************************
-cap drop ebf_x
-gen ebf_x = ebf *100 
-// version 16: table state [pw=state_wgt]     if b19<6, c(mean ebf_x n ebf_x)  format(%8.1f)
-version 16: table age2 one  [iw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row format(%8.1f)
-
-* not a problem with weights * 1000000
-version 16: table age2 one  [pw=v005] if b19<6, c(mean ebf_x n ebf_x) row format(%8.1f)
-
-* NFHS-5 report ebf is not affected by child is alive
-* not a problem with b5
-version 16: table age2 b5  [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row format(%8.1f)
-
-* not a problem with b0
-version 16: table age2 b0  [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row col format(%8.1f)
-
-* not a problem with b9
-version 16: table age2 b9  [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row col format(%8.1f)
-
-* bidx matches midx
-* no relation with bord
-version 16: table bord age2   [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row col format(%8.1f)
-
-* not a problem with b10 complete info
-version 16: table age2 b10   [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row col format(%8.1f)
-
-* b16  child listed in household? 
-version 16: table b16 age2   [pw=national_wgt] if b19<6, c(mean ebf_x n ebf_x) row col format(%8.1f)
-* not issue with listing in household as N by age groups do not match
-version 16: table age2   [pw=national_wgt] if b19<6 & b16>=2, c(mean ebf_x n ebf_x) row col format(%8.1f)
-
-* not issue with v135 resident or visitor 
-version 16: table age2 v135  [pw=national_wgt] if b19<6 , c(mean ebf_x n ebf_x) row col format(%8.1f)
-
-* not issue with v218 number of living children  
-version 16: table v218 age2  [pw=national_wgt] if b19<6 , c(mean ebf_x n ebf_x) row col format(%8.1f)
-
-local feeding_vars = "v409 v410 v411 v411a v412a v412c v413 v414a v414e v414f v414g  v414i v414j v414k v414l v414m v414n v414o v414p v414s v414t v414v m39a"
-
-foreach var of varlist `feeding_vars' {
-	version 16: table one `var'   [pw=national_wgt] if b19<6 , c(mean ebf_x n ebf_x) row col format(%8.1f)
-}
-
-
-// foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg currently_bf {
-// 	tab ebf `var',m
-// }
-* b11 b12 b13 b15 b16 b17 b18 b20
-
-tab m39a ebf
-
-cap drop ebf
-* Create ebf variable - 1 yes 0 no
-// no liquids besides breastmilk
-// no food groups consumed - any_solid_semi_food==0 
-gen ebf=0 
-replace ebf =1 if m4 ==95
-// replace ebf =1 if currently_bf ==1
-replace ebf =0 if water      ==1 | ///
-                  juice      ==1 | ///		
-				  broth      ==1 | ///
-                  milk       ==1 | ///
-				  tea        ==1 | ///
-                  formula    ==1 | ///
-                  other_liq  ==1 | ///
-                  any_solid_semi_food ==1
-
-
-end
-
-
-
-// NFHS-5 REPORT  EBF<6M  	63.7  	22,406 
-// from data      EBF<6M    63.7    22509.2 with twins sorted  b5 caseid midx
-// from data      EBF<6M    63.7    22525.5
-
-
-// foreach var of varlist v409- v415 {
-// 	tab ebf `var',m
-// }
-// plain water
-
-
-***************************************
  
 * MEDIAN duration of exclusive breastfeeding
 cap drop age_ebf
@@ -894,17 +804,19 @@ clonevar freq_solids=m39
 * There 7000 cases of yes any_solid_semi_food but 0 freq_feeds
 * Cannot give any # of freq_feeds to those yes any_solid_semi_food cannot be coded. 
 replace freq_solids =9 if m39==. & any_solid_semi_food==1 // missing frequency and 1+ food groups
+
 la list M39
 // M39:
 //            0 none
 //            7 7+
 //            8 don't know
-
 la def M39 9 missing, add
 la val freq_solids M39
 
 * freq_solids includes number of times consumed yogurt
 * if frequency of yogurt is added to milk_feeds, then it could be double counted
+
+* Check in DHS code if yogurt milk_feeds is double counted. 
 
 tab m39 freq_solids,m
 tab freq_solids any_solid_semi_food, m 
@@ -1237,7 +1149,6 @@ tab ari, m
 
 
 *NFHS 4 state codes are considered as standard for other surveys
-cap drop state
 gen state = 0
 *state_nfhs4 and state are same
 		
@@ -1425,7 +1336,11 @@ gen round=5
 * Save data with name of survey
 save iycf_NFHS5, replace 
 
+keep if b19 < 24 & b9 == 0
+// * if caseid is the same as the prior case, then not the last born
+keep if _n == 1 | caseid != caseid[_n-1]
 
+save iycf_NFHS5_ebf, replace 
 
 
 
