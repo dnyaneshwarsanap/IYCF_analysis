@@ -1095,6 +1095,16 @@ lab val caste caste
 lab var caste "Caste"
 tab caste, m 
 
+* Birth Order
+gen birth_order = bord 
+replace birth_order=5 if bord >=5
+la def birth_order 5 "5+"
+la val birth_order birth_order
+tab birth_order, m 
+
+* Instituitional Births
+recode birth_place (1 4 = 0) (2 3 = 1), gen(inst_birth)
+ tab inst_birth birth_place, m
 
 * Residence Rural Urban
 
