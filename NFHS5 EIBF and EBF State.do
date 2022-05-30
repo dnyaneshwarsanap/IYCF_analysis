@@ -262,7 +262,7 @@ foreach x in `SelectState' {
 		local RowLabel: label `RowValueLabel' `row'
 		putdocx table `TableNum'(`i',1) = ("`RowLabel'")
 		* add results
-		quietly summarize `var1' [aw=national_wgt] if state==`row' 
+		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
 		local result = r(mean) * 100
 		putdocx table `TableNum'(`i',2) = (`result'), nformat(%5.1f) halign(center)
@@ -382,7 +382,7 @@ foreach x in `SelectState' {
 		local RowLabel: label `RowValueLabel' `row'
 		putdocx table `TableNum'(`i',1) = ("`RowLabel'")
 		* add results
-		quietly summarize `var1' [aw=national_wgt] if state==`row' 
+		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
 		local result = r(mean) * 100
 		putdocx table `TableNum'(`i',2) = (`result'), nformat(%5.1f) halign(center)
@@ -538,6 +538,7 @@ foreach x in `SelectState' {
 	putdocx begin, font("Calibri", 9)
 	putdocx paragraph, halign(center)
 	putdocx image bf_area_graph.tif
+	putdocx pagebreak
 	
 	putdocx save "`ExportPath'/`FileName'", append 
 	restore
@@ -607,7 +608,7 @@ foreach x in `SelectState' {
 		local RowLabel: label `RowValueLabel' `row'
 		putdocx table `TableNum'(`i',1) = ("`RowLabel'")
 		* add results
-		quietly summarize `var1' [aw=national_wgt] if state==`row' 
+		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
 		local result = r(mean) * 100
 		putdocx table `TableNum'(`i',2) = (`result'), nformat(%5.1f) halign(center)
@@ -655,7 +656,7 @@ foreach x in `SelectState' {
 		local RowLabel: label `RowValueLabel' `row'
 		putdocx table `TableNum'(`i',1) = ("`RowLabel'")
 		* add results
-		quietly summarize `var1' [aw=national_wgt] if state==`row' 
+		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
 		local result = r(mean) * 100
 		putdocx table `TableNum'(`i',2) = (`result'), nformat(%5.1f) halign(center)
@@ -769,7 +770,7 @@ foreach x in `SelectState' {
 		local RowLabel: label `RowValueLabel' `row'
 		putdocx table `TableNum'(`i',1) = ("`RowLabel'")
 		* add results
-		quietly summarize `var1' [aw=national_wgt] if state==`row' 
+		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
 		local result = r(mean) * 100
 		putdocx table `TableNum'(`i',2) = (`result'), nformat(%5.1f) halign(center)
