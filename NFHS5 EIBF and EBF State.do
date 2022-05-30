@@ -13,6 +13,11 @@ use iycf_NFHS5, clear
 * path for saving reports / graphs
 local ExportPath "C:/TEMP/IYCF"
 
+gen bot_x = bottle*100
+version 16: table state [aw=state_wgt]  if b19<6 , c(mean bot_x n bottle) format(%8.1f)
+
+
+
 * undercase variables come from datasets
 * Camelcase vars are created in the code - used in code and dropped
 
@@ -142,7 +147,6 @@ foreach x in `SelectState' {
 		* add results
 		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
-		local Result = r(mean) * 100
 		local Result =cond(r(N)>=50,r(mean)*100,.)
 		putdocx table `TableNum'(`i',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = r(N)
@@ -151,7 +155,7 @@ foreach x in `SelectState' {
 	* add state / total to foot of table
 	putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		quietly summarize `var1' [aw=state_wgt] 
-		local Result = r(mean) * 100
+		local Result =cond(r(N)>=50,r(mean)*100,.)
 		putdocx table `TableNum'(`RowCount',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = r(N)
 		putdocx table `TableNum'(`RowCount',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
@@ -159,7 +163,8 @@ foreach x in `SelectState' {
 	putdocx save "`ExportPath'/`FileName'", append 
 
 	putdocx begin, font("Calibri", 9)
-
+	putdocx pagebreak
+	
 	* Add EIBF by parity 
 	*  Early Initiation of Breastfeeding (EIBF) by birth order
 
@@ -179,7 +184,7 @@ foreach x in `SelectState' {
 	tabulate `RowVar', matcell(coltotals)
 	local RowCount = r(r)+5
 
-	putdocx pagebreak
+	
 	* define columns
 	putdocx table `TableNum' = (`RowCount',7), border(all, nil) width(100%) layout(autofitcontents) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
@@ -210,7 +215,7 @@ foreach x in `SelectState' {
 				// add total N to far right column - col_num = last on right
 				quietly summarize `Var' [aw=national_wgt] if `RowVar'==`row' 
 				local ColNum = `col'+2
-				local Unweighted_N = (r(N))
+			local Unweighted_N = (r(N))
 				putdocx table `TableNum'(`RowNum',`ColNum') = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 		}
 	}
@@ -244,6 +249,7 @@ foreach x in `SelectState' {
 	tabulate `RowVar', matcell(coltotals)
 	local RowCount = r(r)+4
 
+		putdocx pagebreak
 	* define table with # rows and columns
 	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
@@ -264,16 +270,16 @@ foreach x in `SelectState' {
 		* add results
 		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
-		local result = r(mean) * 100
-		putdocx table `TableNum'(`i',2) = (`result'), nformat(%5.1f) halign(center)
+		local Result =cond(r(N)>=50,r(mean)*100,.)
+		putdocx table `TableNum'(`i',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = (r(N))
 		putdocx table `TableNum'(`i',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 	}
 	* add national / total to foot of table
 	putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	quietly summarize `var1' [aw=state_wgt] 
-	local result = r(mean) * 100
-	putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
+	local Result =cond(r(N)>=50,r(mean)*100,.)
+	putdocx table `TableNum'(`RowCount',2) = (`Result'), nformat(%5.1f) halign(center)
 	local Unweighted_N = (r(N))
 	putdocx table `TableNum'(`RowCount',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 
@@ -326,7 +332,7 @@ foreach x in `SelectState' {
 		local RowLabel: label `RowValueLabel' `row'
 		* define rows 
 		putdocx table `TableNum'(`RowNum',1) = ("`RowLabel'")
-		* add results in columns
+		* add Results in columns
 		foreach col in `columns' {
 			quietly summarize `Var' [aw=national_wgt] if `ColVar'==`col' & `RowVar'==`row'
 			local Result =cond(r(N)>=50,r(mean)*100,.)
@@ -354,7 +360,8 @@ foreach x in `SelectState' {
 	}
 
 	* Add % c-section
-	 
+	putdocx pagebreak
+	
 	* Define variables for table
 	local TableName = "C-Sections"
 	local TableNum = "table1"
@@ -381,24 +388,26 @@ foreach x in `SelectState' {
 		local RowValueLabel : value label `RowVar'
 		local RowLabel: label `RowValueLabel' `row'
 		putdocx table `TableNum'(`i',1) = ("`RowLabel'")
-		* add results
+		* add Results
 		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
-		local result = r(mean) * 100
-		putdocx table `TableNum'(`i',2) = (`result'), nformat(%5.1f) halign(center)
+		local Result =cond(r(N)>=50,r(mean)*100,.)
+		putdocx table `TableNum'(`i',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = (r(N))
 		putdocx table `TableNum'(`i',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 	}
 	* add national / total to foot of table
 	putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		quietly summarize `var1' [aw=state_wgt] 
-		local result = r(mean) * 100
-		putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
+		local Result =cond(r(N)>=50,r(mean)*100,.)
+		putdocx table `TableNum'(`RowCount',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = (r(N))
 		putdocx table `TableNum'(`RowCount',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 		
 
 	// Early Initiation of Breastfeeding (last 2 years) by Normal / Assisted - Caesarian birth
+	// tab district csection
+	
 	local TableName = "Early Initiation of Breastfeeding (EIBF) by type of birth"
 	local TableNum = "table3"
 	local Var = "eibf" 
@@ -432,15 +441,15 @@ foreach x in `SelectState' {
 		local RowLabel: label `RowValueLabel' `row'
 		* define rows 
 		putdocx table `TableNum'(`RowNum',1) = ("`RowLabel'")
-			* add results in columns
+			* add Results in columns
 			foreach col in `columns' {
 				quietly summarize `Var' [aw=national_wgt] if `ColVar'==`col' & `RowVar'==`row'
 				local Result =cond(r(N)>=50,r(mean)*100,.)
 				local ColNum = `col'+2 // normally 1
-				// this is possibly due to c-section being a 0/1 variable. 
+				// this is  due to c-section being a 0/1 variable. 
 				putdocx table `TableNum'(`RowNum',`ColNum') = (`Result'), nformat(%5.1f) halign(center)
 				// add total N to far right column - col_num = last on right
-				quietly summarize `Var' [aw=national_wgt] if `RowVar'==`row' //& `col'==4   
+				quietly summarize `Var' [aw=national_wgt] if `RowVar'==`row' 
 				local ColNum = `col'+3 // normally 2
 				local Unweighted_N = (r(N))
 				putdocx table `TableNum'(`RowNum',`ColNum') = (`Unweighted_N'), nformat(%16.0gc) halign(center)
@@ -508,7 +517,7 @@ foreach x in `SelectState' {
 	// Missing data on breastfeeding is treated as not currently breastfeeding in numerator and included in the denominator. Missing and "don't know" 
 	// data on foods and liquids given is treated as not given in numerator and included in denominator.
 
-	* Create weighted results for graph
+	* Create weighted Results for graph
 	preserve
 	collapse d1 d2 d3 d4 d5 d6 [aw=state_wgt], by(agemos)
 	gen total = d1 + d2 + d3 + d4 + d5 + d6
@@ -607,19 +616,19 @@ foreach x in `SelectState' {
 		local RowValueLabel : value label `RowVar'
 		local RowLabel: label `RowValueLabel' `row'
 		putdocx table `TableNum'(`i',1) = ("`RowLabel'")
-		* add results
+		* add Results
 		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
-		local result = r(mean) * 100
-		putdocx table `TableNum'(`i',2) = (`result'), nformat(%5.1f) halign(center)
+		local Result =cond(r(N)>=50,r(mean)*100,.)
+		putdocx table `TableNum'(`i',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = (r(N))
 		putdocx table `TableNum'(`i',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 	}
 	* add national / total to foot of table
 	putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		quietly summarize `var1' [aw=state_wgt] 
-		local result = r(mean) * 100
-		putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
+		local Result =cond(r(N)>=50,r(mean)*100,.)
+		putdocx table `TableNum'(`RowCount',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = (r(N))
 		putdocx table `TableNum'(`RowCount',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 
@@ -639,13 +648,14 @@ foreach x in `SelectState' {
 	tabulate `RowVar', matcell(coltotals)
 	local RowCount = r(r)+4
 
+	putdocx pagebreak
 	* define table with # rows and columns
 	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) note()
 	* add title
 	putdocx table `TableNum'(1,1) = ("Table 8: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
 	putdocx table `TableNum'(2,1) = ("District"), bold
-	putdocx table `TableNum'(2,2) = ("Exclusive Breastfeeding"), bold halign(center)
+	putdocx table `TableNum'(2,2) = ("Breastfeeding counselling during ANC"), bold halign(center)
 	putdocx table `TableNum'(2,3) = ("Unweighted N"), bold halign(center)
 
 	levelsof `RowVar', local(RowLevels)
@@ -655,19 +665,19 @@ foreach x in `SelectState' {
 		local RowValueLabel : value label `RowVar'
 		local RowLabel: label `RowValueLabel' `row'
 		putdocx table `TableNum'(`i',1) = ("`RowLabel'")
-		* add results
+		* add Results
 		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
-		local result = r(mean) * 100
-		putdocx table `TableNum'(`i',2) = (`result'), nformat(%5.1f) halign(center)
+		local Result =cond(r(N)>=50,r(mean)*100,.)
+		putdocx table `TableNum'(`i',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = (r(N))
 		putdocx table `TableNum'(`i',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 	}
 	* add national / total to foot of table
 	putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		quietly summarize `var1' [aw=state_wgt] 
-		local result = r(mean) * 100
-		putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
+		local Result =cond(r(N)>=50,r(mean)*100,.)
+		putdocx table `TableNum'(`RowCount',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = (r(N))
 		putdocx table `TableNum'(`RowCount',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 
@@ -711,7 +721,7 @@ foreach x in `SelectState' {
 		local RowLabel: label `RowValueLabel' `row'
 		* define rows 
 		putdocx table `TableNum'(`RowNum',1) = ("`RowLabel'")
-			* add results in columns
+			* add Results in columns
 			foreach col in `columns' {
 				quietly summarize `Var' [aw=national_wgt] if `ColVar'==`col' & `RowVar'==`row'
 				local Result =cond(r(N)>=50,r(mean)*100,.)
@@ -744,7 +754,7 @@ foreach x in `SelectState' {
 	// version 16: tabulate state pnc_child_visit, row
 
 	* Define variables for table
-	local TableName = "Received a post natal care visit in 2 months post birth"
+	local TableName = "Received a postnatal care visit in 2 months post birth"
 	local TableNum = "table4"
 	local var1 = "pnc_child_visit" 
 	local RowVar = "district"
@@ -753,13 +763,14 @@ foreach x in `SelectState' {
 	tabulate `RowVar', matcell(coltotals)
 	local RowCount = r(r)+4
 
+	putdocx pagebreak
 	* define table with # rows and columns
 	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) note()
 	* add title
 	putdocx table `TableNum'(1,1) = ("Table 10: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
 	putdocx table `TableNum'(2,1) = ("District"), bold
-	putdocx table `TableNum'(2,2) = ("Exclusive Breastfeeding"), bold halign(center)
+	putdocx table `TableNum'(2,2) = ("Postnatal care"), bold halign(center)
 	putdocx table `TableNum'(2,3) = ("Unweighted N"), bold halign(center)
 
 	levelsof `RowVar', local(RowLevels)
@@ -769,19 +780,19 @@ foreach x in `SelectState' {
 		local RowValueLabel : value label `RowVar'
 		local RowLabel: label `RowValueLabel' `row'
 		putdocx table `TableNum'(`i',1) = ("`RowLabel'")
-		* add results
+		* add Results
 		quietly summarize `var1' [aw=national_wgt] if district==`row' 
 		* convert proportion into percentage
-		local result = r(mean) * 100
-		putdocx table `TableNum'(`i',2) = (`result'), nformat(%5.1f) halign(center)
+		local Result =cond(r(N)>=50,r(mean)*100,.)
+		putdocx table `TableNum'(`i',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = (r(N))
 		putdocx table `TableNum'(`i',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 	}
 	* add national / total to foot of table
 	putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		quietly summarize `var1' [aw=state_wgt] 
-		local result = r(mean) * 100
-		putdocx table `TableNum'(`RowCount',2) = (`result'), nformat(%5.1f) halign(center)
+		local Result =cond(r(N)>=50,r(mean)*100,.)
+		putdocx table `TableNum'(`RowCount',2) = (`Result'), nformat(%5.1f) halign(center)
 		local Unweighted_N = (r(N))
 		putdocx table `TableNum'(`RowCount',3) = (`Unweighted_N'), nformat(%16.0gc) halign(center)
 
@@ -821,7 +832,7 @@ foreach x in `SelectState' {
 		local RowLabel: label `RowValueLabel' `row'
 		* define rows 
 		putdocx table `TableNum'(`RowNum',1) = ("`RowLabel'")
-			* add results in columns
+			* add Results in columns
 			foreach col in `columns' {
 				quietly summarize `Var' [aw=national_wgt] if `ColVar'==`col' & `RowVar'==`row'
 				local Result =cond(r(N)>=50,r(mean)*100,.)
@@ -891,7 +902,7 @@ foreach x in `SelectState' {
 		local RowLabel: label `RowValueLabel' `row'
 		* define rows 
 		putdocx table `TableNum'(`RowNum',1) = ("`RowLabel'")
-			* add results in columns
+			* add Results in columns
 			foreach col in `columns' {
 				quietly summarize `Var' [aw=national_wgt] if `ColVar'==`col' & `RowVar'==`row'
 				local Result =cond(r(N)>=50,r(mean)*100,.)
