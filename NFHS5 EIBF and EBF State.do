@@ -17,7 +17,6 @@ gen bot_x = bottle*100
 version 16: table state [aw=state_wgt]  if b19<6 , c(mean bot_x n bottle) format(%8.1f)
 
 
-
 * undercase variables come from datasets
 * Camelcase vars are created in the code - used in code and dropped
 
@@ -43,12 +42,6 @@ version 16: table state [aw=state_wgt]  if b19<6 , c(mean bot_x n bottle) format
 // gen eibf_x = eibf * 100
 // version 16: table state [pw=state_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
 // version 16: table one   [pw=national_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
-
-// gen imm = m34==0
-// graph bar (mean) imm, over(b19) title ("Immediately put to breast by age in months")
-// gen onehour = m34==100
-// graph bar (mean) onehour, over(b19) title ("Put to breast in first hour by age in months")
-
 
 * when using RowVar as list for looping, the values have to fall in order from 1 to x
 * when state is correctly labelled in all datasets, this should not be a problem. 
@@ -373,8 +366,8 @@ foreach x in `SelectState' {
 	local RowCount = r(r)+4
 
 	* define table with # rows and columns
-	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) note()
-	* add title
+	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
+		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
 	putdocx table `TableNum'(1,1) = ("Table 5: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
 	putdocx table `TableNum'(2,1) = ("District"), bold
@@ -601,8 +594,8 @@ foreach x in `SelectState' {
 	local RowCount = r(r)+4
 
 	* define table with # rows and columns
-	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) note()
-	* add title
+	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
+		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
 	putdocx table `TableNum'(1,1) = ("Table 7: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
 	putdocx table `TableNum'(2,1) = ("District"), bold
@@ -650,7 +643,8 @@ foreach x in `SelectState' {
 
 	putdocx pagebreak
 	* define table with # rows and columns
-	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) note()
+	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
+		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
 	* add title
 	putdocx table `TableNum'(1,1) = ("Table 8: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
@@ -765,7 +759,8 @@ foreach x in `SelectState' {
 
 	putdocx pagebreak
 	* define table with # rows and columns
-	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) note()
+	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
+		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
 	* add title
 	putdocx table `TableNum'(1,1) = ("Table 10: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
