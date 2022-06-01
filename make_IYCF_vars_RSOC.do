@@ -21,18 +21,21 @@ version 16
 // use "C:\Temp\IYCF\RSOC\Household_India_RSOC.dta", clear
 * Please note household data does not include IYCF
 
-cd "C:/Temp"
-use "C:\Temp\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
+cd "C:/Temp/Data"
+use "C:\Temp\Data\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
 
 * 29 states included 
 tab q1a
 
 // cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
 // use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\EMW_INDIA_RSOC.dta"
- 
-gen psu = q5_1
+
+destring q5_1, gen(psu)
+// gen psu = q5_1
 // scatter q1a q5_1
+
 gen hh_num = q11_1
+gen one=1
 
 * identify number of living children under five
 * A2.1 number of live births
@@ -817,10 +820,10 @@ tab cat_birth_wt, m
 
 cap drop lbw
 gen lbw = . 
-replace lbw = 1 if m19 <2500
-replace lbw = 0 if m19 >=2500 
+replace lbw = 1 if birth_weight <2.500
+replace lbw = 0 if birth_weight >=2.500 
 replace lbw = . if cat_birth_wt >=5
-tab m19 lbw, m
+tab birth_weight lbw, m
 tab lbw
 
 * early ANC <=3 months first trimester
