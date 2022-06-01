@@ -40,41 +40,49 @@ version 16
 // cd "C:\Users\rober\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
 // cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
 
+cd "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
+
 * NFHS-3
 clear 
-cd "C:\Users\rober\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
+cd "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
 run make_IYCF_vars_NFHS3.do
 
-*NFHS4
+* NFHS4
 clear 
-cd "C:\Users\rober\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
+cd "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
 run make_IYCF_vars_NFHS4.do
 
 *RSOC
 clear 
-cd "C:\Users\rober\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
+cd "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
 run make_IYCF_vars_RSOC.do
 
 *CNNS
 clear 
-cd "C:\Users\rober\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
+cd "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
 run make_IYCF_vars_CNNS.do
+
+* NFHS5
+clear  
+cd "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
+run make_IYCF_vars_NFHS5.do
 
 
 *MERGE ALL DATASETS
 
-cd "C:/Temp"
-// cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
+cd "C:/Temp/Data"
 
-use "iycf_NFHS3", clear
+use  "iycf_NFHS5" , clear
 tab round, m 
 append using "iycf_NFHS4"
+tab round, m 
+append using "iycf_NFHS3"
 tab round, m 
 append using "iycf_rsoc"
 tab round, m 
 append using "iycf_cnns"
 
-la def round 1 "NFHS-3" 2 RSOC 3 "NFHS-4" 4 CNNS
+la def round 1 "NFHS-3" 2 RSOC 3 "NFHS-4" 4 CNNS 5 "NFHS-5"
 la val round round
 
 
@@ -111,10 +119,11 @@ lab var region "Region"
 lab val region region
 
 
-// save "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\iycf_4surveys.dta", replace
-save "C:\TEMP\iycf_4surveys.dta", replace
+// save "C:\TEMP\iycf_4surveys.dta", replace
 
-// use "C:\TEMP\iycf_4surveys.dta", clear
+save "C:\TEMP\iycf_5surveys.dta", replace
+
+
 
 /*
 *The IYCF vars in the dataset - 
