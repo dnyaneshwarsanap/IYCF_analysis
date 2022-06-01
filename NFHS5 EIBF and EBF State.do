@@ -3,24 +3,22 @@
 *Request from Gayatri Singh 
 * May 2022
 
-* add dependencies
-// ssc install putdoxcrosstabs
+
+* path for saving reports / graphs
+local ExportPath "C:/TEMP/IYCF"
+
+* Code detail
+* undercase variables come from datasets
+* Camelcase vars are created in the code - used in code and dropped
+
 
 * Robert 
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
 // include "dnyaneshwar_paths.do"
 
 use iycf_NFHS5, clear 
+drop if state==9 // Daman & Diu is included with Dadra & Nagar Haveli
 
-* path for saving reports / graphs
-local ExportPath "C:/TEMP/IYCF"
-
-gen bot_x = bottle*100
-version 16: table state [aw=state_wgt]  if b19<6 , c(mean bot_x n bottle) format(%8.1f)
-
-
-* undercase variables come from datasets
-* Camelcase vars are created in the code - used in code and dropped
 
 
 // CONTENTS
@@ -289,7 +287,7 @@ foreach x in `SelectState' {
 	// Cannot use putdocx with this command above
 
 	* version 17
-	version 17: table district birth_place [aw=national_wgt], statistic(percent, across(birth_place))  nformat(%8.1f percent) statistic(frequency) zero
+	cap version 17: table district birth_place [aw=national_wgt], statistic(percent, across(birth_place))  nformat(%8.1f percent) statistic(frequency) zero
 	collect layout
 	putdocx collect
 
@@ -483,6 +481,7 @@ foreach x in `SelectState' {
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
 use iycf_NFHS5_ebf, clear 
 
+
 local ExportPath "C:/TEMP/IYCF"
 
 tab state
@@ -561,6 +560,7 @@ foreach x in `SelectState' {
 
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
 use iycf_NFHS5_ebf, clear 
+
 
 local ExportPath "C:/TEMP/IYCF"
 
@@ -938,7 +938,7 @@ foreach x in `SelectState' {
 }
 
 
-
+End
 
 
 

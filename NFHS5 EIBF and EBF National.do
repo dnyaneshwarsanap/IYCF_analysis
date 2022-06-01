@@ -2,6 +2,10 @@
 *Request from Gayatri Singh 
 * May 2022
 
+* Outstanding tasks
+* Median age EBF
+* make estimates work with set to missing include of drop vars
+
 
 * Robert 
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
@@ -15,7 +19,7 @@ drop if state==9
 * path for saving reports / graphs
 cd "C:/TEMP/IYCF"
 	
-local FileName = "IYCF_National.docx"
+local FileName = "IYCF National.docx"
 * undercase variables come from datasets
 
 * Camelcase vars are created in the code - used in code and dropped
