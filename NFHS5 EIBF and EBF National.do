@@ -9,11 +9,13 @@ include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYC
 
 use iycf_NFHS5, clear 
 
-
+* Daman & Diu causing problems
+drop if state==9
 
 * path for saving reports / graphs
 cd "C:/TEMP/IYCF"
-
+	
+local FileName = "IYCF_National.docx"
 * undercase variables come from datasets
 
 * Camelcase vars are created in the code - used in code and dropped
@@ -37,10 +39,10 @@ cd "C:/TEMP/IYCF"
 * Validate EIBF
 // table one eibf [aw=national_wgt] 
 // table state eibf [pw=state_wgt]
-cap drop eibf_x
-gen eibf_x = eibf * 100
-version 16: table state [pw=state_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
-version 16: table one   [pw=national_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
+// cap drop eibf_x
+// gen eibf_x = eibf * 100
+// version 16: table state [pw=state_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
+// version 16: table one   [pw=national_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
 
 // gen imm = m34==0
 // graph bar (mean) imm, over(b19) title ("Immediately put to breast by age in months")
@@ -128,7 +130,7 @@ putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	putdocx table `TableNum'(`RowCount',3) = (`weighted_n'), nformat(%16.0gc) halign(center)
 
 	
-putdocx save iycf_gayatri, replace 
+putdocx save `FileName', replace 
 putdocx begin, font("Calibri", 9)
 
 * Add EIBF by parity 
@@ -199,7 +201,7 @@ putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`weighted_n'), nformat(%16.0gc) halign(center)
 }
 
-putdocx save iycf_gayatri, append
+putdocx save `FileName', append
 putdocx begin, font("Calibri", 9)
 
 * Add % institutional births 
@@ -247,18 +249,24 @@ putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	putdocx table `TableNum'(`RowCount',3) = (`weighted_n'), nformat(%16.0gc) halign(center)
 
 	
-putdocx save iycf_gayatri, append  
+putdocx save `FileName', append  
+
 putdocx begin, font("Calibri", 9)
 
 
 * Add % public private births 
  *  Percent of births by (public/private) place of birth 
- 
-putdocx paragraph
-putdocx text ("Percent of births by (public/private) place of birth - Add here")
- 
-version 16: tabulate state birth_place, row
+//  version 16: tabulate state birth_place, row
+// Cannot use putdocx with this command above
 
+* version 17
+version 17: table state birth_place [aw=state_wgt], statistic(percent, across(birth_place))  nformat(%8.1f percent) statistic(frequency) zero
+collect layout
+putdocx collect
+
+putdocx save `FileName', replace 
+
+putdocx begin, font("Calibri", 9)
 
 
 *  Early Initiation of Breastfeeding (EIBF) by place of birth (public/private)
@@ -326,7 +334,7 @@ putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`weighted_n'), nformat(%16.0gc) halign(center)
 }
 
-putdocx save iycf_gayatri, append
+putdocx save `FileName', append
 putdocx begin, font("Calibri", 9)
 
 * Add % c-section
@@ -436,7 +444,7 @@ putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`weighted_n'), nformat(%16.0gc) halign(center)
 }
 
-putdocx save iycf_gayatri, append
+putdocx save `FileName', append
 
 
 
@@ -495,7 +503,7 @@ putdocx table `TableNum'(`RowCount',1) = ("Overall")
 	local weighted_n = floor(r(sum_w))
 	putdocx table `TableNum'(`RowCount',3) = (`weighted_n'), nformat(%16.0gc) halign(center)
 
-putdocx save iycf_gayatri, append 
+putdocx save `FileName', append 
 putdocx begin, font("Calibri", 9)
 
  
@@ -616,7 +624,7 @@ putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`weighted_n'), nformat(%16.0gc) halign(center)
 }
 
-putdocx save iycf_gayatri, append
+putdocx save `FileName', append
 putdocx begin, font("Calibri", 9)
 
 // putdocx paragraph
@@ -730,7 +738,7 @@ putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`weighted_n'), nformat(%16.0gc) halign(center)
 }
 
-putdocx save iycf_gayatri, append
+putdocx save `FileName', append
 putdocx begin, font("Calibri", 9)
 
 
@@ -802,7 +810,7 @@ putdocx table `TableNum'(`RowCount',1) = ("Overall")
 		putdocx table `TableNum'(`RowCount',`ColNum') = (`weighted_n'), nformat(%16.0gc) halign(center)
 }
 
-putdocx save iycf_gayatri, append
+putdocx save `FileName', append
 
 
 *Variable for breastfeeding area graph
@@ -865,7 +873,7 @@ graph export bf_area_graph.tif, as(tif) replace
 putdocx begin, font("Calibri", 9)
 putdocx paragraph, halign(center)
 putdocx image bf_area_graph.tif
-putdocx save iycf_gayatri, append
+putdocx save `FileName', append
 
 restore  // restore to prior data
 	 

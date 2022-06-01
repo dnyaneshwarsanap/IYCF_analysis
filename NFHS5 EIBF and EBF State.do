@@ -3,6 +3,8 @@
 *Request from Gayatri Singh 
 * May 2022
 
+* add dependencies
+// ssc install putdoxcrosstabs
 
 * Robert 
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
@@ -242,7 +244,7 @@ foreach x in `SelectState' {
 	tabulate `RowVar', matcell(coltotals)
 	local RowCount = r(r)+4
 
-		putdocx pagebreak
+	putdocx pagebreak
 	* define table with # rows and columns
 	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
@@ -279,14 +281,23 @@ foreach x in `SelectState' {
 	putdocx save "`ExportPath'/`FileName'", append 
 
 	putdocx begin, font("Calibri", 9)
+	
+	* Add Percent of births by (public/private) place of birth 
+	putdocx pagebreak
 
-	* Add % public private births 
-	 *  Percent of births by (public/private) place of birth 
-	 
-	putdocx paragraph
-	putdocx text ("Percent of births by (public/private) place of birth - Add here")
-	version 16: tabulate state birth_place, row
+	// version 16: tabulate state birth_place, row
+	// Cannot use putdocx with this command above
 
+	* version 17
+	version 17: table district birth_place [aw=national_wgt], statistic(percent, across(birth_place))  nformat(%8.1f percent) statistic(frequency) zero
+	collect layout
+	putdocx collect
+
+	putdocx save "`ExportPath'/`FileName'", replace 
+
+	putdocx begin, font("Calibri", 9)
+		
+	
 	*  Early Initiation of Breastfeeding (EIBF) by place of birth (public/private)
 	local TableName = "Early Initiation of Breastfeeding (EIBF) by place of birth"
 	local TableNum = "table2"
@@ -925,6 +936,8 @@ foreach x in `SelectState' {
 	}
 	putdocx save "`ExportPath'/`FileName'", append 
 }
+
+
 
 
 
