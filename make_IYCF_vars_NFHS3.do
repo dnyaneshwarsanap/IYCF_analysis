@@ -5,6 +5,11 @@
 * REFERENCE USED
 * 	USING Updated WHO IYCF guidelines 2020 and recommended IYCF code from UNICEF NY
 
+* Find version of data with Telangana correctly identified. 
+
+
+
+
 clear
 version 16
 
@@ -842,9 +847,42 @@ tab ari, m
 	
 *recode state codes of nfhs3
 *NFHS 3 state variable has to be harmonized with all survey state identification variables 
+cap drop state
+gen state = v101
 
-gen state = .
+// v101:
+//            1 [jm] jammu and kashmir
+//            2 [hp] himachal pradesh
+//            3 [pj] punjab
+//            5 [uc] uttaranchal
+//            6 [hr] haryana
+//            7 [dl] delhi
+//            8 [rj] rajasthan
+//            9 [up] uttar pradesh
+//           10 [bh] bihar
+//           11 [sk] sikkim
+//           12 [ar] arunachal pradesh
+//           13 [na] nagaland
+//           14 [mn] manipur
+//           15 [mz] mizoram
+//           16 [tr] tripura
+//           17 [mg] meghalaya
+//           18 [as] assam
+//           19 [wb] west bengal
+//           20 [jh] jharkhand
+//           21 [or] orissa
+//           22 [ch] chhatisgarh
+//           23 [mp] madhya pradesh
+//           24 [gj] gujarat
+//           27 [mh] maharashtra
+//           28 [ap] andhra pradesh
+//           29 [ka] karnataka
+//           30 [go] goa
+//           32 [ke] kerala
+//           33 [tn] tamil nadu
 
+
+* These codes are correct for NFHS3
 // 1 "A&N islands"
 replace state =2  if v101 ==28			 
 replace state =3  if v101 ==12			 
@@ -880,7 +918,7 @@ replace state =32  if v101 ==16
 replace state =33  if v101 ==9			 
 replace state =34  if v101 ==5			 
 replace state =35  if v101 ==19			 
-
+// Telangana 
 
 cap la drop state_name
 la def state_name			   1 "A&N islands"
@@ -922,6 +960,7 @@ la def state_name			  36 Telangana, add
 la val state state_name
 
 tab state, m 
+tab state v101, m 
 
 gen round=1
 
