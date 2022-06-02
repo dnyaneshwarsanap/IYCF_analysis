@@ -120,9 +120,11 @@ tab  q302u eibf_timing, m
 * q303 Was [NAME] given anything to drink other than breast milk within the first three days after delivery?
 * The CNNS did not ask the question in the best method, so we are trying to edit to represent 2 days. 
 
-
-clonevar ebf3d = q303
-tab ebf3d, m
+tab q303
+la list q303
+recode q303 (2 = 1)(1=0)(8=.), gen(ebf3d)
+la var ebf3d "Given nothing in 1st 3 days but BM"
+tab ebf3d q303, m
 
 cap drop ebf2d
 gen ebf2d =0
