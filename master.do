@@ -40,7 +40,6 @@ version 16
 // cd "C:\Users\rober\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
 // cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
 
-cd "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis"
 
 * NFHS-3
 clear 
@@ -88,28 +87,32 @@ la val round round
 
 * Generate 'region' variable
 gen region= .
-replace region=1 if state==25 |  state==12 | state==13 | state==14 | state==28 | state==29 | state==34
+replace region=1 if state==25 |  state==12 | state==13 | state==14 | state==28 | state==29 | state==34 | state==6 | state==37
 replace region=2 if state==7 |  state==19 | state==33
 replace region=3 if state==5 |  state==35 | state==15 | state==26
 replace region=4 if state==3 |  state==30 | state==32 | state==22 | state==4 | state==24 | state==21 | state==23
-replace region=5 if state==11 |  state==20 | state==10
-replace region=6 if state==2 |  state==16 | state==17 | state==31 | state==36
+replace region=5 if state==11 |  state==20 | state==10 | state==8 | state==9
+replace region=6 if state==2 |  state==16 | state==17 | state==31 | state==36 | state==1 | state==27 | state==18
+
+// list state state_num if region==.
+
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------------------------
 region       Region Name       states included in the region (state)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 region 1       North           NCT of Delhi(25), Haryana(12), Himachal Pradesh(13), Jammu and Kashmir(14), Punjab(28), Rajasthan(29), Uttarakhand(34)
-				        	   						 							   
+				        	   Chandigarh (6) Ladakh (37)			 							   
 region 2	   Central		   Chhattisgarh(7), Madhya Pradesh(19), Uttar Pradesh(33)
 									
 region 3	   East			   Bihar(5), West Bengal(35), Jharkhand(15), Odisha(26)	 							
 
 region 4       NorthEast       Arunachal Pradesh(3), Sikkim(30), Tripura(32),  Meghalaya(22), Assam(4), Nagaland(24), Manipur(21), Mizoram(23)
 
-region 5       West            Gujarat(11), Maharshtra (20), Goa(10)
+region 5       West            Gujarat(11), Maharshtra (20), Goa(10), Dadra & Nagar Haveli (8), Daman and Diu (9) 
 
-region 6       South           Andhra Pradesh(2),  Karnataka(16),  Kerala(17),  Tamil Nadu(31),  Telangana(36) 
+
+region 6       South           Andhra Pradesh(2),  Karnataka(16),  Kerala(17),  Tamil Nadu(31),  Telangana(36)  A&N islands (1) Puducherry (27) Lakshadweep (18)
 --------------------------------------------------------------------------------------------------------------------------------------------------
 */
 
@@ -245,18 +248,24 @@ round                                         Round indicates the survey Round1 
 */
 
 
+End
+
+
+
 * Round
 tab round, m 
 
 *Double check all vars 
 
-tab sex round,m
 tab sex round, col  
 
 tab state, m 
 tab state round,m
 
 tab region round,m
+
+tab state if round ==2
+
 
 tab birthday round,m
 tab birthmonth round,m

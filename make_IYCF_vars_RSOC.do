@@ -1026,9 +1026,10 @@ la val state state_name
 tab state, m 
 tab state state_rsoc, m 
 
-
-
 gen round =2
+
+drop if state==30 & round ==2
+
 
 keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days agemos  ///
 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///

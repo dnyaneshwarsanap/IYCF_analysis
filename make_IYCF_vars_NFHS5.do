@@ -140,15 +140,6 @@ la val age2 age2
 replace age2 =. if b19>35
 
 
-* Survey Weights
-* NFHS4 & 5 are weighted at district level. 
-* all DHS type weights must be divided by million before use
-* analysis at state and regional level uses state weights
-gen national_wgt = v005 / 1000000
-* Regional weights 
-gen regional_wgt = sweight / 1000000
-* State weights
-gen state_wgt =sweight / 1000000
 
 
 * Ever breastfed (children born in past 24 months) 
@@ -172,10 +163,9 @@ replace evbf=. if age_days>=730
 la var evbf "Ever breastfed (children born in past 24 months)"
 tab m4 evbf, m
 tab evbf
-gen evbf_x = evbf*100
-version 16: table one  [iw=national_wgt] if b19<6, c(mean evbf_x n evbf) row format(%8.1f)
-* NOT CORRECT
-* 95.9  87,267
+// gen evbf_x = evbf*100
+// version 16: table one  [iw=national_wgt] if b19<6, c(mean evbf_x n evbf) row format(%8.1f)
+
 
 *Early initiation of Breastfeeding (children born in last 24 months breastfed within 1hr)
 // Numerators:
@@ -291,14 +281,6 @@ replace not_bf =. if b9!=0
 tab not_bf
 tab age2 not_bf
 
-**************************
-// Not getting correct estimates
-// cap drop not_bf_x
-// gen not_bf_x = not_bf *100 
-// version 16: table one   [pw=national_wgt] if b19<6, c(mean not_bf_x  n not_bf_x) format(%8.2f)
-// version 16: table age2 one  [pw=national_wgt] if b19<6, c(mean not_bf_x n not_bf_x) row format(%8.1f)
-// version 16: table age2 one  [aw=national_wgt] if b19<6, c(mean not_bf_x n not_bf_x) row format(%8.1f)
-**************************
 
 *For prelacteal feed variables are
 /* -------------------------------------------------
@@ -1250,7 +1232,7 @@ la def state_name			   4 Assam , add
 la def state_name			   5 Bihar , add
 la def state_name			   6 Chandigarh, add
 la def state_name			   7 Chhattisgarh, add 
-la def state_name			   8 "Dadra & Nagar Haveli D&D", add
+la def state_name			   8 "Dadra & Nagar Haveli", add
 la def state_name			   9 "Daman and Diu", add
 la def state_name			  10 Goa, add
 la def state_name			  11 Gujarat, add
@@ -1286,6 +1268,15 @@ tab state, m
 tab state v101, m 
 
 
+* Survey Weights
+* NFHS4 & 5 are weighted at district level. 
+* all DHS type weights must be divided by million before use
+* analysis at state and regional level uses state weights
+gen national_wgt = v005 / 1000000
+* Regional weights 
+gen regional_wgt = sweight / 1000000
+* State weights
+gen state_wgt =sweight / 1000000
 
 
 
@@ -1385,7 +1376,7 @@ keep psu hh_num int_date birthday birthmonth birthyear dateofbirth age_days agem
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf mmf_all mixed_milk mad_all ///
 	egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus csection ///
 	mum_educ_years mum_educ caste birth_order rururb wi wi_s sex diar fever ari state birth_place /// 
-	inst_birth anc_BFcounsel pnc_child_visit pnc_assistance round district
+	inst_birth anc_BFcounsel pnc_child_visit pnc_assistance round district b19 b9 caseid
 
 
 		
