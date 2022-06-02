@@ -12,23 +12,21 @@ version 16
 **********************************
 
 
-
-
-
-
 // use "C:\Temp\IYCF\RSOC\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
 * EMW - ever married women
 // use "C:\Temp\IYCF\RSOC\Household_India_RSOC.dta", clear
 * Please note household data does not include IYCF
 
-cd "C:/Temp/Data"
-use "C:\Temp\Data\EMW_INDIA_RSOC.dta", clear  // complete data at individual level
+
+include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
+// include "dnyaneshwar_paths.do"
+
+* Open RSOC
+use `RSOC', clear
+
 
 * 29 states included 
 tab q1a
-
-// cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
-// use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\EMW_INDIA_RSOC.dta"
 
 destring q5_1, gen(psu)
 // gen psu = q5_1
@@ -1026,6 +1024,8 @@ la def state_name			  36 Telangana, add
 la val state state_name
 
 tab state, m 
+tab state state_rsoc, m 
+
 
 
 gen round =2
