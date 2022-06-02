@@ -917,7 +917,7 @@ tab ari h31c
 tab ari, m 
 
 
-*NFHS 4 state codes are considered as standard for other surveys
+*NFHS 5 state codes are considered as standard for other surveys
 gen state = v101
 *state_nfhs4 and state are same
 		

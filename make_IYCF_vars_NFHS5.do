@@ -1159,10 +1159,51 @@ tab ari h31c
 tab ari, m 
 
 
-*NFHS 4 state codes are considered as standard for other surveys
-gen state = 0
-*state_nfhs4 and state are same
-		
+*NFHS 5 state codes are used as standard for other surveys
+* Except separation of Dadra Havel and D&D
+cap drop state
+gen state = v101
+
+//
+// V101:
+//            1 jammu & kashmir
+//            2 himachal pradesh
+//            3 punjab
+//            4 chandigarh
+//            5 uttarakhand
+//            6 haryana
+//            7 nct of delhi
+//            8 rajasthan
+//            9 uttar pradesh
+//           10 bihar
+//           11 sikkim
+//           12 arunachal pradesh
+//           13 nagaland
+//           14 manipur
+//           15 mizoram
+//           16 tripura
+//           17 meghalaya
+//           18 assam
+//           19 west bengal
+//           20 jharkhand
+//           21 odisha
+//           22 chhattisgarh
+//           23 madhya pradesh
+//           24 gujarat
+//           25 dadra & nagar haveli and daman & diu
+//           27 maharashtra
+//           28 andhra pradesh
+//           29 karnataka
+//           30 goa
+//           31 lakshadweep
+//           32 kerala
+//           33 tamil nadu
+//           34 puducherry
+//           35 andaman & nicobar islands
+//           36 telangana
+//           37 ladakh
+
+
 replace state =1  if v101 ==35		// 1 "A&N islands"
 replace state =2  if v101 ==28		// Andhra Pradesh
 replace state =3  if v101 ==12			 
@@ -1170,9 +1211,8 @@ replace state =4  if v101 ==18
 replace state =5  if v101 ==10		
 replace state =6  if v101 ==4       // 6 Chandigarh	 
 replace state =7  if v101 ==22		
-* merged two UTs in NFHS5
-replace state =8  if v101 ==25       // 8 dadra & nagar haveli and daman & diu 
-// replace state =9
+replace state =8  if v101 ==25       // 8 dadra & nagar haveli  
+replace state =9  if sdist == 493 | sdist == 494  // daman & diu
 replace state =10  if v101 ==30			 
 replace state =11  if v101 ==24			 
 replace state =12  if v101 ==6			 
@@ -1211,8 +1251,7 @@ la def state_name			   5 Bihar , add
 la def state_name			   6 Chandigarh, add
 la def state_name			   7 Chhattisgarh, add 
 la def state_name			   8 "Dadra & Nagar Haveli D&D", add
-* CORRECT FOR HARMONIZED STATES ACROSS ALL SURVEYS
-// la def state_name			   9 "Daman and Diu", add
+la def state_name			   9 "Daman and Diu", add
 la def state_name			  10 Goa, add
 la def state_name			  11 Gujarat, add
 la def state_name			  12 Haryana, add
@@ -1244,7 +1283,7 @@ la def state_name			  37 Ladakh, add
 la val state state_name
 
 tab state, m 
-tab  state v101, m 
+tab state v101, m 
 
 
 
