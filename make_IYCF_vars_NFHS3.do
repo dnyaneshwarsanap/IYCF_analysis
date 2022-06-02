@@ -1,27 +1,40 @@
-* make_IYCF_vars_NFHS3.do - NAME OF FILE
-* Make IYCF Variables for NFHS3 data - PURPOSE OF FILE
-* USING Updated WHO IYCF guidelines 2020 and recommended IYCF code from UNICEF NY
+* NAME OF FILE
+* 	make_IYCF_vars_NFHS3.do 
+* PURPOSE OF FILE
+* 	Make IYCF Variables for NFHS3 data 
+* REFERENCE USED
+* 	USING Updated WHO IYCF guidelines 2020 and recommended IYCF code from UNICEF NY
+
+clear
+version 16
+
+*Check survey weights
 
 
-* KEEP COLLEAGUES FOLDER REFERENCES - Comment out when not used. 
+*cd "C:/Temp"
+//use "C:\Users\Rojohnston\OneDrive - UNICEF\ECM-Nut OP4 Nutrition Governance, Partnerships, resources M&E\IIT-B\IYCF\NFHS3\IAKR52FL.dta", clear
+*use "C:\TEMP\IAKR52FL.dta", clear
+
 cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
 use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\IAKR52FL.dta", clear
 
-//cd "C:/Temp"
-//use "C:\Users\Rojohnston\OneDrive - UNICEF\ECM-Nut OP4 Nutrition Governance, Partnerships, resources M&E\IIT-B\IYCF\NFHS3\IAKR52FL.dta", clear
 
-
-*------------------------------
 
 gen one=1
+
 lab define no_yes 0 "No" 1 "Yes"
 
-*tab result
-*Filter the data of died children
-tab b5, m
-* Complete N living children 48,679  UPDATED
-* remove all children who died (died children = 2876)
-drop if b5 !=1
+gen psu = v001
+gen hh_num = v002
+
+
+* Do NOT exclude dead children. 
+// Note: Table is based on last-born children born in the 2 years preceding the survey regardless of whether the children are living or dead at
+// the time of the interview
+// Same child sample for EIBF and EBF
+tab b5,m
+
+
 
 * Change from age in months to age in days for all IYCF categories
 * Ages in month by day ranges
@@ -32,7 +45,6 @@ drop if b5 !=1
 * 6-11 M    (183 - 335)
 * 12 - 23 M (335 - 730)
 * Underfive (   < 1825)
-
 
 * Age in days
 gen int_date = mdy(v006 , v016 , v007)
@@ -46,6 +58,7 @@ tab v007   // v007 interview year
 tab b1, m  //b1 is birth month
 tab b2, m  //b2 is birthyear
 tab hw16, m //hw16 is Day of birth
+
 // other than 31 dates of birth
 // inconsistent |         34        0.07       68.97
 //   don't know |     11,036       21.41       90.38
@@ -59,6 +72,10 @@ tab hw16
 * in theory 15th is middle of the month.
 * We have created heaping on 15th of month
 kdensity hw16 if b5==1
+
+gen birthday =  hw16
+gen birthmonth = b1
+gen birthyear = b2
 
 cap drop dob_date
 gen dob_date = mdy(b1, hw16, b2)
@@ -78,10 +95,11 @@ kdensity age_days if b5==1
 gen agemos = floor(age_days/30.42) if b5==1
 graph bar (count) one, over(agemos)
 
-tab agemos, m 
-cap drop agemos_x
-gen agemos_x = v008 -  b3 if b5==1
-scatter agemos_x agemos
+* Double check agemos 
+// tab agemos, m 
+// cap drop agemos_x
+// gen agemos_x = v008 -  b3 if b5==1
+// scatter agemos_x agemos
 
 
 * Ever breastfed (children born in past 24 months) 
@@ -94,17 +112,19 @@ replace evbf=1 if m4 == 95 // still breastfeeding
 replace evbf=. if age_days>=730 
 la var evbf "Ever breastfed (children born in past 24 months)"
 tab  m4 evbf, m
+tab evbf
 
 *Early initiation of Breastfeeding (children born in last 24 months breastfed within 1hr)
 la list m34
 tab m34, m 
 
 gen eibf = 0
-replace eibf = 1 if m34 == 0 | m34==100 | m34 ==101 ///  0 -immediately, 101 - one hour, 100 - within 30min to 1hr 
-
+replace eibf = 1 if m34 == 0 | m34==100  ///  0 -immediately, 100 - within 30min to 1hr 
+// 101 =  one hour and more
 replace eibf =. if age_days>=730 // age in days
 tab eibf,m
 tab m34 eibf, m
+tab eibf
 
 *Timing of initiation of Breastfeeding 
 cap drop eibf_timing
@@ -115,7 +135,7 @@ replace eibf_timing = mod(m34,100) if m34>=102 & m34<=123
 replace eibf_timing = mod(m34,200)*24 if m34>=201 & m34<=223
 replace eibf_timing =.  if age_days>=730
 la var eibf_timing "Timing of start of breastfeeding (in hours)"
-tab eibf_timing,m
+tab eibf_timing, m
 scatter m34 eibf_timing
 kdensity eibf_timing
 
@@ -129,58 +149,43 @@ kdensity eibf_timing
 tab m55z
 cap drop ebf2d
 gen ebf2d =0
-replace ebf2d =. if age_days >2
 replace ebf2d=1 if m55z==1 // m55z=1 means no other drink was given to the child in 1st three days
-
+replace ebf2d =. if age_days >2
 * Question was not asked correctly so variable will only be valid at national level 
 * 38 children in sample <= 2 days
 tab ebf2d m55z, m 
-
-
+clonevar ebf3d = m55z
+replace ebf3d = . if m55z==9
 
 * Currently Breastfeeding
 // 1. ever breastfed
 // 2. still breastfeeding
 // 3. breastfed yesterday
 // v404 is a currently breastfeeding var in NFHS 3 can we use this var directly
+tab m4, m
+tab v404, m 
+tab m4 v404
+
+// la list M4
+// M4:
+//           93 ever breastfed, not currently breastfeeding
+//           94 never breastfed
+//           95 still breastfeeding
+//           96 breastfed until died
+//           97 inconsistent
+//           98 don't know
+// 		      . missing
 
 cap drop currently_bf
-gen currently_bf = v404
-tab currently_bf,m
-
-/*
-cap drop currently_bf
-gen currently_bf = .
-replace currently_bf = 0 if m4==99 | m4==98 | m4==94 | m4==0
+gen currently_bf=0
 replace currently_bf = 1 if m4==95
-replace currently_bf = 1 if v407!=0 | v407!=99 | v408 !=0 | v408 !=99
-replace currently_bf = 0 if v407==0 | v407==99
-replace currently_bf = 0 if v408 ==0 | v408 ==99
-replace currently_bf = 0 if v407 ==. | v408 ==. // 
-la var currently_bf "Currently breastfeeding"
-tab currently_bf, m
-tab currently_bf v407
-tab currently_bf v404,m
-
-
-tab currently_bf v404,m
-
- Currently |       currently
-breastfeed |     breastfeeding (v404)
-       ing |        no        yes |     Total
------------+----------------------+----------
-         0 |    16,500        993 |    17,493 
-         1 |         0     31,186 |    31,186 
------------+----------------------+----------
-     Total |    16,500     32,179 |    48,679 
-*/
-
-
+tab currently_bf,m
+tab m4 currently_bf,m
 
 *PRELACTEAL Feeds
 /*
 -------------------------------------------------
-m55a      		      milk other than BM
+m55a      		      milk other than breastmilk
 m55b         		  PLAIN WATER
 m55c         		  SUGAR OR GLUCOSE WATER
 m55d         		  GRIPE WATER 
@@ -203,9 +208,6 @@ clonevar prelacteal_milk = m55a
 replace prelacteal_milk = 1 if m55g==1 // added formula to prelacteal milk
 replace prelacteal_milk = . if m55a==9
 
-* Compare to variable - gave nothing
-
-
 clonevar prelacteal_water = m55b
 replace prelacteal_water = . if m55b==9
 
@@ -218,8 +220,14 @@ replace prelacteal_gripewater = . if m55d==9
 clonevar prelacteal_saltwater = m55e
 replace prelacteal_saltwater = . if m55e==9
 
+clonevar prelacteal_juice = m55f
+replace prelacteal_juice = . if m55f==9
+
 clonevar prelacteal_formula = m55g
 replace prelacteal_formula = . if m55g==9
+
+clonevar prelacteal_tea = m55h
+replace prelacteal_tea = . if m55h==9
 
 clonevar prelacteal_honey = m55i
 replace prelacteal_honey = . if m55i==9
@@ -227,25 +235,34 @@ replace prelacteal_honey = . if m55i==9
 clonevar prelacteal_janamghuti = m55j
 replace prelacteal_janamghuti = . if m55j==9
 
+tab m55k
+tab m55l
+tab m55m
+tab m55n
+
 clonevar prelacteal_other = m55x
 replace prelacteal_other = . if m55x == 9
 
-local prelacteal_feeds = "prelacteal_milk prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other"
+local prelacteal_feeds = "prelacteal_milk prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other"
 foreach var in `prelacteal_feeds' { 
 	replace `var' = . if  age_days>=730
 }
 
+*Prelacteal other than milk
 cap drop prelacteal_otherthanmilk
 gen prelacteal_otherthanmilk =0
-local prelacteal = "m55b m55c m55d m55e m55f m55h m55i m55j m55k m55l m55m m55n m55x"
+local prelacteal_feeds = "prelacteal_water prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other"
 foreach var in `prelacteal' { 
 	replace prelacteal_otherthanmilk = 1 if  `var'==1
 }
+tab prelacteal_otherthanmilk,m
 
-tab prelacteal_milk,m
+*Prelacteal milk formula
+gen prelacteal_milk_form=0
+replace prelacteal_milk_form =1 if prelacteal_milk==1
+replace prelacteal_milk_form =1 if prelacteal_formula==1
+tab prelacteal_milk_form,m
 
-tab  prelacteal_otherthanmilk, m
-* Compare to variable - gave nothing
 tab m55z prelacteal_otherthanmilk
 * m55z does faithfully represent children who were given nothing in first 3 days. 
  
@@ -258,23 +275,14 @@ replace bottle = . if m38>2       //m38 - did [Name] drink anything from bottle 
 replace bottle = . if age_days>=730
 tab m38 bottle, m
 
+tab m38 v415, m  // v415 does not clearly identify as bottle feeding last 24 hours
 
-tab v410a , m
-//  gave child |
-//      tea or |
-//      coffee |      Freq.     Percent        Cum.
-// ------------+-----------------------------------
-//           0 |     23,937       60.82       60.82
-//           1 |     15,259       38.77       99.60
-//           8 |         94        0.24       99.83
-//           9 |         65        0.17      100.00
-// ------------+-----------------------------------
-//       Total |     39,355      100.00
+tab v410a , m  //  gave child tea or coffee 
+
 
 
 /*
 Var Name    Label
----------------------------------------------------------------------------
 v409		gave child plain water        
 v409a	    gave child sugar water     -na      
 v410		gave child juice 
@@ -311,8 +319,8 @@ v414s 		gave child other solid or semi-solid food
 v414t 		gave child cs foods        -na  // MISSING
 v414u		gave child cs foods        -na  // MISSING
 v415		drank from bottle with nipple
---------------------------------------------------------------------------
 */
+
 ********************************************************************************
 * Food groups (liquids and solids)
 ********************************************************************************
@@ -322,33 +330,40 @@ v415		drank from bottle with nipple
 * 	no and don't know = 0
 * following global guidance on IYCF analysis, this allows for maximium children to be included in indicator 
 
-
 foreach var of varlist v409- v414u {
-	recode `var' (1=1) (2 8 9 .=0) , gen(`var'_rec)
+	recode `var' (1=1) (2 8 9 . =0) , gen(`var'_rec)
 	lab val `var'_rec no_yes
 }
-
 
 * LIQUIDS
 clonevar water					=v409_rec
 clonevar juice			        =v410_rec
-clonevar tea_coff			    =v410a_rec 
-clonevar milk			        =v411_rec
-replace  milk = 1 if v412_rec ==1 // fresh milk 
-* fresh milk var was not used. 
-
-clonevar formula 		        =v411a_rec
+clonevar tea			        =v410a_rec 
 clonevar other_liq 		        =v413_rec
 
-*-------------------------------------
-* LIQUIDS from CNNS
-// clonevar water			=q310a_rec
-// clonevar juice			=q310b_rec
-// clonevar broth			=q310c_rec
-// clonevar milk			=q310d1_rec
-// clonevar formula 		=q310e1_rec
-// clonevar other_liq 		=q310f_rec
-*-------------------------------------
+* Milk represents any milk consumption (animal milk, powder milk/formula and buttermilk/curd)
+clonevar milk			        =v411_rec  // tinned/powder or fresh milk
+clonevar formula 		        =v411a_rec
+
+* No frequency of milks, formula, other milks questions were asked. 
+gen freq_milk = .
+gen freq_formula = .
+gen freq_other_milk = .
+
+replace  milk = 1 if v412_rec ==1 // Add formula
+* no fresh milk var was used. 
+
+lab var water "water"
+lab var juice "juice"
+lab var tea "tea coffee"
+lab var milk "milk"
+lab var formula "formula"
+lab var other_liq "other_liq"
+
+tab v412a 		 // from q480 Any commercially fortified baby food such as Cerelac or Farex?
+tab v412b 		 // from q480 Any porridge or gruel?
+
+
 
 * SOLIDS SEMISOLIDS
 clonevar fortified_food                         =v412a_rec // from q480 Any commercially fortified baby food such as Cerelac or Farex?
@@ -356,11 +371,10 @@ clonevar gruel        							=v412b_rec // other porridge/gruel
 // These belong in solid/semi-solid list and will be added to bread, rice other grains
 clonevar poultry                               = v414a_rec //chicken_duck_other birds
 clonevar meat                                  = v414b_rec // gave child other meat
-replace meat =1 if 								 v414h_rec==1 // (beef, pork-na
+replace  meat =1 if 							 v414h_rec==1 // (beef, pork-na
 clonevar legume                                = v414c_rec //foods_of_beans_peas_lentils
 clonevar nuts                                  = v414d_rec
 clonevar bread                                 = v414e_rec  //food_of_bread_noodles_other_grains 
-replace bread =1 if  gruel ==1
 clonevar potato                                = v414f_rec  //potatoes_cassava_other tubers 
 clonevar egg                                   = v414g_rec
 clonevar vita_veg                              = v414i_rec // pumpkin_carrots_squash (yellow or orange inside 
@@ -371,6 +385,9 @@ clonevar organ              		           = v414m_rec //liver, heart, other organ
 clonevar fish                                  = v414n_rec //fresh or dried fish or shellfish
 clonevar leg_nut							   = v414o_rec //food made from beans, peas, lentils, nuts		
 * Double check leg_nut - here the eating of nuts is asked twice in v414o and v414d both
+tab v414d_rec, m
+tab v414o_rec, m
+tab leg_nut v414o_rec
 replace leg_nut = 1 if nuts ==1
 clonevar yogurt                                = v414p_rec //cheese, yogurt , other milk products
 * yogurt and cheese coded together
@@ -398,14 +415,30 @@ clonevar semisolid                             = v414s_rec //other solid or semi
 // clonevar fat			    =q310v_rec  // oil, ghee, butter    -----------------------------------> this is not a food groups
 // clonevar semisolid		=q310w_rec  // any other solid, semi-solid or soft food		
 
+lab var bread "bread, noodles, other grains"  // any bread, roti, chapati, rice, noodles, biscuits, idli, porridge 
 
-lab var bread "bread, noodles, other grains"  // includes cereals, gruel, porridge 
+lab var fortified_food  "fortified food"
+lab var gruel gruel
+lab var poultry  poultry
+lab var meat poultry
+lab var legume legume
+lab var nuts nuts
+lab var bread bread
+lab var potato potato
+lab var vita_veg "vitamin A rich veg"
+lab var leafy_green "leafy greens"
+lab var vita_fruit "vitamin A rich fruit"
+lab var yogurt yogurt
+lab var semisolid semisolids
+lab var organ "organ meats"
+lab var fish fish 
 
 
 
 *Define eight food groups following WHO recommended IYCF indicators
 gen carb = 0
-replace carb = 1 if bread ==1 | potato==1 
+replace carb = 1 if bread ==1 | potato==1 | gruel ==1 | fortified_food ==1
+* Carb includes gruel and fortified food
 lab var carb "1: Bread, rice, grains, roots and tubers"
 
 tab carb, m 
@@ -430,8 +463,6 @@ lab var vita_fruit_veg "6: Vitamin A rich fruits and vegetables"
 lab var fruit_veg "7: Other fruits and vegetables"
 replace fruit_veg = 0 if fruit_veg==0 | fruit_veg ==9
 tab fruit_veg, m
-
-
 
 foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg fruit_veg currently_bf {
 	lab val `var' no_yes
@@ -461,21 +492,24 @@ rename (fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 fg9) ///
 cap drop any_solid_semi_food
 egen any_solid_semi_food = rowtotal (carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg semisolid)
 replace any_solid_semi_food = 1 if any_solid_semi_food >1
+tab m39, m
+replace any_solid_semi_food = 1 if m39 >0 & m39 <=7 // frequency of feeding
 tab any_solid_semi_food, m 	   
-	   
+cap drop any_solid_semi_food_x
+gen any_solid_semi_food_x = any_solid_semi_food*100
+graph bar (mean) any_solid_semi_food_x if agemos<24, over(agemos)
+cap drop any_solid_semi_food_x
 
 *Introduction to the semi_solid, solid, soft_food in children from 6-8 months of age
 * based on v414s: gave child solid, semi solid, soft foods yesterday 
-* sumfoodgrp - number of food groups eaten yesterday
-tab sumfoodgrp v414s, m 
+
 cap drop intro_compfood
 gen intro_compfood = 0
-replace intro_compfood =. if v414s == 9
-replace intro_compfood = 1 if v414s == 1 | any_solid_semi_food==1 
-replace intro_compfood =. if age_days<=183 | age_days>=243
+replace intro_compfood = . if v414s == 9
+replace intro_compfood = 1 if v414s == 1    | any_solid_semi_food==1 
+replace intro_compfood = . if age_days<=183 | age_days>=243
 la var intro_compfood "Intro to complementary food 6-8 months of age"
 tab intro_compfood
-
 
 *EXCLUSIVE BREASTFEEDING
 *Exclusive breastfeeding is defined as breastfeeding with no other food or drink, not even water.
@@ -491,12 +525,12 @@ replace ebf =1 if currently_bf ==1
 replace ebf =0 if water      ==1 | ///
                   juice      ==1 | ///		
                   milk       ==1 | ///
-				  tea_coff   ==1 | ///
+				  tea        ==1 | ///
                   formula    ==1 | ///
                   other_liq  ==1 | ///
                   any_solid_semi_food ==1
 				  
-replace ebf =. if age_days >182
+replace ebf =. if age_days >730
 la var ebf "Exclusive breasfeeding"
 tab ebf
 tab ebf agemos
@@ -506,30 +540,31 @@ tab ebf agemos
 * MEDIAN duration of exclusive breastfeeding
 cap drop age_ebf
 gen age_ebf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
-replace age_ebf = . if age_days >183
+replace age_ebf = . if age_days >730
 *set agemos_ebf to missing if exbf=no
 replace age_ebf=. if ebf==0
 la var age_ebf "Median age of exclusive breasfeeding in months"
-sum age_ebf [aw=v005], d
+* For correct calculation methods of Median age in month of EBF please see
+* https://dhsprogram.com/data/Guide-to-DHS-Statistics/Breastfeeding_and_Complementary_Feeding.htm
+
+* not correct method but can be used for testing
+sum age_ebf, d
 
 * MEDIAN duration of continued breastfeeding
 gen age_cbf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
 replace age_cbf=. if currently_bf !=1
 la var age_cbf "Median age of continued breasfeeding in months"
-sum age_cbf [aw=v005], d
-
+* not correct method but can be used for testing
 
 
 *Continued breastfeeding / normally presented from 12-15 months or 18-23 months
-
 la list m4
 //  95 still breastfeeding
-recode m4 (95=1)(0/94 96/99=0)(missing=.), gen(cont_bf)
+recode m4 (95=1)(0/94 96/99=0)(missing=0), gen(cont_bf)
 tab m4 cont_bf , m 
 
 gen cont_bf_12_23 = cont_bf if age_days>335 &age_days<730 
 tab cont_bf_12_23, m
-
 
 
 *Minimum Dietary Diversity- code for new indicator definition 
@@ -541,8 +576,6 @@ replace mdd=. if age_days<=183 | age_days>=730
 la var mdd "Minimum Dietary Diversity (2020)"
 tab mdd
 
-
-
 *Minimum Meal Frequency (MMF) 
 *For currently breastfeeding children: MMF is yes if:
 *			child 6-8 months of age receives:
@@ -553,29 +586,37 @@ tab mdd
 
 * For this variable please remember to set response "don't knows" to zero
 * IN NFHS (DHS) replace fed_solids=0 if fed_solids is don't know  - don't know = 8
+tab m39, m
 
 * Q482 How many times did (NAME) eat solid, semisolid, or soft foods other than liquids yesterday during the day or at night? 
 
-tab m39, m
-gen freq_solids=m39
-replace freq_solids =0 if m39==8 & sumfoodgrp==0 // Don't know = Child did not consume any solid semi-solid foods yesterday
-replace freq_solids =0 if m39==0 & sumfoodgrp==0 // 0 frequency and 0 food groups 
-replace freq_solids =1 if m39==. & sumfoodgrp>=1 // missing frequency and 1+ food groups
-replace freq_solids =1 if m39==8 & sumfoodgrp>=1 // don't know frequency and 1+ food groups  
-replace freq_solids =0 if m39==. & sumfoodgrp==0 // missing frequency and 0 
-replace freq_solids =0 if m39==9
+cap drop freq_solids
+clonevar freq_solids=m39
+* Number of freq_solids, don't know and missing
+* There 1000 cases of yes any_solid_semi_food but 0 freq_feeds
+* Cannot give any # of freq_feeds to those yes any_solid_semi_food cannot be coded. 
+replace freq_solids =9 if m39==. & any_solid_semi_food==1 // missing frequency and 1+ food groups
+la list m39
+la def m39 9 missing, add
+la val freq_solids M39
 
 tab m39 freq_solids,m
-tab m39 sumfoodgrp,m
-tab sumfoodgrp freq_solids, m 
+tab freq_solids any_solid_semi_food, m 
 
-*Replacing freq_solids =1 if freq_solids is missing and sumfoodgrp is more than one
-replace freq_solids=1 if freq_solids==. & sumfoodgrp >=1 & sumfoodgrp <=8
-tab sumfoodgrp freq_solids, m 
+* Quality of freq solids indicators
+cap drop qual_freq_solids
+clonevar qual_freq_solids = freq_solids
+replace qual_freq_solids =0 if freq_solids>=0 & freq_solids<=7
 
-*changing sumfoodgrp to 1 if freq_feeds is more than once 
-replace sumfoodgrp=1 if sumfoodgrp==0 & freq_solids>=1 & freq_solids<=7
-tab sumfoodgrp freq_solids, m 
+replace qual_freq_solids =99 if any_solid_semi_food==1 & freq_solids==0
+la def qual_freq_solids 0 "from 0 to 7x", add
+la def qual_freq_solids 8 "don't know", add
+la def qual_freq_solids 9 missing, add
+la def qual_freq_solids 99 "missing freq & yes semi-solids", add
+la val freq_solids qual_freq_solids
+tab qual_freq_solids,m
+tab qual_freq_solids
+
 
 
 *Minimum Meal Frequency (MMF) Breastfeeding
@@ -587,12 +628,25 @@ replace mmf_bf =. if age_days<=183 | age_days>=730
 tab mmf_bf, m
 
 
-la def mmf_bf  0 "Inadequate MMF" 1 "Adequate freq(2) and BF 6-8M" 2 "Adequate freq(3) and BF 9-23M"
-la val mmf_bf mmf_bf
-tab mmf_bf,m
+// la def mmf  0 "Inadequate MMF" 1 "Adequate freq(2) & BF 6-8M" 2 "Adequate freq(3) and BF 6-8M"
+la def mmf  0 "Inadequate MMF" 1 "Adequate freq(2) & BF 6-8M" 2 "Adequate freq(3) and BF 9-23M"
+la val mmf mmf
+tab mmf
 
 
-*AS Frequency of Milk feeds is not in NFHS 3 DATA, WE ARE UNABLE TO CREATE THE MMF for Non_BF CHILDREN  VARIABLE
+
+
+*For currently non-breastfed children: MMF is met if children 6-23 months of age receive solid, semi-solid or soft foods or milk feeds at least 4 
+* times during the previous day and at least one of the feeds is a solid, semi-solid or soft feed
+* Variable freq_milk refers to number of times a child received milk other than breastmilk i.e. other animal milk*
+* Variable freq_formula refers to number of times a child received infant formula*
+* Variable freq_yogurt refers to number of times a child received yogurt*
+
+* PLEASE NOTE
+* As Frequency of Milk feeds is not in NFHS 3 DATA, WE ARE UNABLE TO CREATE THE MMF for Non_BF CHILDREN  VARIABLE
+* Yogurt is not double counted 
+
+* Generates the total number of times a non-breastfed child received solid, semi-solid or soft foods or milk feeds*
 
 
 *MMF among all children 6-23 months    //for NFHS 3 we can only consider MMF for BF children, so this var is only for BF children
@@ -612,8 +666,6 @@ replace mmf_all_bf =. if currently_bf!=1
 replace mad_all_bf=. if age_days<=183 | age_days>=730 
 tab mad_all_bf, m 
 
-*--------------------------------------------------------------------
-
 
 *Egg and/or Flesh food consumption - % of children 6-23months of age who consumed egg and/or flesh food during the previous day*
 gen egg_meat=0
@@ -621,13 +673,6 @@ replace egg_meat=1 if all_meat ==1 | egg==1            //& agemons>=6 & agemons<
 replace egg_meat =. if age_days<=183 | age_days>=730
 tab egg_meat, m 
 
-* Mixed milk feeding 0-5M
-* Mixed milk feeding (<6 months): Percentage of infants 0–5 months of age who 
-* were fed formula and/or animal milk in addition to breast milk during the previous day
-gen mixed_milk = 0 
-replace mixed_milk=1 if (currently_bf==1 & formula==1) | (currently_bf==1 & milk==1) 
-replace mixed_milk =. if age_days<0 | age_days>=183 
-tab mixed_milk, m 
 
 *Zero fruit or veg consumption - % of children 6-23months of age who did not consume any fruits or vegetables during the previous day**
 gen zero_fv=0
@@ -644,20 +689,49 @@ gen unhealthy_food = .
 * Need clear definition of unhealthy foods - from WHO guidance. 
 * Low nutrient density liquids
 * juice broth other_liq
-
 *ABOVE VARIABLES ARE NOT POSSIBLE TO MAKE BASED ON THE AVAILABLE NFHS 3 DATA
-
-
 
 * INCLUDE ALL SOCIO-DEMOGRAPHIC data		
 
-// CORRECT THESE VARIABLES BELOW
-		
+* Birth weight
+tab m19, m 
+//         9996 not weighed at birth
+//         9998 don't know
+gen birth_weight = m19
+replace birth_weight = 9999 if birth_weight >9995
+label def bw 9999 "Missing", replace
+label val birth_weight bw
+label var birth_weight "Birth weight"
+replace birth_weight = birth_weight/1000 if birth_weight != 9999
+
+// kdensity birth_weight
+* kdensity misrepresents the spread of birthweights
+
+* Line graph kdensity
+cap drop temp
+gen temp = birth_weight if birth_weight<9995
+cap drop count_birth_weight
+bysort temp: egen count_birth_weight = count(temp) 
+replace temp=. if temp >= 6
+twoway line count_birth_weight temp
+
+recode birth_weight (0/0.249=6)(0.25/1.499=1)(1.5/2.499=2)(2.5/3.999=3)(4/10.999=4)(11/10000=7), gen(cat_birth_wt)
+replace cat_birth_wt = 5 if m19==9996
+replace cat_birth_wt = 6 if m19==9998
+// egen c_birth_wt = cut(birth_weight), at(0.25,1.5,2.5,4,9001,9997,9999,10000) icodes
+label def cat_birth_wt 1 "Very low <1.5kg" 2 "Low <2.5kg" 3 "Average" 4 "High >4kg" 5 "Not weighed" 6 "Don't know" 7 "Missing"
+label val cat_birth_wt cat_birth_wt
+label var cat_birth_wt "Birth weight category"
+tab cat_birth_wt, m 
+
 * LBW  //low birth weight
+cap drop lbw
 gen lbw = . 
-replace lbw = 1 if m19 <=2500
-replace lbw = 0 if m19 >2500 & m19<8000
-tab lbw,m
+replace lbw = 1 if m19 <2500
+replace lbw = 0 if m19 >=2500 
+replace lbw = . if cat_birth_wt >=5
+tab m19 lbw, m
+tab lbw
 
 
 * early ANC  <=3 months first trimester (ANC checkup within first 3 months of pregnancy)
@@ -686,6 +760,7 @@ tab v106, m
 tab v107, m
 tab v107 v106, m
 
+* code NFHS data into number of school years completed
 gen mum_educ_years=.
 replace mum_educ_years = 0 if v106==0
 replace mum_educ_years = v107 if v106==1
@@ -694,10 +769,10 @@ replace mum_educ_years = 12 + v107 if v106==3
 tab mum_educ_years
 scatter   mum_educ_years v106
 
-recode mum_educ_years (0=1)(1/4=2)(5/9=3)(10/11=4)(12/25=5)(26/max=6), gen(mum_educ)
+recode mum_educ_years (0=1)(1/4=2)(5/9=3)(10/11=4)(12/25=5)(26/max=99), gen(mum_educ)
 lab var mum_educ "Maternal Education"
 la def mum_educ 1 "No Education" 2 "<5 years completed" 3 "5-9 years completed" ///
-	4 "10-11 years completed" 5  "12+ years completed" 6 "Missing"
+	4 "10-11 years completed" 5  "12+ years completed" 99 "Missing"
 la val mum_educ mum_educ
 tab mum_educ_years mum_educ, m
 
@@ -708,17 +783,19 @@ tab v155 mum_educ, col nofreq
 
 
 
-
 * caste
-gen caste = 0 if v130!=.                             //caste =0 if religion is missing
+tab v130 s46, m  // caste and religion
+cap drop caste
+gen caste=0 
 replace caste = 1 if s46 ==1 
 replace caste = 2 if s46 ==2 
 replace caste = 3 if s46 ==3
 replace caste = 4 if s46 ==4
-replace caste = . if s46 ==. | s46==9 | s46 ==8      // missing values are not assigned to any caste
-lab define caste 1 "Scheduled caste" 2"Scheduled tribe" 3"OBC"  4"Others" 
+replace caste = 5 if s46 ==. | s46==9 | s46 ==8      // missing values are not assigned to any caste
+lab define caste 1 "Scheduled caste" 2"Scheduled tribe" 3"OBC"  4"Others" 5 "Missing/don't know" 
 lab val caste caste
 lab var caste "Caste"
+tab caste s46, m 
 tab caste, m 
 
 
@@ -737,10 +814,12 @@ gen wi = v190
 lab define wi 1"poorest" 2"poorer"	3 "middle" 4 "richer" 5 "richest"
 lab val wi wi
 tab wi,m	
+gen wi_s=v190
 	
 * Survey Weights
-gen nat_wgt = v005     //national women's weight (6 decimals)
-gen state_wgt =v005s    // 	state women's weight (6 decimals)
+gen national_wgt = v005 /1000000    //   national women's weight (6 decimals)
+gen regional_wgt =v005s /1000000    // 	state women's weight (6 decimals)
+gen state_wgt =v005s /1000000       // 	state women's weight (6 decimals)
 	
 *sex of child
 gen sex=b4
@@ -791,7 +870,8 @@ replace state =3  if v101 ==12
 replace state =4  if v101 ==18			 
 replace state =5  if v101 ==10		
 // 6 Chandigarh	 
-replace state =7  if v101 ==22		
+replace state =7  if v101 ==22
+		
 // 8 "Dadra and Nagar Haveli"
 // 9 "Daman and Diu"	 
 replace state =10  if v101 ==30			 
@@ -863,57 +943,36 @@ la val state state_name
 
 tab state, m 
 
-
-
-* Generate 'region' variable
-gen double region:region=0
-replace region=1 if state==25 |  state==12 | state==13 | state==14 | state==28 | state==29 | state==34
-replace region=2 if state==7 |  state==19 | state==33
-replace region=3 if state==5 |  state==35 | state==15 | state==26
-replace region=4 if state==3 |  state==30 | state==32 | state==22 | state==4 | state==24 | state==21 | state==23
-replace region=5 if state==11 |  state==20 | state==10
-replace region=6 if state==2 |  state==16 | state==17 | state==31 | state==36
-
-
-* In NFHS use national weights for region
-lab define region 1 "North" 2 "Central" 3 "East" 4 "Northeast" 5 "West" 6 "South"
-lab var region "Region" 
-lab val region region
-
-
-/*
-------------------------------------------------------------------------------------------------------------------------------------------------
-region       Region Name       states included in the region (state)
--------------------------------------------------------------------------------------------------------------------------------------------------
-region 1       North           NCT of Delhi(25), Haryana(12), Himachal Pradesh(13), Jammu and Kashmir(14), Punjab(28), Rajasthan(29), Uttarakhand(34)
-				        	   						 							   
-region 2	   Central		   Chhattisgarh(7), Madhya Pradesh(19), Uttar Pradesh(33)
-									
-region 3	   East			   Bihar(5), West Bengal(35), Jharkhand(15), Odisha(26)	 							
-
-region 4       NorthEast       Arunachal Pradesh(3), Sikkim(30), Tripura(32),  Meghalaya(22), Assam(4), Nagaland(24), Manipur(21), Mizoram(23)
-
-region 5       West            Gujarat(11), Maharshtra (20), Goa(10)
-
-region 6       South           Andhra Pradesh(2),  Karnataka(16),  Kerala(17),  Tamil Nadu(31),  Telangana(36) 
---------------------------------------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------------------------------------
-*/
-
-	
 gen round=1
 
-keep one int_date age_days agemos ///
-evbf eibf eibf_timing ebf age_cbf age_ebf ebf2d prelacteal_milk prelacteal_water prelacteal_sugarwater ///
-prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey ///
-prelacteal_janamghuti prelacteal_other prelacteal_otherthanmilk bottle water juice milk any_solid_semi_food ///
-formula other_liq yogurt fortified_food bread legume vita_veg potato leafy_green ///
-any_solid_semi_food vita_fruit fruit_veg organ meat egg fish nut cont_bf semisolid carb leg_nut dairy ///
-all_meat vita_fruit_veg agegroup sumfoodgrp diar fever ari cont_bf_12_23 ///
-intro_compfood mdd currently_bf freq_solids mmf_bf  ///
-mmf_all mad_all egg_meat ///
-zero_fv sugar_bev  lbw anc4plus csection earlyanc ///
-mum_educ caste rururb wi state region sex nat_wgt state_wgt round mixed_milk
+// keep one int_date age_days agemos ///
+// 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
+// 	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
+// 	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
+// 	prelacteal_janamghuti prelacteal_other bottle water juice milk ///
+// 	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
+// 	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
+// 	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
+// 	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
+// 	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
+// 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
+// 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
+// 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
+// 	sex nat_wgt state_wgt round  
+
+keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos evbf eibf ///
+	eibf_timing ebf2d ebf3d currently_bf prelacteal_milk prelacteal_water prelacteal_sugarwater ///
+	prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula ///
+	prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other /// 
+	prelacteal_otherthanmilk prelacteal_milk_form bottle water juice tea other_liq milk ///
+	formula freq_milk freq_formula freq_other_milk fortified_food gruel poultry meat legume ///
+	nuts bread potato vita_veg leafy_green vita_fruit fruit_veg organ fish leg_nut yogurt ///
+	semisolid carb dairy all_meat vita_fruit_veg agegroup sumfoodgrp ///
+	fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 any_solid_semi_food intro_compfood ebf age_ebf ///
+	age_cbf cont_bf cont_bf_12_23 mdd freq_solids mmf_bf mmf_all_bf mad_all_bf ///
+	egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus ///
+	csection mum_educ_years mum_educ caste rururb wi wi_s national_wgt regional_wgt state_wgt ///
+	sex diar fever ari state round
 
 	
 * Save data with name of survey
