@@ -264,150 +264,176 @@ tab state round,m
 
 tab region round,m
 
-tab state if round ==2
-
-
 tab birthday round,m
 tab birthmonth round,m
 tab birthyear round,m
 
 tab agegroup round,m
 
+* keep all children under three 
+drop if age_days > 1095
+tab agegroup round,m
+
+
 
 * Liquid variables
-tab evbf round,m
+tab evbf round, col 
+tab evbf round, col m
 
-tab eibf round,m 
+tab eibf round,col 
+tab eibf round,col m 
 
-tab eibf_timing round
-
+* initation of breastfeeding in hours
+version 16: table round, c (mean eibf_timing) 
 
 * recommended ebf in 1st two days
 tab ebf2d round,m
 * original ebg in 1st 3 days
-tab ebf3d round,m
+tab ebf3d round,col 
+tab ebf3d round,col m
 
-tab ebf round,m 
+* Not correct for NFHS5
 tab ebf round, col   
+tab ebf round, m 
 
-tab cont_bf round,m 
 tab cont_bf round, col 
+tab cont_bf round,m 
 
 
  *Prelacteal feeds
+tab prelacteal_milk round, col
 tab prelacteal_milk round,m
 
+tab prelacteal_formula round,col
 tab prelacteal_formula round,m
 
+tab prelacteal_gripewater round, col
 tab prelacteal_gripewater round,m
 
+tab prelacteal_sugarwater round, col
 tab prelacteal_sugarwater round,m
 
+tab prelacteal_saltwater round, col
 tab prelacteal_saltwater round,m
 
+tab prelacteal_water round, col 
 tab prelacteal_water round,m
 
+tab prelacteal_honey round, col
 tab prelacteal_honey round,m
 
+tab prelacteal_other round, col
 tab prelacteal_other round,m
 
-tab prelacteal_janamghuti round,m
 * Ayurvedic medicine which cures stomach ailments/constipation in babies 
+tab prelacteal_janamghuti round, col
+tab prelacteal_janamghuti round,m
 
-tab colostrum round,m
-* missing NFHS3, 4 and CNNS
+// tab colostrum round,m
+// * missing NFHS3, 4, 5 and CNNS
 
+tab bottle round, col
 tab bottle round,m
 * missing bottle with nipple RSOC
 
+tab water round, col     
 tab water round,m       
-tab water round, col                                         
-
-tab juice round,m
+                                    
 tab juice round, col
+tab juice round,m
 
+tab broth round, col
 tab broth round,m
 
-tab milk round,m 
 tab milk round, col
+tab milk round,m 
 
-tab formula round,m 
 tab formula round, col
+tab formula round,m 
 
+tab other_liq round, col
 tab other_liq round,m
 
 * Food variables
-
-tab yogurt round,m 
 tab yogurt round, col 
+tab yogurt round,m 
 
-tab fortified_food round,m 
 tab fortified_food round, col 
- 
-tab bread round,m 
+tab fortified_food round,m 
+
 tab bread round, col
+tab bread round,m 
 
-tab vita_veg round,m 
 tab vita_veg round, col
+tab vita_veg round,m 
 
-tab potato round,m 
 tab potato round, col 
+tab potato round,m 
 
-tab leafy_green round,m 
 tab leafy_green round, col
+tab leafy_green round,m 
 
-tab vita_fruit round,m 
 tab vita_fruit round, col
+tab vita_fruit round,m 
 
-tab fruit_veg round,m 
 tab fruit_veg round, col
-
-tab organ round,m 
-tab organ round, col
-
-tab meat round,m 
-tab meat round, col 
-
-tab egg round,m 
-tab egg round, col
-
-tab fish round,m 
-tab fish round, col 
-
-tab semisolid round,m 
-tab semisolid round, col
-
-tab carb round,m 
-tab carb round, col
-	 
-tab leg_nut round,m 
-tab leg_nut round, col 
-	 
-tab dairy round,m 
-tab dairy round, col 
-
-tab all_meat round,m 
-tab all_meat round, col 
-
-tab egg round,m 
-tab egg round, col  
-
-tab vita_fruit_veg round, m 
-tab vita_fruit_veg round, col 
-	 
 tab fruit_veg round,m 
-tab fruit_veg round, col 
+
+tab organ round, col
+tab organ round,m 
+
+tab meat round, col 
+tab meat round,m 
+
+tab egg round, col
+tab egg round,m 
+
+tab fish round, col 
+tab fish round,m 
+
+tab semisolid round, col
+tab semisolid round,m 
+* NFHS 4 problem?
+
+tab carb round, col
+tab carb round,m 
+
+tab leg_nut round, col 
+tab leg_nut round,m 
+* NFHS 4 problem?
+
+tab dairy round, col 	 
+tab dairy round,m 
+
+tab all_meat round, col 
+tab all_meat round,m 
+
+tab egg round, col  
+tab egg round,m 
+
+tab vita_fruit_veg round, col 
+tab vita_fruit_veg round, m 
+
+tab fruit_veg round, col  
+tab fruit_veg round,m 
+
 
 * Composite diet variables
+tab sumfoodgrp round, col
 tab sumfoodgrp round,m
 
+tab mdd round, col
 tab mdd round,m
-	 
+
+tab mmf_bf round, col	 
 tab mmf_bf round,m
 
+tab mmf_nobf round, col
 tab mmf_nobf round,m
 
+tab mmf_all round, col
 tab mmf_all round,m
+* As Frequency of Milk feeds is not in NFHS 3 DATA, WE ARE UNABLE TO CREATE THE MMF for Non_BF CHILDREN  VARIABLE
 
 tab mixed_milk round,m
  
