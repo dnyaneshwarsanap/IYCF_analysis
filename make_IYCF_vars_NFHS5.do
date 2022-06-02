@@ -8,15 +8,8 @@
 // https://github.com/DHSProgram/DHS-Indicators-Stata
 
 
-* Review and correct
-********************
-* don't code number of feeds if you don't know how many feeds.  Don't code as at least 1. leave as missing
-* Harmonize the states/ut's to NHFS4
-// spelling Chhattisgarh
-// put weights first
-********************
-
 * Outstanding tasks
+* Check EIBF
 * Median age EBF
 * make estimates work with set to missing include of drop vars
 
@@ -57,7 +50,8 @@ tab b5,m
 * 9 -23 M   (243 - 730)
 * 6-11 M    (183 - 335)
 * 12 - 23 M (335 - 730)
-* Underfive (   < 1825)
+* Under three (   < 1096)
+* Under five  (   < 1825)
 
 * Age in days
 gen int_date = mdy(v006 , v016 , v007)
@@ -451,7 +445,7 @@ v415		     V415            drank from bottle with nipple
  
 * In NFHS-5 for all vars 409 - 415 0 = no and 1 = yes
 foreach var of varlist v409- v415 m39a {
-	recode `var' (1/7=1) (0=0) , gen(`var'_rec)
+	recode `var' (1/7=1) (0 8=0) , gen(`var'_rec)
 	lab val `var'_rec no_yes
 }
 
@@ -1099,10 +1093,10 @@ lab var rururb "Residence"
 tab rururb, m 
 
 * Wealth index
-gen wi = v190
+clonevar wi = v190
 tab wi,m	
-gen wi_s= v190
-			
+clonevar wi_s= v190
+tab wi_s,m			
 		
 
 *sex of child
