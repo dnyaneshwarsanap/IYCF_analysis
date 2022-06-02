@@ -56,9 +56,9 @@ gen birthyear = q103y
 gen int_date = mdy(int_m , int_d , int_y)
 format int_date %td
 
-gen dob_date = mdy(q103m , q103d , q103y)
-format dob_date %td
-gen age_days = int_date - dob_date 
+gen dateofbirth = mdy(q103m , q103d , q103y)
+format dateofbirth %td
+gen age_days = int_date - dateofbirth 
 replace age_days =. if age_days>1825
 tab age_days,m 
 // cap drop count
@@ -888,7 +888,7 @@ gen round=4
 
 * if doing analysis on only IYCF then drop all other vars. 
 
-keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos ///
+keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days agemos ///
 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
 	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
 	prelacteal_saltwater prelacteal_formula prelacteal_honey ///

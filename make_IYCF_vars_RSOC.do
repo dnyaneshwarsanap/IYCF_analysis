@@ -58,9 +58,9 @@ gen birthday =  q136a_1
 gen birthmonth = q136b_1
 gen birthyear = q136c_1
 replace birthyear = . if q136c_1<2010 | q136c_1>2014 
-gen dob_date = mdy(birthmonth , birthday , birthyear)
-format dob_date %td
-// kdensity dob_date
+gen dateofbirth = mdy(birthmonth , birthday , birthyear)
+format dateofbirth %td
+// kdensity dateofbirth
 
 
 * date of interview - Data recorded as string
@@ -102,9 +102,9 @@ list q106_1 int_d int_m int_y int_date in 1/20
 * Underfive (< 1825)
 
 * Age in days
-gen age_days = int_date - dob_date 
+gen age_days = int_date - dateofbirth 
 tab age_days,m 
-list q106_1 int_d int_m int_y int_date dob_date q136a_1 q136b_1 q136c_1 if age_days<0
+list q106_1 int_d int_m int_y int_date dateofbirth q136a_1 q136b_1 q136c_1 if age_days<0
 replace age_days =. if age_days<0 | age_days>1825
 
 gen agemos = floor(age_days/30.42)
@@ -1030,7 +1030,7 @@ tab state, m
 
 gen round =2
 
-keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos  ///
+keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days agemos  ///
 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
 	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
 	prelacteal_saltwater prelacteal_formula prelacteal_honey ///

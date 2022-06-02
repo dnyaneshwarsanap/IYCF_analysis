@@ -72,16 +72,16 @@ gen birthday =  hw16
 gen birthmonth = b1
 gen birthyear = b2
 
-cap drop dob_date
-gen dob_date = mdy(b1, hw16, b2)
-format dob_date %td
-gen age_days = int_date - dob_date 
+cap drop dateofbirth
+gen dateofbirth = mdy(b1, hw16, b2)
+format dateofbirth %td
+gen age_days = int_date - dateofbirth 
 * for some children 15th day of birth is after interview date
 
-list age_days dob_date int_date if age_days<0
-replace dob_date = int_date -7 if age_days<0
+list age_days dateofbirth int_date if age_days<0
+replace dateofbirth = int_date -7 if age_days<0
 * 7 days is mid point of 15 days  - subjective decision
-replace age_days = int_date - dob_date 
+replace age_days = int_date - dateofbirth 
 
 replace age_days =. if age_days>1825
 tab age_days,m 
@@ -940,7 +940,7 @@ gen round=1
 // 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
 // 	sex nat_wgt state_wgt round  
 
-keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos evbf eibf ///
+keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days agemos evbf eibf ///
 	eibf_timing ebf2d ebf3d currently_bf prelacteal_milk prelacteal_water prelacteal_sugarwater ///
 	prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula ///
 	prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other /// 

@@ -10,12 +10,16 @@
 
 * Review and correct
 ********************
-* don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
-* check currently BF !!! based on m4
+* don't code number of feeds if you don't know how many feeds.  Don't code as at least 1. leave as missing
 * Harmonize the states/ut's to NHFS4
 // spelling Chhattisgarh
 // put weights first
 ********************
+
+* Outstanding tasks
+* Median age EBF
+* make estimates work with set to missing include of drop vars
+
 
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
 // include "dnyaneshwar_paths.do"
@@ -85,17 +89,17 @@ tab birthday
 * By following WHO recommendations on anthro data, we have created heaping on 15th of month
 // kdensity hw16 
 
-cap drop dob_date
-gen dob_date = mdy(b1, hw16, b2)
-format dob_date %td
-gen age_days = int_date - dob_date 
+cap drop dateofbirth
+gen dateofbirth = mdy(b1, hw16, b2)
+format dateofbirth %td
+gen age_days = int_date - dateofbirth 
 * for some children 15th day of birth is after interview date
 
 * If children are less than 1 month old, double check 15th of month as setting for day of birth. 
-list age_days dob_date int_date if age_days<0
-replace dob_date = int_date -7 if age_days<0
+list age_days dateofbirth int_date if age_days<0
+replace dateofbirth = int_date -7 if age_days<0
 * 7 days is mid point of 15 days  - subjective decision
-replace age_days = int_date - dob_date 
+replace age_days = int_date - dateofbirth 
 
 *check if any age_days are less than zero
 replace age_days =. if age_days>1825
@@ -1102,9 +1106,6 @@ la def birth_order 5 "5+"
 la val birth_order birth_order
 tab birth_order, m 
 
-* Instituitional Births
-recode birth_place (1 4 = 0) (2 3 = 1), gen(inst_birth)
- tab inst_birth birth_place, m
 
 * Residence Rural Urban
 
@@ -1208,8 +1209,8 @@ la def state_name			   3 "Arunachal Pradesh" , add
 la def state_name			   4 Assam , add
 la def state_name			   5 Bihar , add
 la def state_name			   6 Chandigarh, add
-la def state_name			   7 Chhattisgarh, add
-la def state_name			   8 "Dadra & Nagar Haveli/D&D", add
+la def state_name			   7 Chhattisgarh, add 
+la def state_name			   8 "Dadra & Nagar Haveli D&D", add
 * CORRECT FOR HARMONIZED STATES ACROSS ALL SURVEYS
 // la def state_name			   9 "Daman and Diu", add
 la def state_name			  10 Goa, add
@@ -1263,6 +1264,12 @@ la val birth_place birth_place
 la var birth_place "Place of delivery"
 tab birth_place, m
 tab m15 birth_place, m
+
+* Instituitional Births
+recode birth_place (1 4 = 0) (2 3 = 1), gen(inst_birth)
+tab inst_birth birth_place, m
+
+
 
 * meeting with Triple A in past 3 months of pregnancy
 // During the last three months of this pregnancy, did you meet with
@@ -1321,31 +1328,32 @@ tab pnc_assistance s477,m
 
 
 * Districts
-gen district = sdist
+cap drop district
+clonevar district = sdist
 tab district, m
 
 
 gen round=5
 
-// keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days agemos ///
-// 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
-// 	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
-// 	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
-// 	prelacteal_janamghuti prelacteal_other bottle water juice milk ///
-// 	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
-// 	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
-// 	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
-// 	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
-// 	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
-// 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
-// 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
-// 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-// 	sex national_wgt regional_wgt state_wgt round  
+keep psu hh_num int_date birthday birthmonth birthyear dateofbirth age_days agemos national_wgt regional_wgt ///
+	state_wgt evbf eibf eibf_timing ebf2d ebf3d currently_bf not_bf prelacteal_milk prelacteal_water ///
+	prelacteal_sugarwater prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula ///
+	prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other prelacteal_otherthanmilk /// 
+	bottle water juice tea broth other_liq milk formula fortified_food gruel poultry meat bread potato /// 
+	egg vita_veg leafy_green vita_fruit fruit_veg organ fish leg_nut yogurt fat sweets semisolid carb /// 
+	dairy all_meat vita_fruit_veg agegroup sumfoodgrp any_solid_semi_food solids intro_compfood diet ///
+	ebf age_ebf age_cbf cont_bf cont_bf_12_23 mdd freq_solids qual_freq_solids mmf_bf freq_milk ///
+	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf mmf_all mixed_milk mad_all ///
+	egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus csection ///
+	mum_educ_years mum_educ caste birth_order rururb wi wi_s sex diar fever ari state birth_place /// 
+	inst_birth anc_BFcounsel pnc_child_visit pnc_assistance round district
+
 
 		
 * Save data with name of survey
 save iycf_NFHS5, replace 
 
+* for Exclusive Breastfeeding estimates
 keep if b19 < 24 & b9 == 0
 // * if caseid is the same as the prior case, then not the last born
 keep if _n == 1 | caseid != caseid[_n-1]
@@ -1357,6 +1365,10 @@ save iycf_NFHS5_ebf, replace
 
 
 end
+
+
+
+
 
 gen temp = m4 if m4 < 90
 * Line graph kdensity
