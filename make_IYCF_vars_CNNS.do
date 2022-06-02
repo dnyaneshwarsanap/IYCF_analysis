@@ -919,7 +919,7 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
-	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
+	lbw cat_birth_wt anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
 	sex national_wgt state_wgt round  
 
 // 	regional_wgt regional_bio_wgt 

@@ -928,7 +928,7 @@ recode q257 (1=1)(2 8=0), gen(diar)
 tab diar q257
 * Fever
  tab q263
-recode q263 (1=1)(2 8=0), gen(fever)
+recode q263 (1=1)(2 8 98=0), gen(fever)
 tab fever q263	
 * Cough with rapid breathing excluding those with only nasal breathing problems
 * q266 q267 q268
