@@ -248,10 +248,11 @@ round                                         Round indicates the survey Round1 
 */
 
 
-End
 
 
 
+log using IYCF_5_survey_data.txt, replace text
+ 
 * Round
 tab round, m 
 
@@ -405,6 +406,12 @@ tab leg_nut round,m
 tab dairy round, col 	 
 tab dairy round,m 
 
+tab mixed_milk round, col
+tab mixed_milk round,m
+* Mixed milk feeding 0-5M
+* Mixed milk feeding (<6 months): Percentage of infants 0–5 months of age who 
+* were fed formula and/or animal milk in addition to breast milk during the previous day
+
 tab all_meat round, col 
 tab all_meat round,m 
 
@@ -435,39 +442,72 @@ tab mmf_all round, col
 tab mmf_all round,m
 * As Frequency of Milk feeds is not in NFHS 3 DATA, WE ARE UNABLE TO CREATE THE MMF for Non_BF CHILDREN  VARIABLE
 
-tab mixed_milk round,m
- 
+tab mad_all round, col
 tab mad_all round,m
+* Minimum Acceptable Diet (MAD) in NFHS-3 is only for BF children
+* cannot calculate for all children as do not have frequency of milk feeds in non_BF children
 
+tab egg_meat round, col
 tab egg_meat round,m
 	 
+tab zero_fv round, col
 tab zero_fv round,m
 
 * Health and Illness variables
+tab diar round, col
 tab diar round,m
 
+tab fever round, col    
 tab fever round,m        
 
+tab ari round, col
 tab ari round,m
 
+tab lbw round, col
 tab lbw round,m
 
-tab anc4plus round,m
-tab anc4plus round, col
+tab cat_birth_wt round, col
+tab cat_birth_wt round,m
 
-tab csection round,m
+tab anc4plus round, col
+tab anc4plus round,m
+
 tab csection round, col 
+tab csection round,m
 
 * Socio-economic variables
-
-tab mum_educ round,m
 tab mum_educ round, col 
+tab mum_educ round,m
 
+tab caste round, col
 tab caste round,m
 
+tab rururb round, col
 tab rururb round,m
 
+tab wi round, col
 tab wi round,m
+
+* to update
+log close 
+end
+
+tab birth_place round, col
+tab birth_place round,m
+
+tab inst_birth round, col
+tab inst_birth round,m
+
+tab anc_BFcounsel round, col
+tab anc_BFcounsel round,m
+
+tab pnc_child_visit round, col
+tab pnc_child_visit round,m
+
+tab pnc_assistance round, col
+tab pnc_assistance round,m
+
+
 
 
 
