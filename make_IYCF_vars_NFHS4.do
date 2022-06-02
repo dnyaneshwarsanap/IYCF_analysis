@@ -4,30 +4,25 @@
 
 * Code Robert, Shekhar, Dnyaneshwar 
 
-* don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
-
-
-
-
 
 
 
 *********************
 *check currently BF !!!
-state
-ANC counselling on BF
+// state
+// ANC counselling on BF
+// Don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
 ********************
 
 
 
 version 16 
 
-cd "C:/Temp"
-use "C:\TEMP\IAKR71FL.DTA", clear
+include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
+// include "dnyaneshwar_paths.do"
 
-*use "D:\unicef\iycf\nfhs4\IAKR71FL.dta"
-// cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
-// use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\IAKR71FL.DTA", clear
+* Open NFHS 4
+use `NFHS4', clear
 
 *gen one=1
 lab define no_yes 0 "No" 1 "Yes"
@@ -926,45 +921,43 @@ tab ari, m
 gen state = v101
 *state_nfhs4 and state are same
 		
-
-
-replace state =1  if v101 ==35		// 1 "A&N islands"
-replace state =2  if v101 ==28		// Andhra Pradesh
-replace state =3  if v101 ==12			 
-replace state =4  if v101 ==18			 
-replace state =5  if v101 ==10		
-replace state =6  if v101 ==4       // 6 Chandigarh	 
-replace state =7  if v101 ==22		
-* merged two UTs in NFHS5
-replace state =8  if v101 ==25       // 8 dadra & nagar haveli and daman & diu 
-// replace state =9
-replace state =10  if v101 ==30			 
-replace state =11  if v101 ==24			 
-replace state =12  if v101 ==6			 
-replace state =13  if v101 ==2			 
-replace state =14  if v101 ==1			 
-replace state =15  if v101 ==20			 
-replace state =16  if v101 ==29			 
-replace state =17  if v101 ==32		
-replace state =18  if v101 ==31       // 18 Lakshadweep	 
-replace state =19  if v101 ==23			 
-replace state =20  if v101 ==27			 
-replace state =21  if v101 ==14			 
-replace state =22  if v101 ==17			 
-replace state =23  if v101 ==15			 
-replace state =24  if v101 ==13			 
-replace state =25  if v101 ==7			 
-replace state =26  if v101 ==21			
-replace state =27  if v101 ==34      // 27 Puducherry 
-replace state =28  if v101 ==3			 
-replace state =29  if v101 ==8			 
-replace state =30  if v101 ==11			 
-replace state =31  if v101 ==33			 
-replace state =32  if v101 ==16			 
-replace state =33  if v101 ==9			 
-replace state =34  if v101 ==5			 
-replace state =35  if v101 ==19		
-
+// V101:
+//            1 andaman and nicobar islands
+//            2 andhra pradesh
+//            3 arunachal pradesh
+//            4 assam
+//            5 bihar
+//            6 chandigarh
+//            7 chhattisgarh
+//            8 dadra and nagar haveli
+//            9 daman and diu
+//           10 goa
+//           11 gujarat
+//           12 haryana
+//           13 himachal pradesh
+//           14 jammu and kashmir
+//           15 jharkhand
+//           16 karnataka
+//           17 kerala
+//           18 lakshadweep
+//           19 madhya pradesh
+//           20 maharashtra
+//           21 manipur
+//           22 meghalaya
+//           23 mizoram
+//           24 nagaland
+//           25 delhi
+//           26 odisha
+//           27 puducherry
+//           28 punjab
+//           29 rajasthan
+//           30 sikkim
+//           31 tamil nadu
+//           32 tripura
+//           33 uttar pradesh
+//           34 uttarakhand
+//           35 west bengal
+//           36 telangana
 
 cap la drop state_name
 la def state_name			   1 "A&N islands"
@@ -974,10 +967,8 @@ la def state_name			   4 Assam , add
 la def state_name			   5 Bihar , add
 la def state_name			   6 Chandigarh, add
 la def state_name			   7 Chattisgarh, add
-la def state_name			   8 "Dadra & Nagar Haveli/ Daman & Diu", add
-* CORRECT FOR HARMONIZED STATES ACROSS ALL SURVEYS
-// la def state_name			   9 "Daman and Diu", add
-
+la def state_name			   8 "Dadra & Nagar Haveli", add
+la def state_name			   9 "Daman and Diu", add
 la def state_name			  10 Goa, add
 la def state_name			  11 Gujarat, add
 la def state_name			  12 Haryana, add
