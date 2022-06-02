@@ -8,12 +8,12 @@
 clear
 version 16
 
-Check survey weights
 
+include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
+// include "dnyaneshwar_paths.do"
 
-cd "C:/Temp"
-//use "C:\Users\Rojohnston\OneDrive - UNICEF\ECM-Nut OP4 Nutrition Governance, Partnerships, resources M&E\IIT-B\IYCF\NFHS3\IAKR52FL.dta", clear
-use "C:\TEMP\IAKR52FL.dta", clear
+* Open NFHS 3
+use `NFHS3', clear
 
 gen one=1
 
@@ -799,8 +799,8 @@ gen wi_s=v190
 	
 * Survey Weights
 gen national_wgt = v005 /1000000    //   national women's weight (6 decimals)
-gen regional_wgt =v005s /1000000    // 	state women's weight (6 decimals)
-gen state_wgt =v005s /1000000       // 	state women's weight (6 decimals)
+gen regional_wgt =v005 /1000000    // 	state women's weight (6 decimals)
+gen state_wgt =v005 /1000000       // 	state women's weight (6 decimals)
 	
 *sex of child
 gen sex=b4
