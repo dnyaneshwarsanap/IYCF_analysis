@@ -767,11 +767,17 @@ replace mixed_milk =. if age_days<0 | age_days>=183
 tab mixed_milk, m 
 
 
+tab mdd
+tab mmf_all
+tab currently_bf
+tab min_milk_freq_nbf
+
 **** MAD among all infants 6-23 months of age ****	
-gen mad_all=.
+gen mad_all=0
 replace mad_all=1 if (mdd==1 & mmf_all==1) & (currently_bf==1 | min_milk_freq_nbf==1) 
 replace mad_all=. if age_days<=183 | age_days>=730 
 tab mad_all, m 
+
 
 *Egg and/or Flesh food consumption - % of children 6-23months of age who consumed egg and/or flesh food during the previous day*
 gen egg_meat=0
