@@ -28,6 +28,9 @@ gen psu = v001
 gen hh_num = v002
 
 
+
+
+
 * Do NOT exclude dead children. 
 // Note: Table is based on last-born children born in the 2 years preceding the survey regardless of whether the children are living or dead at
 // the time of the interview
@@ -450,7 +453,7 @@ lab var fruit_veg "7: Other fruits and vegetables"
 replace fruit_veg = 0 if fruit_veg==0 | fruit_veg ==9
 tab fruit_veg, m
 
-foreach var of varlist carb leg_nut dairy all_meat vita_fruit_veg fruit_veg currently_bf {
+foreach var of varlist carb leg_nut dairy all_meat egg vita_fruit_veg fruit_veg currently_bf {
 	lab val `var' no_yes
 }
 
@@ -667,6 +670,16 @@ replace zero_fv =. if age_days<=183 | age_days>=730
 tab zero_fv, m 
 
 
+* Mixed milk feeding 0-5M
+* Mixed milk feeding (<6 months): Percentage of infants 0–5 months of age who 
+* were fed formula and/or animal milk in addition to breast milk during the previous day
+gen mixed_milk = 0 
+replace mixed_milk=1 if (currently_bf==1 & milk==1)
+replace mixed_milk=1 if (currently_bf==1 & formula==1)
+replace mixed_milk=1 if (currently_bf==1 & other_milk==1)
+replace mixed_milk =. if age_days<0 | age_days>=183 
+tab mixed_milk, m 
+
 *Unhealthy food consumption
 *consumption of sugar sweetened beverages by child agemons 6 to 23
 
@@ -802,10 +815,8 @@ lab val wi wi
 tab wi,m	
 gen wi_s=v190
 	
-* Survey Weights
-gen national_wgt = v005 /1000000    //   national women's weight (6 decimals)
-gen regional_wgt =v005 /1000000    // 	state women's weight (6 decimals)
-gen state_wgt =v005 /1000000       // 	state women's weight (6 decimals)
+
+
 	
 *sex of child
 gen sex=b4
@@ -962,22 +973,18 @@ la val state state_name
 tab state, m 
 tab state v101, m 
 
-gen round=1
+* Survey Weights
+gen state_wgt =    v005 /1000000       
+// 	state women's weight (6 decimals)
+assert state_wgt !=. 
 
-// keep one int_date age_days agemos ///
-// 	evbf eibf eibf_timing ebf2d ebf3d ebf age_cbf age_ebf prelacteal_milk ///
-// 	prelacteal_water prelacteal_sugarwater prelacteal_gripewater /// 
-// 	prelacteal_saltwater prelacteal_formula prelacteal_honey ///
-// 	prelacteal_janamghuti prelacteal_other bottle water juice milk ///
-// 	formula other_liq juice broth yogurt fortified_food bread vita_veg ///
-// 	potato leafy_green any_solid_semi_food vita_fruit fruit_veg organ meat ///
-// 	egg fish cont_bf semisolid carb leg_nut dairy all_meat vita_fruit_veg ///
-// 	agegroup sumfoodgrp diar fever ari cont_bf cont_bf_12_23 ///
-// 	intro_compfood mdd currently_bf freq_solids mmf_bf freq_milk ///
-// 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
-// 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
-// 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-// 	sex nat_wgt state_wgt round  
+gen national_wgt = v005 /1000000    
+//   national women's weight (6 decimals)
+
+gen regional_wgt = v005 /1000000     
+// 	state women's weight (6 decimals)
+
+gen round=1
 
 keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days agemos evbf eibf ///
 	eibf_timing ebf2d ebf3d currently_bf prelacteal_milk prelacteal_water prelacteal_sugarwater ///
@@ -988,9 +995,9 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	nuts bread potato vita_veg leafy_green vita_fruit fruit_veg organ fish leg_nut yogurt ///
 	semisolid carb dairy all_meat vita_fruit_veg agegroup sumfoodgrp ///
 	fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 any_solid_semi_food intro_compfood ebf age_ebf ///
-	age_cbf cont_bf cont_bf_12_23 mdd freq_solids mmf_bf mmf_all_bf mad_all_bf ///
+	age_cbf cont_bf cont_bf_12_23 mdd freq_solids mmf_bf mmf_all_bf mad_all_bf egg ///
 	egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus ///
-	csection mum_educ_years mum_educ caste rururb wi wi_s national_wgt regional_wgt state_wgt ///
+	csection mum_educ_years mum_educ caste rururb wi wi_s national_wgt regional_wgt state_wgt /// 
 	sex diar fever ari state round
 
 	
