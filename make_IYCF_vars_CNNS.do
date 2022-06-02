@@ -8,8 +8,8 @@ version 16
 * LBW
 * Mothers education 
  
-cd "C:/Temp"
-use "C:\TEMP\CNNS_04_Cleaned_21MAY_final_with_constructed_var.dta", clear
+cd "C:/Temp/Data"
+use "CNNS_04_Cleaned_21MAY_final_with_constructed_var.dta", clear
 * use "C:\Temp\CNNS_04_Cleaned_3JUNE_final.dta", clear
 
 * use "C:\Users\roypu\OneDrive\Documents\UNICEF 2019-20\CNNS IYCF Analysis\CNNS_04_version_1.1.dta"
@@ -767,10 +767,9 @@ tab wi_s,m
 gen national_wgt =iw_s_pool   
 
 * Regional weights not added
-merge 1:1 case_id using "C:\TEMP\CNNS_04_regional_weights.dta"
-
-gen regional_wgt = reg_weight_survey
-gen regional_bio_wgt = reg_weight_bio
+// merge 1:1 case_id using "C:\Temp\Data\CNNS_04_regional_weights.dta"
+// gen regional_wgt = reg_weight_survey
+// gen regional_bio_wgt = reg_weight_bio
 
 gen state_wgt =iweight_s   
 
@@ -902,8 +901,9 @@ keep psu hh_num one int_date birthday birthmonth birthyear dob_date age_days age
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex national_wgt regional_wgt regional_bio_wgt state_wgt round  
+	sex national_wgt state_wgt round  
 
+// 	regional_wgt regional_bio_wgt 
 
 * Save data with name of survey
 save iycf_cnns, replace 
