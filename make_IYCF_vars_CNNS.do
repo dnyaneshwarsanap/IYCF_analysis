@@ -14,6 +14,10 @@ include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYC
 * Open CNNS
 use `CNNS', clear
 
+* Tasks
+* Find regional weights
+
+
 
 
 * * * 
@@ -49,6 +53,11 @@ drop if result !=1
 
 
 gen birthday =  q103d
+
+replace birthday = 15 if q103d > 31
+tab birthday
+* By following WHO recommendations on anthro data, we have created heaping on 15th of month
+
 gen birthmonth = q103m
 gen birthyear = q103y
 
@@ -61,6 +70,11 @@ format dateofbirth %td
 gen age_days = int_date - dateofbirth 
 replace age_days =. if age_days>1825
 tab age_days,m 
+
+* If children are less than 1 month old, double check 15th of month as setting for day of birth. 
+list age_days dateofbirth int_date if age_days<0
+
+
 // cap drop count
 // bysort age_days: egen count = count(age_days)
 // line count age_days
@@ -763,15 +777,6 @@ tab wi, m
 tab wi_s,m
 
 
-* Survey Weights
-gen national_wgt =iw_s_pool   
-
-* Regional weights not added
-// merge 1:1 case_id using "C:\Temp\Data\CNNS_04_regional_weights.dta"
-// gen regional_wgt = reg_weight_survey
-// gen regional_bio_wgt = reg_weight_bio
-
-gen state_wgt =iweight_s   
 
 * Sex 
 * 1= male / 2= female 
@@ -884,6 +889,17 @@ la val state state_name
 
 tab state, m 
 tab state state_cnns, m 
+
+* Survey Weights
+gen national_wgt =iw_s_pool   
+
+* Regional weights not added
+// merge 1:1 case_id using "C:\Temp\Data\CNNS_04_regional_weights.dta"
+// gen regional_wgt = reg_weight_survey
+// gen regional_bio_wgt = reg_weight_bio
+
+gen state_wgt =iweight_s   
+
 
 gen round=4
 
