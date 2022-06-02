@@ -8,13 +8,13 @@ version 16
 * LBW
 * Mothers education 
  
-cd "C:/Temp/Data"
-use "CNNS_04_Cleaned_21MAY_final_with_constructed_var.dta", clear
-* use "C:\Temp\CNNS_04_Cleaned_3JUNE_final.dta", clear
+include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
+// include "dnyaneshwar_paths.do"
 
-* use "C:\Users\roypu\OneDrive\Documents\UNICEF 2019-20\CNNS IYCF Analysis\CNNS_04_version_1.1.dta"
-* cd "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged"
-* use "C:\Users\dnyan\OneDrive\Documents\UNICEF FELLOWSHIP\CNNS\Merged\CNNS_04_version_1.1.dta", clear
+* Open CNNS
+use `CNNS', clear
+
+
 
 * * * 
 *DROP ALL PREVIOUSLY CONSTRUCTED IYCF VARS
@@ -883,6 +883,7 @@ la def state_name			  36 Telangana, add
 la val state state_name
 
 tab state, m 
+tab state state_cnns, m 
 
 gen round=4
 
