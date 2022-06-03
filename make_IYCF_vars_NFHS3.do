@@ -164,12 +164,31 @@ replace ebf3d = . if m55z==9
 // 1. ever breastfed
 // 2. still breastfeeding
 // 3. breastfed yesterday
-// v404 is a currently breastfeeding var in NFHS 3 can we use this var directly
+// m4 and v404 is a currently breastfeeding var in NFHS can we use this var directly
+* DHS 7 Statistics recommended to use m4
+tab m4, m
+tab v404, m 
+tab m4 v404
+
+// la list M4
+// M4:
+//           93 ever breastfed, not currently breastfeeding
+//           94 never breastfed
+//           95 still breastfeeding
+//           96 breastfed until died
+//           97 inconsistent
+//           98 don't know
+// 		      . missing
 
 cap drop currently_bf
-gen currently_bf = v404
-tab v404, m 
+gen currently_bf=0
+replace currently_bf = 1 if m4==95
 tab currently_bf,m
+tab m4 currently_bf,m
+
+cap drop not_bf
+gen not_bf=0
+replace not_bf =1 if m4!=95
 
 *PRELACTEAL Feeds
 /*
