@@ -333,6 +333,7 @@ clonevar other_liq 		        =v413_rec
 * Milk represents any milk consumption (animal milk, powder milk/formula and buttermilk/curd)
 clonevar milk			        =v411_rec  // tinned/powder or fresh milk
 clonevar formula 		        =v411a_rec
+clonevar other_milk  	                =v414p_rec 
 
 * No frequency of milks, formula, other milks questions were asked. 
 gen freq_milk = .
