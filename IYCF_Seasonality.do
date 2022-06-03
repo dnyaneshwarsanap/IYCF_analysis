@@ -1,13 +1,18 @@
 * IYCF Seasonality Analysis
 
 * Data requirements for following analysis:  All months of the year must be represented in the data.
-
 * Analysis with 5 datasets
 
 * Add dependencies
 // ssc install labvalch3
 // ssc install mdesc
 // ssc install combomarginsplot
+
+* Combomarginsplot
+* help combomarginsplot
+* Coefplot
+* http://repec.sowi.unibe.ch/stata/coefplot/getting-started.html
+
 
 * Tasks
 * make one NFHS5 dataset with EIBF and EBF
@@ -28,6 +33,20 @@
 * Excel EBF graph by 12 months by survey (centred on midpoint of data collection) without trend lines
 
 
+* Analysis Uncontrolled for by independent variable except for state
+
+
+
+* Dependent variables
+* Breastfeeding and liquids
+// evbf eibf ebf3d currently_bf  ebf mixed_milk water juice tea other_liq milk formula  broth bottle
+//
+// prelacteal_milk prelacteal_sugarwater prelacteal_water prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other prelacteal_otherthanmilk prelacteal_milk_form 
+//
+// eibf_timing freq_milk freq_formula freq_other_milk
+
+
+* What if vars are not represented by each survey - like ebf3d
 
 
 
@@ -43,15 +62,8 @@ local ExportPath "C:/TEMP/Seasonality"
 local FileName "IYCF Seasonality.docx"
 
 
-* to make this code generic
-* add local or global with continuous dependent variable - DEPVAR
-// local depvar zwfh
 
-* calculate the related dichotomous variable - DEPVAR_01
-// local depvar_01 wasted sev_wasted
-
-
-
+cd C:\Temp\Junk
 
 tab int_month round, m
 
@@ -69,49 +81,113 @@ putdocx paragraph, style(Title) halign(center) spacing(line,16 pt)
 putdocx text ("in Indian 5 Surveys ")
 putdocx save `ExportPath'\`FileName', replace
 	
-* Analysis Uncontrolled for by independent variable except for state
 
-// tab evbf
-// tab eibf
+// local depvar01  evbf eibf ebf3d currently_bf ebf mixed_milk water milk formula juice tea other_liq broth bottle
 
-* are there significant differences in the variables by round? 
+local ContVars "ib12.int_month state rururb wi mum_educ sex cat_birth_wt birth_order diar fever ari"
+tab round, m 
 
-* Dependent variables
-* Breastfeeding and liquids
-// evbf eibf ebf3d currently_bf  ebf mixed_milk water juice tea other_liq milk formula  broth bottle
-//
-// prelacteal_milk prelacteal_sugarwater prelacteal_water prelacteal_gripewater prelacteal_saltwater prelacteal_juice prelacteal_formula prelacteal_tea prelacteal_honey prelacteal_janamghuti prelacteal_other prelacteal_otherthanmilk prelacteal_milk_form 
-//
-// eibf_timing freq_milk freq_formula freq_other_milk
+* Combomarginsplot
+*Plot the predicted values of the dependent variable across five surveys
+
+* Exclusive Breastfeeding by Round
+local ContVars "ib12.int_month state rururb wi mum_educ sex cat_birth_wt diar fever ari"
+di "`ContVars'"
+
+// logit ebf "`ContVars'" [pw = national_wgt] 
+logit ebf ib12.int_month i.state i.rururb i.wi i.mum_educ i.sex i.cat_birth_wt i.diar i.fever i.ari i.round [pw = national_wgt] 
+margins round, saving(file1, replace)
+
+logit ebf ib12.int_month i.round [pw = national_wgt] 
+margins round, saving(file2, replace)
+combomarginsplot file1 file2, labels("Adjusted" "Unadjusted") ///
+	file1opts(pstyle(p1)) file2opts(pstyle(p2)) lplot1(mfcolor(white)) ///
+	byopt(legend(at(3) pos(1)) title("Probability exclusive breastfeeding by survey")) legend(col(1))
+
+* Exclusive Breastfeeding by Month by Round (adjusted)
+local ContVars "ib12.int_month state rururb wi mum_educ sex cat_birth_wt diar fever ari round"
+di "`ContVars'"
+
+// logit ebf "`ContVars'" [pw = national_wgt] 
+logit ebf ib12.int_month##i.round i.state i.rururb i.wi i.mum_educ i.sex i.cat_birth_wt i.diar i.fever i.ari  [pw = national_wgt] 
+margins int_month#round,  saving(file1, replace)
+marginsplot
+
+* Combomarginsplot - joining five graphs onto one background
+forval x = 1/5 {
+	logit ebf ib12.int_month##i.round i.state i.rururb i.wi i.mum_educ i.sex i.cat_birth_wt i.diar i.fever i.ari [pw = national_wgt] ///
+	if round==`x' 
+	margins int_month#round
+	local RoundValueLabel : value label round
+	local GraphLabel: label `RoundValueLabel' `x'
+	marginsplot, title("`GraphLabel'") name(file`x', replace) ylab(0(.1)1) yscale(range(0 1))
+}
+graph combine file1 file2 file3 file4 file5, xsize(6.5) ysize(2.7) iscale(.8) name(comb, replace)
+graph close file1 file2 file3 file4 file5
+graph export "EBF by month by survey.png", width(6000) replace
 
 
-* What if vars are not represented by each survey - like ebf3d
 
-// preserve
-// collapse 
-// graph twoway (line water int_month if round==1) ///
-// 	         (line water int_month if round==2) ///
-// 	         (line water int_month if round==3) ///
-// 	         (line water int_month if round==4) ///
-// 	         (line water int_month if round==5, ///
-// 	legend(ring(0) pos(2) col(1) order(2 "NFHS-3" 3 "RSOC" 4 "NFHS-4" 5 "CNNS" 6 "NFHS-5")))
+	
+* WATER by Round
+// logit ebf "`ContVars'" [pw = national_wgt] 
+logit water ib12.int_month i.state i.rururb i.wi i.mum_educ i.sex i.diar i.fever i.ari i.round [pw = national_wgt] 
+margins round, saving(file1, replace)
+
+logit water ib12.int_month i.round [pw = national_wgt] 
+margins round, saving(file2, replace)
+combomarginsplot file1 file2, labels("Adjusted" "Unadjusted") ///
+	file1opts(pstyle(p1)) file2opts(pstyle(p2)) lplot1(mfcolor(white)) ///
+	byopt(legend(at(3) pos(1)) title("Probability exclusive breastfeeding by survey")) legend(col(1))
+
+
+// 		  ib12.int_month state rururb wi round mum_educ sex cat_birth_wt diar fever ari
+// logit ebf ib12.int_month state rururb wi round mum_educ sex cat_birth_wt diar fever ari [pw = national_wgt] 
 
 
 
-* evbf eibf ebf3d currently_bf
+
+
+
+* evbf currently_bf
 putdocx begin, font("Calibri", 9)
 
 * Seasonality of depvar01
-local depvar01  evbf eibf ebf3d currently_bf 
+local depvar01  evbf currently_bf
 local contvars state round
 
 foreach var in `depvar01' {
 	di `depvar01'
-	
-	
+		
 	logit `var' ib12.int_month state round [pw = national_wgt] 
 	margins int_month
-	marginsplot, title(`var' by month of data collection) 
+	marginsplot, title(`var' by month of data collection) ylabel(0(0.1)1)
+	graph export `var'.tif, as(tif) replace
+
+	putdocx paragraph, halign(center)
+	putdocx image "`var'.tif"
+}
+local ExportPath "C:/TEMP/Seasonality"
+local FileName "IYCF Seasonality.docx"
+putdocx save "`ExportPath'/`FileName'", append
+
+
+
+
+*  eibf ebf3d 
+* ANALYSIS BY MONTH OF BIRTH
+putdocx begin, font("Calibri", 9)
+
+* Seasonality of depvar01
+local depvar01  eibf ebf3d 
+local contvars state round
+
+foreach var in `depvar01' {
+	di `depvar01'
+		
+	logit `var' ib12.birthmonth state round [pw = national_wgt] 
+	margins birthmonth
+	marginsplot, title(`var' by birth month) ylabel(0(0.1)1)
 	graph export `var'.tif, as(tif) replace
 
 	putdocx paragraph, halign(center)
@@ -125,7 +201,8 @@ putdocx save "`ExportPath'/`FileName'", append
 * Exclusive Breastfeeding
 putdocx begin, font("Calibri", 9)
 * Seasonality of depvar01
-local depvar01  evbf eibf ebf3d currently_bf ebf mixed_milk water milk formula juice tea other_liq broth bottle
+local depvar01 ebf mixed_milk 
+* Mixed-milk formerly labelled predominant_bf - misnomer. 
 local contvars state round
 
 // local depvar01  water 
@@ -134,7 +211,7 @@ foreach var in `depvar01' {
 	di `depvar01'
 	logit `var' ib12.int_month state round [pw = national_wgt] 
 	margins int_month
-	marginsplot, title(`var' by month of data collection) 
+	marginsplot, title(`var' by month of data collection) ylabel(0(0.1)1)
 	graph export `var'.tif, as(tif) replace
 
 	putdocx paragraph, halign(center)
@@ -548,3 +625,13 @@ marginsplot, noci
 
 
 
+
+
+// preserve
+// collapse 
+// graph twoway (line water int_month if round==1) ///
+// 	         (line water int_month if round==2) ///
+// 	         (line water int_month if round==3) ///
+// 	         (line water int_month if round==4) ///
+// 	         (line water int_month if round==5, ///
+// 	legend(ring(0) pos(2) col(1) order(2 "NFHS-3" 3 "RSOC" 4 "NFHS-4" 5 "CNNS" 6 "NFHS-5")))
