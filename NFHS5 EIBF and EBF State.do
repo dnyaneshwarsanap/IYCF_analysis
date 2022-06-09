@@ -3,6 +3,8 @@
 *Request from Gayatri Singh 
 * May 2022
 
+* Issues
+* cannot renumber states in one place and not everywhere
 
 * path for saving reports / graphs
 local ExportPath "C:/TEMP/IYCF"
@@ -11,14 +13,12 @@ local ExportPath "C:/TEMP/IYCF"
 * undercase variables come from datasets
 * Camelcase vars are created in the code - used in code and dropped
 
-
+ 
 * Robert 
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
 // include "dnyaneshwar_paths.do"
 
 use iycf_NFHS5, clear 
-drop if state==9 // Daman & Diu is included with Dadra & Nagar Haveli
-
 
 
 // CONTENTS
@@ -39,7 +39,7 @@ drop if state==9 // Daman & Diu is included with Dadra & Nagar Haveli
 // table one eibf [aw=national_wgt] 
 // table state eibf [pw=state_wgt]
 // cap drop eibf_x
-// gen eibf_x = eibf * 100
+// gen eibf_x = eibf * 100 
 // version 16: table state [pw=state_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
 // version 16: table one   [pw=national_wgt], c(mean eibf_x n eibf_x) format(%8.1f)
 
@@ -47,19 +47,19 @@ drop if state==9 // Daman & Diu is included with Dadra & Nagar Haveli
 * when state is correctly labelled in all datasets, this should not be a problem. 
 
 * to set value label of state from 1 to x
-cap drop state_old
-gen state_old = state
-cap drop stateString
-decode state, gen(stateString)
-tab stateString
-cap drop state
-// Under certain circumstances, -encode- will number  the numeric version of a string variable starting where it left off at the last encode
-// to stop this behavior, drop the labels and start again
-
-cap lab drop state
-encode stateString, gen(state)
-tab state, m 
-la list state
+// cap drop state_old
+// gen state_old = state
+// cap drop stateString
+// decode state, gen(stateString)
+// tab stateString
+// cap drop state
+// // Under certain circumstances, -encode- will number  the numeric version of a string variable starting where it left off at the last encode
+// // to stop this behavior, drop the labels and start again
+//
+// cap lab drop state
+// encode stateString, gen(state)
+// tab state, m 
+// la list state
 
 *https://www.statalist.org/forums/forum/general-stata-discussion/general/1538255-creating-descriptive-stats-table-using-putdocx
 
@@ -100,19 +100,18 @@ foreach x in `SelectState' {
 	// Early Initiation of Breastfeeding (EIBF)
 
 	* Define variables for table
-	local TableName = "Early Initiation of Breastfeeding (EIBF)"
+	local TableName = "Early Initiation of Breastfeeding among last-born children who were born in the 2 years preceding the survey"
 	local TableNum = "table1"
 	local var1 = "eibf" 
 	local RowVar = "district"
 		
 	* to set value label of district from 1 to x
 	cap drop districtString
-	decode sdist, gen(districtString)
+	decode district, gen(districtString)
 // 	tab districtString
 	cap drop district
 	// Under certain circumstances, -encode- will number  the numeric version of a string variable starting where it left off at the last encode
 	// to stop this behavior, drop the labels and start again
-
 	cap lab drop district
 	encode districtString, gen(district)
 
@@ -161,7 +160,7 @@ foreach x in `SelectState' {
 	* Add EIBF by parity 
 	*  Early Initiation of Breastfeeding (EIBF) by birth order
 
-	local TableName = "Early Initiation of Breastfeeding (EIBF) by birth order"
+	local TableName = "Early Initiation of Breastfeeding among last-born children who were born in the 2 years preceding the survey by birth order"
 	local TableNum = "table2"
 	local Var = "eibf" 
 	local RowVar = "district"
@@ -177,11 +176,10 @@ foreach x in `SelectState' {
 	tabulate `RowVar', matcell(coltotals)
 	local RowCount = r(r)+5
 
-	
 	* define columns
 	putdocx table `TableNum' = (`RowCount',7), border(all, nil) width(100%) layout(autofitcontents) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
-	putdocx table `TableNum'(1,1)=("Table 2: Percentage `TableName' in children under five years by `RowVar'"), ///
+	putdocx table `TableNum'(1,1)=("Table 2: Percentage `TableName' by `RowVar'"), ///
 		bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	putdocx table `TableNum'(2,1) = ("`RowVar'"), bold 	
 	putdocx table `TableNum'(2,2) = ("1"), bold 
@@ -231,9 +229,11 @@ foreach x in `SelectState' {
 	putdocx begin, font("Calibri", 9)
 
 	* Add % institutional births 
+	* make age group for < 2 years for denominator
+	replace inst_birth = . if agemos>23
 	 
 	* Define variables for table
-	local TableName = "Institutional Births"
+	local TableName = "Institutional births"
 	local TableNum = "table1"
 	local var1 = "inst_birth" 
 	local RowVar = "district"
@@ -247,7 +247,7 @@ foreach x in `SelectState' {
 	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
 	* add title
-	putdocx table `TableNum'(1,1) = ("Table 3: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
+	putdocx table `TableNum'(1,1) = ("Table 3: Percent `TableName' in children under two years by district"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
 	putdocx table `TableNum'(2,1) = ("District"), bold
 	putdocx table `TableNum'(2,2) = ("Institutional Births"), bold halign(center)
@@ -286,18 +286,26 @@ foreach x in `SelectState' {
 	// version 16: tabulate state birth_place, row
 	// Cannot use putdocx with this command above
 
+	* Table 4: Percentage of births by place of birth in children under two years by district
+	putdocx paragraph
+	replace birth_place = . if agemos>23
+	
+	putdocx text ("Table 4: Percentage of births by place of birth in children under two years by district")
 	* version 17
-	cap version 17: table district birth_place [aw=national_wgt], statistic(percent, across(birth_place))  nformat(%8.1f percent) statistic(frequency) zero
+
+	cap version 17: table district birth_place [aw=national_wgt], ///
+		statistic(percent, across(birth_place))  nformat(%8.1f percent) ///
+		statistic(frequency) zero
 	collect layout
 	putdocx collect
 
-	putdocx save "`ExportPath'/`FileName'", replace 
+	putdocx save "`ExportPath'/`FileName'", append 
 
 	putdocx begin, font("Calibri", 9)
 		
 	
 	*  Early Initiation of Breastfeeding (EIBF) by place of birth (public/private)
-	local TableName = "Early Initiation of Breastfeeding (EIBF) by place of birth"
+	local TableName = "Early Initiation of Breastfeeding among last-born children who were born in the 2 years preceding the survey by place of birth"
 	local TableNum = "table2"
 	local Var = "eibf" 
 	local RowVar = "district"
@@ -317,7 +325,7 @@ foreach x in `SelectState' {
 	* define columns
 	putdocx table `TableNum' = (`RowCount',6), border(all, nil) width(100%) layout(autofitcontents) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
-	putdocx table `TableNum'(1,1)=("Table 4: Percentage `TableName' in children under five years by `RowVar'"), ///
+	putdocx table `TableNum'(1,1)=("Table 5: Percentage `TableName' by `RowVar'"), ///
 		bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	putdocx table `TableNum'(2,1) = ("`RowVar'"), bold 	
 	putdocx table `TableNum'(2,2) = ("At home"), bold 
@@ -362,6 +370,9 @@ foreach x in `SelectState' {
 	}
 
 	* Add % c-section
+	* set denominator to under two years
+	replace csection = . if agemos >23	
+	
 	putdocx pagebreak
 	
 	* Define variables for table
@@ -369,6 +380,7 @@ foreach x in `SelectState' {
 	local TableNum = "table1"
 	local var1 = "csection" 
 	local RowVar = "district"
+	
 
 	* How many rows to use for RowVar / number of state + 4: one for table title, the header, footer and (notes) 
 	tabulate `RowVar', matcell(coltotals)
@@ -377,7 +389,7 @@ foreach x in `SelectState' {
 	* define table with # rows and columns
 	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
-	putdocx table `TableNum'(1,1) = ("Table 5: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
+	putdocx table `TableNum'(1,1) = ("Table 6: Percent `TableName' births in children under two years by district"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
 	putdocx table `TableNum'(2,1) = ("District"), bold
 	putdocx table `TableNum'(2,2) = ("C-Section Births"), bold halign(center)
@@ -410,7 +422,7 @@ foreach x in `SelectState' {
 	// Early Initiation of Breastfeeding (last 2 years) by Normal / Assisted - Caesarian birth
 	// tab district csection
 	
-	local TableName = "Early Initiation of Breastfeeding (EIBF) by type of birth"
+	local TableName = "Early Initiation of Breastfeeding among last-born children who were born in the 2 years preceding the survey by type of birth"
 	local TableNum = "table3"
 	local Var = "eibf" 
 	local RowVar = "district"
@@ -428,7 +440,7 @@ foreach x in `SelectState' {
 	* define columns
 	putdocx table `TableNum' = (`RowCount',4), border(all, nil) width(100%) layout(autofitcontents) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
-	putdocx table `TableNum'(1,1)=("Table 6: Percentage `TableName' in children under five years by `RowVar'"), ///
+	putdocx table `TableNum'(1,1)=("Table 7: Percentage `TableName' by `RowVar'"), ///
 		bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	putdocx table `TableNum'(2,1) = ("`RowVar'"), bold 	
 	putdocx table `TableNum'(2,2) = ("Normal"), bold 
@@ -472,10 +484,7 @@ foreach x in `SelectState' {
 	}
 
 	putdocx save "`ExportPath'/`FileName'", append 
-
 }
-
-
 
 
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
@@ -577,13 +586,12 @@ foreach x in `SelectState' {
 	* Use only one state data for analysis
 	drop if state !=`x'
 	
-
 	putdocx begin, font("Calibri", 9)
 
 	
 	* to set value label of district from 1 to x
 	cap drop districtString
-	decode sdist, gen(districtString)
+	decode district, gen(districtString)
 	// 	tab districtString
 	cap drop district
 	// Under certain circumstances, -encode- will number  the numeric version of a string variable starting where it left off at the last encode
@@ -595,7 +603,7 @@ foreach x in `SelectState' {
 	// Exclusive Breastfeeding (ExBF)
 
 	* Define variables for table
-	local TableName = "Exclusive Breastfeeding (ExBF)"
+	local TableName = "Exclusive Breastfeeding in youngest children under age 2 years living with their mother"
 	local TableNum = "table4"
 	local var1 = "ebf" 
 	local RowVar = "district"
@@ -607,7 +615,7 @@ foreach x in `SelectState' {
 	* define table with # rows and columns
 	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
-	putdocx table `TableNum'(1,1) = ("Table 7: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
+	putdocx table `TableNum'(1,1) = ("Table 8: Percent `TableName' by district"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
 	putdocx table `TableNum'(2,1) = ("District"), bold
 	putdocx table `TableNum'(2,2) = ("Exclusive Breastfeeding"), bold halign(center)
@@ -641,9 +649,10 @@ foreach x in `SelectState' {
 	// version 16: tabulate state anc_BFcounsel, row
 
 	recode anc_BFcounsel (1 2 =0)(3=1), gen(recd_BF_counselling)
+	replace recd_BF_counselling=. if agemos>=24
 
 	* Define variables for table
-	local TableName = "Received breastfeeding counselling during ANC"
+	local TableName = "Women who received breastfeeding counselling during ANC"
 	local TableNum = "table4"
 	local var1 = "recd_BF_counselling" 
 	local RowVar = "district"
@@ -657,7 +666,7 @@ foreach x in `SelectState' {
 	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
 	* add title
-	putdocx table `TableNum'(1,1) = ("Table 8: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
+	putdocx table `TableNum'(1,1) = ("Table 9: Percent `TableName' by district"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
 	putdocx table `TableNum'(2,1) = ("District"), bold
 	putdocx table `TableNum'(2,2) = ("Breastfeeding counselling during ANC"), bold halign(center)
@@ -691,7 +700,7 @@ foreach x in `SelectState' {
 	// •	Who provided Postnatal care visits (doctor, nurse, midwife, ASHA)
 
 	*  Exclusive Breastfeeding (ExBF) by antenatal counselling on breastfeeding
-	local TableName = "Exclusive Breastfeeding (ExBF) by antenatal counselling on breastfeeding"
+	local TableName = "Exclusive Breastfeeding in youngest children under age 2 years living with their mother by ANC counselling on breastfeeding"
 	local TableNum = "table5"
 	local Var = "ebf" 
 	local RowVar = "district"
@@ -710,7 +719,7 @@ foreach x in `SelectState' {
 	* define columns
 	putdocx table `TableNum' = (`RowCount',5), border(all, nil) width(100%) layout(autofitcontents) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
-	putdocx table `TableNum'(1,1)=("Table 9: Percentage `TableName' in children under five years by `RowVar'"), ///
+	putdocx table `TableNum'(1,1)=("Table 10: Percentage `TableName' by `RowVar'"), ///
 		bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	putdocx table `TableNum'(2,1) = ("`RowVar'"), bold 	
 	putdocx table `TableNum'(2,2) = ("Didn't meet TripleA"), bold 
@@ -759,7 +768,7 @@ foreach x in `SelectState' {
 	// version 16: tabulate state pnc_child_visit, row
 
 	* Define variables for table
-	local TableName = "Received a postnatal care visit in 2 months post birth"
+	local TableName = "of cargivers who received a postnatal care visit in 2 months post birth"
 	local TableNum = "table4"
 	local var1 = "pnc_child_visit" 
 	local RowVar = "district"
@@ -773,7 +782,7 @@ foreach x in `SelectState' {
 	putdocx table `TableNum' = (`RowCount', 3), border(all, nil) width(90%) layout(autofitwindow) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
 	* add title
-	putdocx table `TableNum'(1,1) = ("Table 10: Percent `TableName' by District"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
+	putdocx table `TableNum'(1,1) = ("Table 11: Percent `TableName' by district"), bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	* add headers
 	putdocx table `TableNum'(2,1) = ("District"), bold
 	putdocx table `TableNum'(2,2) = ("Postnatal care"), bold halign(center)
@@ -805,7 +814,7 @@ foreach x in `SelectState' {
 
 	// Exclusive Breastfeeding (ExBF) by postnatal care
 
-	local TableName = "Exclusive Breastfeeding (ExBF) by postnatal care"
+	local TableName = "Exclusive Breastfeeding in youngest children under age 2 years living with their mother by postnatal care"
 	local TableNum = "table6"
 	local Var = "ebf" 
 	local RowVar = "district"
@@ -823,7 +832,7 @@ foreach x in `SelectState' {
 	* define columns
 	putdocx table `TableNum' = (`RowCount',4), border(all, nil) width(100%) layout(autofitcontents) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
-	putdocx table `TableNum'(1,1)=("Table 11: Percentage `TableName' in children under five years by `RowVar'"), ///
+	putdocx table `TableNum'(1,1)=("Table 12: Percentage `TableName' by `RowVar'"), ///
 		bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	putdocx table `TableNum'(2,1) = ("`RowVar'"), bold 	
 	putdocx table `TableNum'(2,2) = ("No PNC visit"), bold 
@@ -868,7 +877,7 @@ foreach x in `SelectState' {
 
 
 	*  Exclusive Breastfeeding (ExBF) by postnatal assistance
-	local TableName = "Exclusive Breastfeeding (ExBF) by antenatal counselling on breastfeeding"
+	local TableName = "Exclusive Breastfeeding in youngest children under age 2 years living with their mother by ANC counselling on breastfeeding"
 	local TableNum = "table7"
 	local Var = "ebf" 
 	local RowVar = "district"
@@ -890,7 +899,7 @@ foreach x in `SelectState' {
 	* define columns
 	putdocx table `TableNum' = (`RowCount',7), border(all, nil) width(100%) layout(autofitcontents) ///
 		note(Note: Estimates with sample < 50 unweighted cases are suppressed as marked by ".")
-	putdocx table `TableNum'(1,1)=("Table 12: Percentage `TableName' in children under five years by `RowVar'"), ///
+	putdocx table `TableNum'(1,1)=("Table 13: Percentage `TableName' by `RowVar'"), ///
 		bold font("Calibri", 11) halign(left) colspan(7) linebreak
 	putdocx table `TableNum'(2,1) = ("`RowVar'"), bold 	
 	putdocx table `TableNum'(2,2) = ("Doctor"), bold 
@@ -940,7 +949,7 @@ foreach x in `SelectState' {
 
 End
 
-
+putdocx save "`ExportPath'/`FileName'", append 
 
 
 
