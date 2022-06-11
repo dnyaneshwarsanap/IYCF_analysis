@@ -57,19 +57,18 @@ include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYC
 * Load Data
 use iycf_5surveys.dta, clear 
 
+* path for graphs to apply to word doc. 
+cd C:\Temp\Junk
 
 local ExportPath "C:/TEMP/Seasonality"
 local FileName "IYCF Seasonality.docx"
-
-
-
-cd C:\Temp\Junk
+di "`ExportPath'/`FileName'"
 
 tab int_month round, m
 
-// Test
 
-local ExportPath "C:/TEMP/Seasonality"
+
+local ExportPath "C:\Temp\Seasonality"
 local FileName "IYCF Seasonality.docx"
 
 * TITLE PAGE
@@ -79,44 +78,96 @@ putdocx paragraph, style(Title) halign(center) spacing(line,16 pt)
 putdocx text ("Seasonality of IYCF variables ")
 putdocx paragraph, style(Title) halign(center) spacing(line,16 pt)
 putdocx text ("in Indian 5 Surveys ")
-putdocx save `ExportPath'\`FileName', replace
+putdocx save "`ExportPath'\`FileName'", replace
 	
 
 // local depvar01  evbf eibf ebf3d currently_bf ebf mixed_milk water milk formula juice tea other_liq broth bottle
 
-local ContVars "ib12.int_month state rururb wi mum_educ sex cat_birth_wt birth_order diar fever ari"
+local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+di "`ContVars'"
 tab round, m 
 
-* Combomarginsplot
-*Plot the predicted values of the dependent variable across five surveys
 
 * Exclusive Breastfeeding by Round
-local ContVars "ib12.int_month state rururb wi mum_educ sex cat_birth_wt diar fever ari"
-di "`ContVars'"
 
-// logit ebf "`ContVars'" [pw = national_wgt] 
-logit ebf ib12.int_month i.state i.rururb i.wi i.mum_educ i.sex i.cat_birth_wt i.diar i.fever i.ari i.round [pw = national_wgt] 
+* selection of correct denominators
+drop if agemos >=6
+
+// * corrections for NFHS-5
+// keep if b19 < 24 & b9 == 0
+// // * if caseid is the same as the prior case, then not the last born
+// keep if _n == 1 | caseid != caseid[_n-1]
+
+* Plot adjusted vs unadjusted estimates onto one graph
+local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+// local ContVars ib12.int_month i.round i.state i.rururb i.wi 
+// local ContVars ib12.int_month i.round i.state c.age_days c.age_days2 i.sex
+// local ContVars ib12.int_month i.round i.state i.diar i.fever i.ari 
+logit ebf `ContVars' [pw = national_wgt] 
 margins round, saving(file1, replace)
 
-logit ebf ib12.int_month i.round [pw = national_wgt] 
+logit ebf i.round [pw = national_wgt] 
+* here no controls are applied for month of data collection 
 margins round, saving(file2, replace)
+* Make combomarginsplot
 combomarginsplot file1 file2, labels("Adjusted" "Unadjusted") ///
 	file1opts(pstyle(p1)) file2opts(pstyle(p2)) lplot1(mfcolor(white)) ///
-	byopt(legend(at(3) pos(1)) title("Probability exclusive breastfeeding by survey")) legend(col(1))
+	title("Exclusive breastfeeding by survey") legend(col(2))
 
-* Exclusive Breastfeeding by Month by Round (adjusted)
-local ContVars "ib12.int_month state rururb wi mum_educ sex cat_birth_wt diar fever ari round"
-di "`ContVars'"
+// combomarginsplot file1 file2, labels("Adjusted" "Unadjusted") ///
+// 	file1opts(pstyle(p1)) file2opts(pstyle(p2)) lplot1(mfcolor(white)) ///
+// 	byopt(legend(at(3) pos(1)) title("Probability exclusive breastfeeding by survey")) legend(col(1))
+	
+* Add combomarginsplot to word file1
+putdocx begin, font("Calibri") 
+putdocx save "`ExportPath'\`FileName'", append
 
-// logit ebf "`ContVars'" [pw = national_wgt] 
-logit ebf ib12.int_month##i.round i.state i.rururb i.wi i.mum_educ i.sex i.cat_birth_wt i.diar i.fever i.ari  [pw = national_wgt] 
+
+* Plot adjusted EBF estimates by month for all 5 surveys - one graph
+local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+logit ebf `ContVars' [pw = national_wgt] 
+margins int_month, saving(file1, replace)
+marginsplot, title("Exclusive breastfeeding by month of data collection") ylab(0.1(.1)0.7) yscale(range(0.1 0.7))
+
+* Plot adjusted ebf water estimates by month for all 5 surveys - one graph
+local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+// Plot adjusted water, mixed_milk, formula bottle estimates by month for all 5 surveys - one graph
+// foreach v of varlist water mixed_milk formula bottle {  
+foreach v of varlist ebf water {  
+	logit `v' `ContVars' [pw = national_wgt]  
+	margins int_month
+	marginsplot, title("`v'") name(month_`v', replace) ylab(0.2(.1)0.7) yscale(range(0.2 0.7))
+}
+graph combine month_ebf month_water , xsize(6.5) ysize(2.7) iscale(.8) name(comb, replace)
+graph close month_ebf month_water 
+graph export "Feeding variables by month of data collection.png", width(6000) replace
+
+
+foreach v of varlist water, mixed_milk, formula bottle {  
+	di "`vi'"
+}	
+
+	
+* Exclusive Breastfeeding by Month by Round - ALL SURVEY DATA (adjusted)
+* this format is not very interpretable
+logit ebf ib12.int_month##i.round i.state i.rururb i.wi i.mum_educ c.age_days c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari [pw = national_wgt] 
 margins int_month#round,  saving(file1, replace)
-marginsplot
+marginsplot, title("Exclusive breastfeeding by month of data collection & round") 
 
+
+* Exclusive Breastfeeding by Month by Socio-Economic Status - ALL SURVEY DATA (adjusted)
+* to aid interpretation - convert to SES terciles
+logit ebf ib12.int_month##i.wi i.state i.rururb i.mum_educ c.age_days c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari [pw = national_wgt] 
+margins int_month#wi,  saving(file1, replace)
+marginsplot, title("Exclusive breastfeeding by month of data collection & SES") 
+
+
+
+* Plot the predicted values of the dependent variable in five graphs for five surveys
 * Combomarginsplot - joining five graphs onto one background
 forval x = 1/5 {
-	logit ebf ib12.int_month##i.round i.state i.rururb i.wi i.mum_educ i.sex i.cat_birth_wt i.diar i.fever i.ari [pw = national_wgt] ///
-	if round==`x' 
+	logit ebf ib12.int_month##i.round i.state i.rururb i.wi i.mum_educ c.age_days ///
+		c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari i.round [pw = national_wgt] if round==`x' 
 	margins int_month#round
 	local RoundValueLabel : value label round
 	local GraphLabel: label `RoundValueLabel' `x'
@@ -128,10 +179,17 @@ graph export "EBF by month by survey.png", width(6000) replace
 
 
 
+
+
 	
 * WATER by Round
 // logit ebf "`ContVars'" [pw = national_wgt] 
+* Full list
 logit water ib12.int_month i.state i.rururb i.wi i.mum_educ i.sex i.diar i.fever i.ari i.round [pw = national_wgt] 
+
+* does illness drive giving water? 
+logit water ib12.int_month i.state i.rururb i.wi i.mum_educ i.sex i.round [pw = national_wgt] 
+
 margins round, saving(file1, replace)
 
 logit water ib12.int_month i.round [pw = national_wgt] 
@@ -144,6 +202,12 @@ combomarginsplot file1 file2, labels("Adjusted" "Unadjusted") ///
 // 		  ib12.int_month state rururb wi round mum_educ sex cat_birth_wt diar fever ari
 // logit ebf ib12.int_month state rururb wi round mum_educ sex cat_birth_wt diar fever ari [pw = national_wgt] 
 
+
+* attempt to calculate estimates by month and test for significant differences
+preserve
+// collapse (mean) ebf_month=ebf (seb) seb_ebf=ebf (mean) mean_h20=water (seb) seb_h20=water [aw = national_wgt] , by(int_month)
+* collaps SEB does not work with aweights or pweights
+collapse (mean) ebf_month=ebf (mean) mean_h20=water  [aw = national_wgt] , by(int_month)
 
 
 
