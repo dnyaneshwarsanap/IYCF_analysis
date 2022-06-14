@@ -177,8 +177,20 @@ graph combine file1 file2 file3 file4 file5, xsize(6.5) ysize(2.7) iscale(.8) na
 graph close file1 file2 file3 file4 file5
 graph export "EBF by month by survey.png", width(6000) replace
 
-
-
+* WATER
+* Plot the predicted values of the dependent variable in five graphs for five surveys
+* Combomarginsplot - joining five graphs onto one background
+forval x = 1/5 {
+	logit water ib12.int_month##i.round i.state i.rururb i.wi i.mum_educ c.age_days ///
+		c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari i.round [pw = national_wgt] if round==`x' 
+	margins int_month#round
+	local RoundValueLabel : value label round
+	local GraphLabel: label `RoundValueLabel' `x'
+	marginsplot, title("`GraphLabel'") name(file`x', replace) ylab(0(.1)1) yscale(range(0 1))
+}
+graph combine file1 file2 file3 file4 file5, xsize(6.5) ysize(2.7) iscale(.8) name(comb, replace)
+graph close file1 file2 file3 file4 file5
+graph export "Water by month by survey.png", width(6000) replace
 
 
 	
