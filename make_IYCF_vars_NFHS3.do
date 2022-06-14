@@ -676,7 +676,7 @@ tab zero_fv, m
 gen mixed_milk = 0 
 replace mixed_milk=1 if (currently_bf==1 & milk==1)
 replace mixed_milk=1 if (currently_bf==1 & formula==1)
-replace mixed_milk=1 if (currently_bf==1 & other_milk==1)
+cap replace mixed_milk=1 if (currently_bf==1 & other_milk==1)
 replace mixed_milk =. if age_days<0 | age_days>=183 
 tab mixed_milk, m 
 
@@ -993,7 +993,7 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	prelacteal_otherthanmilk prelacteal_milk_form bottle water juice tea other_liq milk ///
 	formula freq_milk freq_formula freq_other_milk fortified_food gruel poultry meat legume ///
 	nuts bread potato vita_veg leafy_green vita_fruit fruit_veg organ fish leg_nut yogurt ///
-	semisolid carb dairy all_meat vita_fruit_veg agegroup sumfoodgrp ///
+	semisolid carb dairy all_meat vita_fruit_veg mixed_milk agegroup sumfoodgrp ///
 	fg0 fg1 fg2 fg3 fg4 fg5 fg6 fg7 fg8 any_solid_semi_food intro_compfood ebf age_ebf ///
 	age_cbf cont_bf cont_bf_12_23 mdd freq_solids mmf_bf mmf_all_bf mad_all_bf egg ///
 	egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus ///
