@@ -121,10 +121,18 @@ lab define region 1 "North" 2 "Central" 3 "East" 4 "Northeast" 5 "West" 6 "South
 lab var region "Region" 
 lab val region region
 
+*Month of survey
+ gen int_month = month(int_date)
+label define m12 1 "Jan" 2 "Feb" 3 "Mar" 4 "Apr" 5 "May" 6 "Jun" 7 "Jul" 8 "Aug" 9 "Sep" 10 "Oct" 11 "Nov" 12 "Dec"
+label val int_month m12 
+label var int_month "Month"
+
+gen age_days2=  age_days^2
+
 
 // save "C:\TEMP\iycf_4surveys.dta", replace
 
-save "C:\TEMP\iycf_5surveys.dta", replace
+save "C:\Temp\Data\iycf_5surveys.dta", replace
 
 
 
@@ -411,6 +419,7 @@ tab mixed_milk round,m
 * Mixed milk feeding 0-5M
 * Mixed milk feeding (<6 months): Percentage of infants 0–5 months of age who 
 * were fed formula and/or animal milk in addition to breast milk during the previous day
+* formerly predominant breastfeeding - misnomer
 
 tab all_meat round, col 
 tab all_meat round,m 
@@ -476,6 +485,9 @@ tab csection round, col
 tab csection round,m
 
 * Socio-economic variables
+tab birth_order round, col 
+tab birth_order round,m
+
 tab mum_educ round, col 
 tab mum_educ round,m
 
