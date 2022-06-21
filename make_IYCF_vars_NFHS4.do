@@ -498,6 +498,7 @@ tab intro_compfood any_solid_semi_food
 *Using the WHO guideline for defining ebf variable - create a condition variable based on 
 *if the child received any other food items (liquid/solids/semi-solids) on previous day
 
+/*
 cap drop ebf
 * Create ebf variable - 1 yes 0 no
 // no liquids besides breastmilk
@@ -516,6 +517,65 @@ replace ebf =. if age_days >730
 la var ebf "Exclusive breasfeeding"
 tab ebf
 tab agemos ebf 
+*/
+
+**************
+**New ebf*****
+**************
+
+gen tag =0
+replace tag=1 if _n == 1 | caseid != caseid[_n-1]
+tab tag midx, m
+
+
+
+// *Assume that living twin of last birth who is living with mother is breastfeeding if the last birth is still breastfeeding
+// replace brstfed = 1 if caseid == caseid[_n-1] & b3 == b3[_n-1] & brstfed[_n-1] == 1 & b0 > 0 & b5==1 & b9[_n-1]==0 & b9==0
+// label values brstfed yesno
+
+
+**********************
+//breastfeeding status
+gen diet=1
+replace diet=2 if (v409>=1 & v409<=7) 					// water
+
+foreach xvar of varlist v409a v410 v410a v412c v413*{ 	// other liquids
+	replace diet=3 if `xvar'>=1 & `xvar'<=7
+}
+foreach xvar of varlist v411 v411a {  					// other milks
+	replace diet=4  if `xvar'>=1 & `xvar'<=7
+}
+foreach xvar of varlist v414* { 						// solids
+	replace diet=5 if `xvar'>=1 & `xvar'<=7
+}
+replace diet=5 if v412a==1 | v412b==1 | m39a==1
+replace diet=0 if m4!=95
+
+
+
+* Create correct sample
+* Note: The following do files select for the youngest child under 2 years living with the mother. Therefore some cases will be dropped. 
+* Selecting for youngest child under 24 months and living with mother
+// keep if b19 < 24 & b9 == 0
+// * if caseid is the same as the prior case, then not the last born
+// keep if _n == 1 | caseid != caseid[_n-1]
+
+label define bf_status 0"not bf" 1"exclusively bf" 2"bf & plain water" 3"bf & non-milk liquids" 4"bf & other milk" 5"bf & complementary foods"
+label values diet bf_status
+label var diet "Breastfeeding status for last-born child under 2 years"
+
+//exclusively breastfed
+recode diet (1=1) (else=0) if agemos<6, gen(ebf)
+label values ebf yesno
+label var ebf "Exclusively breastfed - last-born under 6 months"
+
+
+* Exclusive breastfeeding 
+*Age under 6
+tab ebf if agemos<6 [iw=v005/1000000]
+
+
+
 
 * MEDIAN duration of exclusive breastfeeding
 cap drop age_ebf
