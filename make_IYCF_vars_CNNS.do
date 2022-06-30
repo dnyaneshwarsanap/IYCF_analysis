@@ -15,14 +15,14 @@ include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYC
 use `CNNS', clear
 
 * Tasks
-* Find regional weights
+* Add regional weights
 
 
 
 
 * * * 
 *DROP ALL PREVIOUSLY CONSTRUCTED IYCF VARS
-drop everbf breast1h colstrum breast24h exbf cbf compfed minmealfbf minmealf ///
+drop everbf breast1h colstrum breast24h cbf compfed minmealfbf minmealf ///
 minmealfnbf group1_cdd group2_cdd group3_cdd group4_cdd group5_cdd group6_cdd ///
 group7_cdd childdd childdd_nbf minaccdiet minaccdietbf minaccdietnbf ironfood food_con_n age_c
 * * * 
@@ -405,7 +405,27 @@ replace ebf =0 if water      ==1 | ///
 replace ebf =. if age_days >730
 la var ebf "Exclusive breasfeeding"
 tab ebf
+
+* Validate correct estimate of EBF between current calculations and final report
+* EXBF is the variable used in final report
+la drop exbf1
+la var exbf "EBF - CNNS"
 tab agemos ebf 
+tab agemos exbf 
+* many differences in EBF by age months between official and recalculated EBF indicator
+foreach var of varlist ebf exbf {
+	foreach var_2 of varlist water juice broth milk formula yogurt other_liq fortified_food bread vita_veg potato leafy_green vita_fruit fruit_veg organ poultry meat egg fish leg_nut currently_bf {
+		tab `var_2' `var' , m
+	}
+}
+
+cap drop ebf_denom
+gen ebf_denom=1 if agemos<6
+gen exbf_x = exbf*100
+version 16: table one [pw = iw_s_pool] if ebf_denom==1, c(mean exbf_x n exbf_x) format(%9.1f)
+// CNNS   REPORT  EBF<6M  	58.0     3,615
+cap drop exbf_x
+
 
 
 * MEDIAN duration of exclusive breastfeeding
@@ -920,7 +940,7 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw cat_birth_wt anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex national_wgt state_wgt round  
+	sex national_wgt state_wgt round  ebf_denom
 
 // 	regional_wgt regional_bio_wgt 
 

@@ -1,5 +1,5 @@
-* make_IYCF_Vars_NFHS4_data.do
-* Make IYCF Variables for NFHS4 data - PURPOSE OF FILE
+* make_IYCF_Vars_NFHS5_data.do
+* Make IYCF Variables for NFHS5 data - PURPOSE OF FILE
 * USING Updated WHO IYCF guidelines 2020 and recommended IYCF code from UNICEF NY
 * Code Robert, Dnyaneshwar 
 
@@ -19,6 +19,8 @@ include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYC
 
 * Open NFHS 5
 use `NFHS5', clear
+
+
 
 tab v007
 
@@ -650,10 +652,7 @@ tab intro_compfood any_solid_semi_food
 // 4)     Breastfeeding and consuming other milk.
 // 5)     Breastfeeding and consuming complementary foods.
 
-gen tag =0
-replace tag=1 if _n == 1 | caseid != caseid[_n-1]
-tab tag midx, m
-* midx and caseid != caseid[_n-1] are the same
+
 
 * NFHS-5 report ebf 
 * add twins
@@ -701,16 +700,35 @@ label var ebf "Exclusively breastfed - last-born under 6 months"
 
 * Exclusive breastfeeding 
 *Age under 6
-tab ebf if b19<6 [iw=v005/1000000]
+
 // NFHS-5 REPORT  EBF<6M  	63.7  	22,406 
 
 * Double check correct coding with all liquids / food vars
 // local feeding_vars = "v409 v410 v411 v411a v412a v412c v413 v414a v414e v414f v414g v414i v414j v414k v414l v414m v414n v414o v414p v414s v414t v414v m39a"
 // foreach var of varlist `feeding_vars' {
-// 	version 16: table one `var'   [pw=national_wgt] if b19<6 , c(mean ebf_x n ebf_x) row col format(%8.1f)
-// }
+// 	version 16: table one `var'  [pw=national_wgt] if b19<6 , c(mean ebf_x n ebf_x) row col format(%8.1f) }
 
-****************************
+
+* EBF denominator / last born child
+* best method to create EBF population is to follow instructions in guidance 
+* and merge data into one database tagging the correct cases
+cap drop tag
+gen tag =0
+replace tag=1 if _n == 1 | caseid != caseid[_n-1]
+tab tag midx, m
+* midx and caseid != caseid[_n-1] are the same
+
+* if caseid is the same as the prior case, then not the last born
+// keep if _n == 1 | caseid != caseid[_n-1]
+// keep if b19 < 24 & b9 == 0 
+// age 24 months and child lives with respondent
+// cap drop ebf_denom
+// gen ebf_denom = _n == 1 | caseid != caseid[_n-1]
+// replace ebf_denom = . if b19 >=6 & b9 != 0 
+//
+// gen ebf_x = ebf * 100
+// version 16: table ebf_denom [pw = v005/1000000], c(mean ebf_x n ebf_x) format(%9.1f)
+// NFHS-5 REPORT  EBF<6M  	63.7  	22,406 
 
 
  
@@ -721,7 +739,7 @@ replace age_ebf = . if age_days >730
 *set agemos_ebf to missing if exbf=no
 replace age_ebf=. if ebf==0
 la var age_ebf "Median age of exclusive breasfeeding in months"
-* For correct calculation methods of Median age in month of EBF please see
+* For correct calculation methods of median age in month of EBF please see
 * https://dhsprogram.com/data/Guide-to-DHS-Statistics/Breastfeeding_and_Complementary_Feeding.htm
 
 * not correct method but can be used for testing
@@ -1370,7 +1388,7 @@ keep psu hh_num int_date birthday birthmonth birthyear dateofbirth age_days agem
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf mmf_all mixed_milk mad_all ///
 	egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus csection ///
 	mum_educ_years mum_educ caste birth_order rururb wi wi_s sex diar fever ari state birth_place /// 
-	inst_birth anc_BFcounsel pnc_child_visit pnc_assistance round district b19 b9 caseid
+	inst_birth anc_BFcounsel pnc_child_visit pnc_assistance round district b19 b9 caseid midx 
 
 
 		
@@ -1382,7 +1400,18 @@ keep if b19 < 24 & b9 == 0
 // * if caseid is the same as the prior case, then not the last born
 keep if _n == 1 | caseid != caseid[_n-1]
 
-save iycf_NFHS5_ebf, replace 
+merge 1:1 caseid midx using iycf_NFHS5
+* Change tag to ebf_denom
+cap drop ebf_denom
+gen ebf_denom = _merge==3
+cap drop _merge
+
+gen ebf_x = ebf * 100
+version 16: table ebf_denom [pw = national_wgt], c(mean ebf_x n ebf) format(%9.1f)
+// NFHS-5 REPORT  EBF<6M  	63.7  	22,406 
+cap drop ebf_x
+
+save iycf_NFHS5, replace 
 
 
 

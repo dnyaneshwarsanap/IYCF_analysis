@@ -2,7 +2,7 @@
 * Make IYCF Variables for NFHS4 data - PURPOSE OF FILE
 * USING Updated WHO IYCF guidelines 2020 and recommended IYCF code from UNICEF NY
 
-* Code Robert, Shekhar, Dnyaneshwar 
+* Code Robert, Dnyaneshwar 
 
 
 
@@ -99,9 +99,13 @@ gen agemos = floor(age_days/30.42) if b5==1
 // graph bar (count) one, over(agemos)
 
 tab agemos, m 
-// cap drop agemos_x
-// gen agemos_x = v008 -  b3 if b5==1
-// scatter agemos_x agemos
+cap drop agemos_x
+gen agemos_x = v008 -  b3 if b5==1
+scatter agemos_x agemos
+* large difference (2000 cases) between age in days and agemos
+
+
+
 
 * Ever breastfed (children born in past 24 months) 
 
@@ -516,6 +520,22 @@ replace ebf =. if age_days >730
 la var ebf "Exclusive breasfeeding"
 tab ebf
 tab agemos ebf 
+
+* for Exclusive Breastfeeding estimates/  Seasonality analysis
+gen ebf_denom = agemos_x < 6
+replace ebf_denom = . if b5 !=1 
+
+* Following is not used in DHS6
+// * Child lives with respondent
+// replace ebf_denom =0 if b9>0
+// * Youngest child in household
+// // * if caseid is the same as the prior case, then not the last born
+// keep if _n == 1 | caseid != caseid[_n-1]
+
+gen ebf_x = ebf*100
+version 16: table one [pw = v005/1000000] if ebf_denom==1, c(mean ebf_x n ebf_x) format(%9.1f)
+// NFHS-4 REPORT  EBF<6M  	55.0    21,365 - youngest child < 6 months living with mother
+
 
 * MEDIAN duration of exclusive breastfeeding
 cap drop age_ebf
@@ -1028,7 +1048,7 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw cat_birth_wt anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex national_wgt regional_wgt state_wgt round  
+	sex national_wgt regional_wgt state_wgt round ebf_denom 
 
 		
 * Save data with name of survey

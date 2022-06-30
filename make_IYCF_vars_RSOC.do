@@ -580,6 +580,14 @@ la var ebf "Exclusive breasfeeding"
 tab ebf
 tab ebf agemos
 
+gen ebf_denom = 1 
+replace ebf_denom = . if agemos>=6
+
+gen ebf_x = ebf*100
+version 16: table one [pw =  N_WT] if ebf_denom==1, c(mean ebf_x n ebf_x) format(%9.1f)
+// RSOC   REPORT  EBF<6M  	64.9     9,281
+
+
 * MEDIAN duration of exclusive breastfeeding
 cap drop age_ebf
 gen age_ebf = round(age_days/30.4375, 0.01)   //exact age in months round of to 2 digits after decimal
@@ -1050,7 +1058,7 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	freq_formula freq_other_milk milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw cat_birth_wt anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex national_wgt regional_wgt state_wgt round  
+	sex national_wgt regional_wgt state_wgt round ebf_denom 
 
 
 * Save data with name of survey
