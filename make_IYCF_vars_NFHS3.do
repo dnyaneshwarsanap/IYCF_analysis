@@ -99,10 +99,10 @@ gen agemos = floor(age_days/30.42) if b5==1
 graph bar (count) one, over(agemos)
 
 * Double check agemos 
-// tab agemos, m 
-// cap drop agemos_x
-// gen agemos_x = v008 -  b3 if b5==1
-// scatter agemos_x agemos
+tab agemos, m 
+cap drop agemos_x
+gen agemos_x = v008 -  b3 if b5==1
+scatter agemos_x agemos
 
 
 * Ever breastfed (children born in past 24 months) 
@@ -523,6 +523,26 @@ replace ebf =. if age_days >730
 la var ebf "Exclusive breasfeeding"
 tab ebf
 tab ebf agemos
+
+
+* for Exclusive Breastfeeding estimates/  Seasonality analysis
+cap drop ebf_denom
+gen ebf_denom = agemos_x < 6
+replace ebf_denom =0 if b9>0
+replace ebf_denom = . if b5 !=1 
+replace ebf_denom = . if caseid == caseid[_n-1]
+
+
+* Following is not used in NFHS 3 DHS6
+// * Child lives with respondent
+// replace ebf_denom =0 if b9>0
+// * Youngest child in household
+// // * if caseid is the same as the prior case, then not the last born
+// keep if _n == 1 | caseid != caseid[_n-1]
+
+gen ebf_x = ebf*100
+version 16: table one [pw = v005/1000000] if ebf_denom==1, c(mean ebf_x n ebf_x) format(%9.1f)
+// NFHS-3 REPORT  EBF<6M  	46.4     5,081 - youngest child < 6 months living with mother
 
 
 
@@ -998,7 +1018,7 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	age_cbf cont_bf cont_bf_12_23 mdd freq_solids mmf_bf mmf_all_bf mad_all_bf egg ///
 	egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus ///
 	csection mum_educ_years mum_educ caste rururb wi wi_s national_wgt regional_wgt state_wgt /// 
-	sex diar fever ari state round
+	sex diar fever ari state round ebf_denom
 
 	
 * Save data with name of survey
