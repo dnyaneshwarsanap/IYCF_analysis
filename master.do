@@ -121,16 +121,24 @@ lab define region 1 "North" 2 "Central" 3 "East" 4 "Northeast" 5 "West" 6 "South
 lab var region "Region" 
 lab val region region
 
+* Add regional weights
+
+
+
 *Month of survey
  gen int_month = month(int_date)
 label define m12 1 "Jan" 2 "Feb" 3 "Mar" 4 "Apr" 5 "May" 6 "Jun" 7 "Jul" 8 "Aug" 9 "Sep" 10 "Oct" 11 "Nov" 12 "Dec"
 label val int_month m12 
 label var int_month "Month"
 
-gen age_days2=  age_days^2
 
-
-// save "C:\TEMP\iycf_4surveys.dta", replace
+* add bottle to RSOC
+sort round agemos
+* set one case to be present in following
+* add bottle to RSOC
+replace bottle = 0 if _n == 51556
+* add broth to NFHS-3
+replace broth = 0 if _n == 1
 
 save "C:\Temp\Data\iycf_5surveys.dta", replace
 
@@ -353,6 +361,9 @@ tab juice round,m
 
 tab broth round, col
 tab broth round,m
+
+
+
 
 tab milk round, col
 tab milk round,m 
