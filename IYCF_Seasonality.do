@@ -1,4 +1,5 @@
 * IYCF Seasonality Analysis
+* Five pooled datasets from India 2005-21
 
 * Data requirements for following analysis:  All months of the year must be represented in the data.
 * Analysis with 5 datasets
@@ -11,34 +12,29 @@
 * help combomarginsplot
 * Coefplot -  http://repec.sowi.unibe.ch/stata/coefplot/getting-started.html
 
-* Tasks
+* Don't forget
 * make one NFHS5 dataset with EIBF and EBF
 * 	or insert drop vars into code before analysis
 * decide to use RSOC - yes or no? 
 
-* Analysis
-* Data by background variables (weighted estimates)
-* Graph of percent data collected by month by survey
+* Analysis Plan
+* 1 Graph of percent data collected by month by survey
+* 2 Data by background variables (weighted estimates)
+* 3 Tests for seasonal variation by month12
+* 4 Amplitude of seasonal variation by vars
+* 5 Adjusted vs unadjusted survey estimates of breastfeeding vars / complementary feeding vars
+* 		significant/ relevant differences
+* 6 Adjusted survey estimates by month
+* 7 Trend analysis
+* Excel EBF graph by 12 months by survey (centred on midpoint of data collection) without trend lines
+* Excel Water graph by 12 months by survey (centred on midpoint of data collection) without trend lines
 
-* Analysis uncontrolled for by independent variable except for state
-
-* tests for seasonal variation by month12
-* Amplitude of seasonal variation by vars
-
-* Adjusted vs unadjusted survey estimates of breastfeeding vars / complementary feeding vars
-* 		significant differences
-
-* Adjusted survey estimates by month
 * Analysis by region by month
 
 * Analysis by rural / urban by month
 * Analysis by wealth index by month
 
-* Excel EBF graph by 12 months by survey (centred on midpoint of data collection) without trend lines
-
-
-
-
+ 
 
 * Dependent variables
 
@@ -51,9 +47,9 @@
 // ebf mixed_milk water juice tea other_liq milk formula broth bottle
 // freq_milk freq_formula freq_other_milk
 
-* What if vars are not represented by each survey - like ebf3d, freq_milk, freq_formula
+* if vars are not represented by each survey - like ebf3d, tea, freq_milk, freq_formula, do not include
 
-
+// set scheme plotplainblind
 
 * Include paths 
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
@@ -65,25 +61,9 @@ use iycf_5surveys.dta, clear
 * path for graphs to apply to word doc. 
 cd C:\Temp\Junk
 
-local ExportPath "C:/TEMP/Seasonality"
-local FileName "IYCF Seasonality.docx"
-di "`ExportPath'/`FileName'"
-
 tab int_month round, m
+sum agemos
 
-
-
-local ExportPath "C:\Temp\Seasonality"
-local FileName "IYCF Seasonality.docx"
-
-* TITLE PAGE
-putdocx clear
-putdocx begin, font("Calibri") 
-putdocx paragraph, style(Title) halign(center) spacing(line,16 pt)
-putdocx text ("Seasonality of IYCF variables ")
-putdocx paragraph, style(Title) halign(center) spacing(line,14 pt)
-putdocx text ("in Indian 5 Surveys ")
-putdocx save "`ExportPath'\`FileName'", replace
 	
 
 // local depvar01  evbf eibf ebf3d currently_bf ebf mixed_milk water milk formula juice tea other_liq broth bottle
@@ -93,11 +73,34 @@ putdocx save "`ExportPath'\`FileName'", replace
 * for continuous vars use "c."
 * for use of age and age squared use - c.age c.age#c.age
 
-* wi and mum_educ are considered categorical variables, as agegrp is considered categorical in tutorials
+* wi and mum_educ are considered categorical variables, as agegrp is considered categorical in stata manual
 
 local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
 di "`ContVars'"
-tab round, m 
+
+tab ebf round
+gen ebf_x = ebf*100
+tab ebf_denom round
+
+version 16: table round [pw = national_wgt] if ebf_denom==1, c(mean ebf_x n ebf_x) format(%9.1f)
+version 16: table round [pw = national_wgt] , c(mean ebf_x n ebf_x) format(%9.1f)
+* Reported results from survey reports
+// youngest child < 6 months living with mother
+// NFHS-3 REPORT  EBF<6M  	46.4     5,081 -
+//										   - uses age in months v008-b3  & child is alive, most recent birth & child living with mother
+// RSOC   REPORT  EBF<6M  	64.9     9,281
+// NFHS-4 REPORT  EBF<6M  	55.0    21,365 - 
+//                                         - uses age in months v008-b3  & child is alive
+//                                         - does not use most recent birth & child living with mother
+// CNNS   REPORT  EBF<6M  	58.0     3,615 - is old estimate from CNNS Report.  This has been updated by new code
+// NFHS-5 REPORT  EBF<6M  	63.7  	22,406 
+
+* Test for inclusion of only youngest child of woman
+egen ebf_count = tag(caseid v003 ebf)
+* Child is twin
+tab b0 ebf_count,m
+tab round ebf_count ,m
+* 103 cases from NFHS-5 of mulitiple births with EBF data collected
 
 
 * Analysis
@@ -105,30 +108,74 @@ tab round, m
 
 * Add code from Dnyaneshwar here
 **********
-
+* Table 1
 **********
 
-* NOTE
-// logit ebf ib12.int_month [pw = national_wgt] 
-// and 
-// logit ebf i.int_month [pw = national_wgt] 
-* with ib12.int_month in the independent variables list, this sets december as comparison month in margins calculations
-* would like comparison to be done with mean of dependent var
-* There is no difference in margins output between ib12.int_month and i.int_month
-* i.int_month specifies jan as comparison month
+* Table for prevalence estimate from dependent variables
+
+foreach var of varlist ebf mixed_milk water juice other_liq milk formula broth bottle {
+	replace `var' = . if agemos>=6
+}
+foreach var of varlist evbf currently_bf eibf prelacteal_milk prelacteal_sugarwater prelacteal_water prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other {
+	replace `var' = . if agemos>=24
+}
+
+putexcel set prev_table, replace
+putexcel A1 = "Table 2: Prevalence of breastfeeding and giving liquids variables by survey, India Surveys 2005-2021"
+putexcel A2 = "Variable"
+putexcel C2 = "NFHS-3"
+putexcel D2 = "RSOC"
+putexcel E2 = "NFHS-4"
+putexcel F2 = "CNNS"
+putexcel G2 = "NFHS-5"
+
+// evbf currently_bf
+// ebf mixed_milk water juice other_liq milk formula broth bottle
+// eibf prelacteal_milk prelacteal_sugarwater prelacteal_water prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other
 
 
+local RowNum = 1
+
+foreach var of varlist evbf currently_bf ebf mixed_milk water juice other_liq milk formula broth bottle eibf prelacteal_milk prelacteal_sugarwater prelacteal_water prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other {
+	local RowNum = `RowNum'+2
+	putexcel A`RowNum' = "`var'"
+	local ObsRowNum = `RowNum' +1
+	putexcel B`ObsRowNum' = "N"
+
+	forvalues i=1/5 {
+		sum `var' [aw = national_wgt] if round==`i'
+		local Cell = char(66 + `i' ) + string(`RowNum')
+// 		local Prev =(cond(`r(mean)'==0,"-", string(`r(mean)'*100)))
+		local Prev = string(`r(mean)'*100)
+		putexcel `Cell' = `Prev', nformat(#0.0)
+		local Cell = char(66 + `i') + string(`ObsRowNum')
+// 		local Obs =(cond(`r(N)'<=1,"-", string(`r(N)')))
+// 		putexcel `Cell' = `Obs', nformat(#,###)
+		putexcel `Cell' = `r(N)', nformat(#,###)
+	}
+}
+putexcel save
+
+tab broth round [aw = national_wgt], col
+tab bottle round [aw = national_wgt], col
+sum broth if round==1
+sum bottle if round==2
 
 
+local Prev =(cond(`r(mean)'==0,"-", string(`r(mean)'*100)))
+local Obs =(cond(`r(N)'<=1,"-", string(`r(N)')))
+di "`Prev'"
+di "`Obs'" 
+	
+	
+	
+	
+	
+	
+	
 * Tables for dependent variables, max / min / amplitude / statistical significance of monthly variation
 
-* Assumption, if there is no variation in 5 survey data, then no variation in single survey dataset
-
-* how to extract results from r(table)
-* https://blog.uvm.edu/tbplante/2019/10/30/working-with-stata-regression-results-matrix-matrices-macros-oh-my/
-// return list
-// matrix list r(table)
-
+* Assumption, if there is no variation in pooled 5 survey data, then no variation in single survey dataset
 * Start Min Max Table 
 putexcel set min_max_table, replace
 putexcel A1 = "Table X: Annual prevalence & standard deviation with monthly estimates of minimum, maximum and amplitude of feeding variables adjusted for socio-demographic variation, India Surveys 2005-2021"
@@ -141,7 +188,6 @@ putexcel F2 = "Amp"
 putexcel G2 = "N"
 
 local DepVars = "evbf currently_bf"
-
 local ControlVars i.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
 local RowNum = 2
 
@@ -181,12 +227,6 @@ foreach var of varlist evbf currently_bf {
 	use C:\Temp\Data\iycf_5surveys.dta, clear 
 }
 
-* significance testing is still meaningless here
-* most variables will be significantly different as N is so large
-* only currently_bf is different at one month (sept) from mean
-
-
-
 local ControlVars i.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
 local RowNum = 5
 
@@ -197,8 +237,7 @@ foreach var of varlist ebf mixed_milk water juice other_liq milk formula broth b
 	margins 
 	* save r(table) to normal matrix
 	matrix output = r(table)
-	local temp = "`r(predict1_label)'"
-	local temp1 = substr("`temp'",4,.)
+	local temp1 = substr("`r(predict1_label)'",4,.)
 	local var_name = subinstr("`temp1'",")","",.)
 	putexcel A`RowNum' = "`var_name'"
 	putexcel B`RowNum' = (output[1,1] * 100), nformat(##.0) // mean one digit 
@@ -226,19 +265,92 @@ foreach var of varlist ebf mixed_milk water juice other_liq milk formula broth b
 	use C:\Temp\Data\iycf_5surveys.dta, clear 
 }
 
+* add initiation of breastfeeding variables
+local ControlVars i.birthmonth i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+local RowNum = 14
+
+foreach var of varlist eibf prelacteal_milk prelacteal_sugarwater prelacteal_water prelacteal_gripewater prelacteal_saltwater prelacteal_formula prelacteal_honey prelacteal_janamghuti prelacteal_other { 
+	di "`var'"
+ 	local RowNum = `RowNum' +1
+	logit `var' `ControlVars' [pw = national_wgt] if agemos < 24
+	margins 
+	* save r(table) to normal matrix
+	matrix output = r(table)
+	local temp1 = substr("`r(predict1_label)'",4,.)
+	local var_name = subinstr("`temp1'",")","",.)
+	putexcel A`RowNum' = "`var_name'"
+	putexcel B`RowNum' = (output[1,1] * 100), nformat(##.0) // mean one digit 
+	* Note SD is calculated as SD = SE * sqrt(N)
+	putexcel C`RowNum' = (output[2,1] * sqrt(`r(N)')), nformat(number_d2) // standard deviation two digits
+	putexcel G`RowNum' = `r(N)', nformat(#,###) 
+
+	margins birthmonth
+	putexcel set margin_output, replace
+	* Add Matrix
+	putexcel A1 = matrix(r(table)'), names
+	* Add varname to Matrix
+	putexcel A1 = "`r(predict1_label)'"
+	putexcel save
+	import excel "C:\Temp\Junk\margin_output.xlsx", sheet("Sheet1") firstrow clear
+	sum b, meanonly
+	local min = r(min) *100
+	local max = r(max) *100
+	local amp = (`max'-`min')/2
+	putexcel set min_max_table, modify
+	putexcel D`RowNum' = `min', nformat(0.0) 		// min
+	putexcel E`RowNum' = `max', nformat(0.0) 	  	// max
+	putexcel F`RowNum' = `amp', nformat(number_d2)  // amplitude
+	putexcel save
+	use C:\Temp\Data\iycf_5surveys.dta, clear 
+}
 
 
 
+local ExportPath "C:/TEMP/Seasonality"
+local FileName "IYCF Seasonality.docx"
+di "`ExportPath'/`FileName'"
 
 
-
-
-
-
-
+* TITLE PAGE
+putdocx clear
+putdocx begin, font("Calibri") 
+putdocx paragraph, style(Title) halign(center) spacing(line,16 pt)
+putdocx text ("Seasonality of IYCF variables ")
+putdocx paragraph, style(Title) halign(center) spacing(line,14 pt)
+putdocx text ("in Indian 5 Surveys ")
+putdocx save "`ExportPath'/`FileName'", replace
+	
 
 * Exclusive Breastfeeding by Round
+* add corrections for selection of correct denominators
+drop if agemos >=6
 
+
+
+* Plot adjusted vs unadjusted estimates onto one graph
+* Here we use the mean month of data collection for comparison - not so wise, but is what is done
+* Decide if you want to use ebf_denom
+
+local ContVars i.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+logit ebf_x `ContVars' [pw = national_wgt] 
+* output by round of survey
+margins round, saving(file1, replace)
+
+logit ebf_x i.round [pw = national_wgt] 
+* here no controls are applied for month of data collection 
+margins round, saving(file2, replace)
+* Make combomarginsplot
+combomarginsplot file1 file2, labels("Adjusted" "Unadjusted") ///
+	file1opts(pstyle(p1)) file2opts(pstyle(p2)) lplot1(mfcolor(white)) ///
+	title("Exclusive breastfeeding by survey") legend(col(2))
+
+
+	
+* Add combomarginsplot to word file1
+putdocx begin, font("Calibri") 
+putdocx save "`ExportPath'/`FileName'", append
+
+* Giving Water by Round
 * selection of correct denominators
 drop if agemos >=6
 
@@ -248,21 +360,18 @@ drop if agemos >=6
 // keep if _n == 1 | caseid != caseid[_n-1]
 
 * Plot adjusted vs unadjusted estimates onto one graph
-local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
-// local ContVars ib12.int_month i.round i.state i.rururb i.wi 
-// local ContVars ib12.int_month i.round i.state c.age_days c.age_days#c.age_days i.sex
-// local ContVars ib12.int_month i.round i.state i.diar i.fever i.ari 
-logit ebf `ContVars' [pw = national_wgt] 
+local ContVars i.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+logit water `ContVars' [pw = national_wgt] if ebf_denom==1
 * output by round of survey
 margins round, saving(file1, replace)
 
-logit ebf i.round [pw = national_wgt] 
+logit water i.round [pw = national_wgt] if ebf_denom==1
 * here no controls are applied for month of data collection 
 margins round, saving(file2, replace)
 * Make combomarginsplot
 combomarginsplot file1 file2, labels("Adjusted" "Unadjusted") ///
 	file1opts(pstyle(p1)) file2opts(pstyle(p2)) lplot1(mfcolor(white)) ///
-	title("Exclusive breastfeeding by survey") legend(col(2))
+	title("Giving water by survey") legend(col(2))
 
 // combomarginsplot file1 file2, labels("Adjusted" "Unadjusted") ///
 // 	file1opts(pstyle(p1)) file2opts(pstyle(p2)) lplot1(mfcolor(white)) ///
@@ -273,9 +382,15 @@ putdocx begin, font("Calibri")
 putdocx save "`ExportPath'\`FileName'", append
 
 
-* Plot adjusted EBF estimates by month for all 5 surveys - one graph
-local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
-logit ebf `ContVars' [pw = national_wgt] 
+local ExportPath "C:/TEMP/Seasonality"
+local FileName "IYCF Seasonality.docx"
+putdocx save "`ExportPath'/`FileName'", append
+
+
+
+* Plot adjusted EBF estimates by month for all 5 surveys / pooled data in one graph
+local ContVars i.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+logit ebf `ContVars' [pw = national_wgt] if ebf_denom==1
 margins int_month, saving(file1, replace)
 marginsplot, title("Exclusive breastfeeding by month of data collection") ylab(0.1(.1)0.7) yscale(range(0.1 0.7))
 
@@ -284,19 +399,22 @@ local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_
 // Plot adjusted water, mixed_milk, formula bottle estimates by month for all 5 surveys - one graph
 // foreach v of varlist water mixed_milk formula bottle {  
 foreach v of varlist ebf water {  
-	logit `v' `ContVars' [pw = national_wgt]  
+	logit `v' `ContVars' [pw = national_wgt]  if ebf_denom==1
 	margins int_month
 	marginsplot, title("`v'") name(month_`v', replace) ylab(0.2(.1)0.7) yscale(range(0.2 0.7))
 }
+
 graph combine month_ebf month_water , xsize(6.5) ysize(2.7) iscale(.8) name(comb, replace)
 graph close month_ebf month_water 
 graph export "Feeding variables by month of data collection.png", width(6000) replace
 
+* Change the y axis to prevalence
+* Change the y label to prevalence
 
-foreach v of varlist water, mixed_milk, formula bottle {  
-	di "`vi'"
-}	
 
+
+	
+	
 	
 * Exclusive Breastfeeding by Month by Round - ALL SURVEY DATA (adjusted)
 * this format is not very interpretable
@@ -305,15 +423,15 @@ margins int_month#round,  saving(file1, replace)
 marginsplot, title("Exclusive breastfeeding by month of data collection & round") 
 
 
-* Exclusive Breastfeeding by Month by Socio-Economic Status - ALL SURVEY DATA (adjusted)
-* to aid interpretation - convert to SES terciles
-logit ebf ib12.int_month##i.wi i.state i.rururb i.mum_educ c.age_days c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari [pw = national_wgt] 
-margins int_month#wi,  saving(file1, replace)
-marginsplot, title("Exclusive breastfeeding by month of data collection & SES") 
 
 
 
-* Plot the predicted values of the dependent variable in five graphs for five surveys
+
+
+
+
+* Exclusive breastfeeding	
+* Plot the predicted values of the dependent variable for each survey in five graphs for five surveys
 * Combomarginsplot - joining five graphs onto one background
 forval x = 1/5 {
 	logit ebf ib12.int_month##i.round i.state i.rururb i.wi i.mum_educ c.age_days ///
@@ -360,9 +478,23 @@ combomarginsplot file1 file2, labels("Adjusted" "Unadjusted") ///
 	file1opts(pstyle(p1)) file2opts(pstyle(p2)) lplot1(mfcolor(white)) ///
 	byopt(legend(at(3) pos(1)) title("Probability exclusive breastfeeding by survey")) legend(col(1))
 
+	
+* For Excel Graph
+* Use estimates that assume that all data was collected in April
+local ContVars i.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+logit ebf_x `ContVars' [pw = national_wgt] if ebf_denom==1
+* output by round of survey
+margins round, at(int_month=4) saving(file1, replace)	
+	
+	
 
-// 		  ib12.int_month state rururb wi round mum_educ sex cat_birth_wt diar fever ari
-// logit ebf ib12.int_month state rururb wi round mum_educ sex cat_birth_wt diar fever ari [pw = national_wgt] 
+* Exclusive Breastfeeding by Month by Socio-Economic Status - ALL SURVEY DATA (adjusted)
+* to aid interpretation - convert to SES terciles
+logit ebf ib12.int_month##i.wi i.state i.rururb i.mum_educ c.age_days c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari [pw = national_wgt] 
+margins int_month#wi,  saving(file1, replace)
+marginsplot, title("Exclusive breastfeeding by month of data collection & SES") 
+
+	
 
 
 // Test chi-square differences
@@ -384,16 +516,7 @@ margins int_month
 marginsplot
 
 
-*COLLAPSE
-* attempt to calculate estimates by month and test for significant differences
-preserve
-// collapse (mean) ebf_month=ebf (seb) seb_ebf=ebf (mean) mean_h20=water (seb) seb_h20=water [aw = national_wgt] , by(int_month)
-* collaps SEB does not work with aweights or pweights
-collapse (mean) ebf_month=ebf (mean) mean_h20=water  [aw = national_wgt] , by(int_month)
-* add SD in order to calculate mean and variance
 
-// Test chi-square differences
-tabstat ebf_month
 
 
 
@@ -440,6 +563,8 @@ foreach var in `depvar01' {
 local ExportPath "C:/TEMP/Seasonality"
 local FileName "IYCF Seasonality.docx"
 putdocx save "`ExportPath'/`FileName'", append
+
+
 
 
 
@@ -494,6 +619,7 @@ putdocx save "`ExportPath'/`FileName'", append
 
 * Other liquids
 use iycf_5surveys.dta, clear 
+* verify the age range to be used here.
 putdocx begin, font("Calibri", 9)
 
 * Seasonality of depvar01
@@ -514,7 +640,8 @@ foreach var in `depvar01' {
 local ExportPath "C:/TEMP/Seasonality"
 local FileName "IYCF Seasonality.docx"
 putdocx save "`ExportPath'/`FileName'", append
-	
+
+
 	
 * Seasonality of depvar
 // local depvar eibf_timing 
@@ -596,12 +723,7 @@ tab agecat_m, m
 *State
 
 *Month of survey
- gen int_month = month(int_date)
-label define m12 1 "Jan" 2 "Feb" 3 "Mar" 4 "Apr" 5 "May" 6 "Jun" 7 "Jul" 8 "Aug" 9 "Sep" 10 "Oct" 11 "Nov" 12 "Dec"
-label val int_month m12 
-label var int_month "Month"
 
-tab int_month round, m
 
 
 
@@ -622,19 +744,10 @@ sum male agecat_m bweight mean_height_mother mother_working education_years weal
 *Religion
 *Caste
 *Rural
-*State Dummies
-save "C:\Temp\Junk\fivesurv_seas.dta", replace
 
 
-* Create dummy variables for all variables below
-tab month12, gen(sum_month12)
-tab agecat_m, gen(sum_agecat_m)
-tab bweight, gen(sum_weight)
-tab mother_working, gen(sum_mother_working)
-tab education_years, gen(sum_education_years)
-tab wealth, gen(sum_wealth)
-tab caste, gen(sum_caste)
-tab statecode, gen(sum_state)
+
+
 
 *Variable finalising the sample to be used for a particular dependent variable
 local depvar zwfh
@@ -813,35 +926,6 @@ marginsplot, title("Seasonality of Wasting")
 
 * Does seasonality have an effect on prevalence of overweight / obesity in children under-five 
 
-* Overweight WHZ>+2 SD
-gen overwgt = zwfh
-recode overwgt (min/1.99=0) (2/max=1) (.=.)
-replace overwgt=. if _fwfl==1
-tab overwgt, m 
-
-* Seasonality of overweight WITHOUT control vars
-logit overwgt ib12.month12  [pw = survey_weight] 
-margins month12
-marginsplot, title("Seasonality of Overweight")
-* These results are counterintuitive as overweight increases in March through May and declines to normal in September. 
-
-
-* Seasonality of overweight with control vars
-logit overwgt ib12.month12 male i.agecat_m i.bweight mean_height_mother i.mother_working i.education_years i.wealth hhmem hindu i.caste rural i.statecode [pw = survey_weight] 
-margins month12
-marginsplot, title("Seasonality of Overweight")
-* These results are counterintuitive as overweight increases in March through May and declines to normal in September. 
-
-*You may use the loop if you want
-local depvar_01 wasted sev_wasted overwgt
-foreach var in `depvar' {
-logit `var' ib12.month12 male i.agecat_m i.bweight mean_height_mother i.mother_working i.education_years i.wealth hhmem hindu i.caste rural i.statecode [pw = survey_weight] 
-margins month12
-* marginsplot, noci
-marginsplot
-*graph save "PATH\`var'_1"
-}
-
 
 * END
 
@@ -895,8 +979,9 @@ marginsplot, noci
 
 
 
+* END
 
-
+* Robert testing code
 
 // preserve
 // collapse 
@@ -908,6 +993,16 @@ marginsplot, noci
 // 	legend(ring(0) pos(2) col(1) order(2 "NFHS-3" 3 "RSOC" 4 "NFHS-4" 5 "CNNS" 6 "NFHS-5")))
 
 
+*COLLAPSE
+* attempt to calculate estimates by month and test for significant differences
+preserve
+// collapse (mean) ebf_month=ebf (seb) seb_ebf=ebf (mean) mean_h20=water (seb) seb_h20=water [aw = national_wgt] , by(int_month)
+* collapse SEB does not work with aweights or pweights
+collapse (mean) ebf_month=ebf (mean) mean_h20=water  [aw = national_wgt] , by(int_month)
+* add SD in order to calculate mean and variance
+// Test chi-square differences
+tabstat ebf_month
+
 * string manipulation
 local temp = "`r(predict1_label)'"
 di "`temp'"
@@ -917,23 +1012,7 @@ local var_name = subinstr("`temp1'",")","",.)
 di "`var_name'"
 
 
-foreach var in `DepVars' {
-	logit `var' `ContVars' [pw = national_wgt] 
-	margins 
-	* Add mean SE and N for dependent var
 
-	return list
-	matrix list r(table)
-	putexcel set min_max_table, modify
-	putexcel A1 = "`r(predict1_label)'"
-	margins int_month
-	matrix list r(table)
-
-	* Export r(table) output to excel for further analysis
-	putexcel set margin_output, replace
-	putexcel A1 = matrix(r(table)'), names
-	// local var_name = "`r(predict1_label)'"
-	putexcel A1 = "`r(predict1_label)'"
 
 
 
