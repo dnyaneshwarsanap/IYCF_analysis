@@ -1,11 +1,12 @@
 * IYCF Seasonality Analysis
 * Five pooled datasets from India 2005-21
 
+mum_work inst_birth bord 
+
 * Data requirements for following analysis:  All months of the year must be represented in the data.
 * Analysis with 5 datasets
 
 * Add dependencies
-* ssc install mdesc
 * ssc install combomarginsplot
 
 * Combomarginsplot
@@ -62,11 +63,9 @@ use iycf_5surveys.dta, clear
 cd C:\Temp\Junk
 
 tab int_month round, m
+tab round if agemos<24, m
 sum agemos
 
-	
-
-// local depvar01  evbf eibf ebf3d currently_bf ebf mixed_milk water milk formula juice tea other_liq broth bottle
 
 * for independent variables in analysis, we do not need to create dummies if we specify variable type in code
 * for categorical vars use "i."
@@ -75,8 +74,13 @@ sum agemos
 
 * wi and mum_educ are considered categorical variables, as agegrp is considered categorical in stata manual
 
-local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ i.mum_work i.anc4+ i.early_anc i.c_section i.inst_birth i.bord c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
 di "`ContVars'"
+
+
+
+
+
 
 tab ebf round
 gen ebf_x = ebf*100
@@ -310,7 +314,7 @@ local ExportPath "C:/TEMP/Seasonality"
 local FileName "IYCF Seasonality.docx"
 di "`ExportPath'/`FileName'"
 
-
+* Document containing results
 * TITLE PAGE
 putdocx clear
 putdocx begin, font("Calibri") 
@@ -328,10 +332,30 @@ drop if agemos >=6
 
 
 * Plot adjusted vs unadjusted estimates onto one graph
-* Here we use the mean month of data collection for comparison - not so wise, but is what is done
-* Decide if you want to use ebf_denom
+* Here we use the mean month of data collection for comparison - not perfect for comparison.  That is the point that we are demonstrating. 
 
-local ContVars i.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+
+
+
+// local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ i.mum_work i.anc4plus i.earlyanc i.csection i.inst_birth i.bord c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+
+logit ebf_x i.round [pw = national_wgt] 
+logit ebf_x ib12.int_month i.round [pw = national_wgt] 
+logit ebf_x ib12.int_month i.round i.mum_work [pw = national_wgt] 
+
+logit ebf_x ib12.int_month i.state i.rururb i.wi i.mum_educ i.anc4plus i.earlyanc i.csection i.inst_birth i.bord c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round [pw = national_wgt] 
+
+logit ebf_x ib12.int_month i.state i.rururb i.wi i.mum_educ i.mum_work  i.anc4plus i.earlyanc i.csection i.inst_birth i.bord c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round [pw = national_wgt] 
+
+
+
+
+
+local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ i.mum_work i.anc4plus i.earlyanc i.csection i.inst_birth i.bord c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+
+* old list
+// local ContVars i.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+
 logit ebf_x `ContVars' [pw = national_wgt] 
 * output by round of survey
 margins round, saving(file1, replace)
@@ -360,7 +384,11 @@ drop if agemos >=6
 // keep if _n == 1 | caseid != caseid[_n-1]
 
 * Plot adjusted vs unadjusted estimates onto one graph
-local ContVars i.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+* old
+// local ContVars i.int_month i.state i.rururb i.wi i.mum_educ c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+
+local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ i.mum_work i.anc4plus i.earlyanc i.csection i.inst_birth i.bord c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+
 logit water `ContVars' [pw = national_wgt] if ebf_denom==1
 * output by round of survey
 margins round, saving(file1, replace)
