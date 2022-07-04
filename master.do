@@ -492,12 +492,22 @@ tab cat_birth_wt round,m
 tab anc4plus round, col
 tab anc4plus round,m
 
+tab earlyanc round, col
+tab earlyanc round,m
+
 tab csection round, col 
 tab csection round,m
 
 * Socio-economic variables
-tab birth_order round, col 
-tab birth_order round,m
+tab bord round, col 
+tab bord round,m
+
+
+tab inst_birth round, m
+tab inst_birth round, col
+
+tab mum_work round, col 
+tab mum_work round,m
 
 tab mum_educ round, col 
 tab mum_educ round,m

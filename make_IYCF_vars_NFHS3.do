@@ -752,7 +752,6 @@ replace lbw = . if cat_birth_wt >=5
 tab m19 lbw, m
 tab lbw
 
-
 * early ANC  <=3 months first trimester (ANC checkup within first 3 months of pregnancy)
 gen earlyanc = 0
 replace earlyanc = 1 if m13<=3
@@ -760,7 +759,6 @@ replace earlyanc =. if age_days>=730
 tab m13 earlyanc
 tab m13,m
 
- 
 * ANC 4+ (Pregnent women receiving more than 4 ANC check-ups)
 gen anc4plus = 0
 replace anc4plus = 1 if m14 >=4 & m14 <=30
@@ -772,7 +770,15 @@ gen csection = 0
 replace csection = 1 if m17 == 1
 tab m17 csection, m 
 
+* Institutional births (public, private, home)
+la list m15
+recode m15 (10/13=3)(20/27=1)(30/41=2)(96/99=4), gen(inst_birth)
+la def inst_birth 1 public 2 private 3 home 4 "other-missing"
+la val inst_birth inst_birth
+tab m15 inst_birth, m 
 
+* Birth order
+tab bord
 
 * Mothers education
 tab v106, m 
@@ -800,6 +806,18 @@ tab v190 mum_educ, row nofreq
 tab v190 mum_educ, col nofreq
 tab v155 mum_educ, col nofreq
 
+* mother's work status*
+tab v714
+la list LABK
+recode v714 (0=0)(1=1)(9=9),gen(mum_work)
+la var mum_work "Mother working"
+tab v714 mum_work, m 
+
+tab v714a
+tab v716
+tab v717
+tab v731 
+tab v732
 
 
 * caste
@@ -819,13 +837,12 @@ tab caste, m
 
 
 * Residence Rural Urban
-
 gen rururb=v102
 
 lab define rururb 1 "Urban" 2"Rural"
 lab val rururb rururb   
 lab var rururb "Residence"
-tab rururb, m 
+tab rururb v102, m 
 
 
 * Wealth index
@@ -1018,7 +1035,7 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	age_cbf cont_bf cont_bf_12_23 mdd freq_solids mmf_bf mmf_all_bf mad_all_bf egg ///
 	egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus ///
 	csection mum_educ_years mum_educ caste rururb wi wi_s national_wgt regional_wgt state_wgt /// 
-	sex diar fever ari state round ebf_denom
+	sex diar fever ari state round ebf_denom mum_work inst_birth bord 
 
 	
 * Save data with name of survey

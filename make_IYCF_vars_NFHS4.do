@@ -11,7 +11,6 @@
 *check currently BF !!!
 // state
 // ANC counselling on BF
-// Don't code number of feeds if you don't know how many feeds.  Don't code as 1. 
 ********************
 
 
@@ -23,6 +22,8 @@ include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYC
 
 * Open NFHS 4
 use `NFHS4', clear
+
+tab v000
 
 *gen one=1
 lab define no_yes 0 "No" 1 "Yes"
@@ -839,6 +840,23 @@ replace csection = 1 if m17 == 1
 la val csection no_yes
 tab m17 csection, m 
 
+* Institutional births (public, private, home)
+la list M15
+recode m15 (10/13=3)(20/27=1)(30/41=2)(96/99 . =4), gen(inst_birth)
+la def inst_birth 1 public 2 private 3 home 4 "other-missing"
+la val inst_birth inst_birth
+tab m15 inst_birth, m 
+
+* Birth order
+tab bord
+
+* mother's work status*
+tab v714
+la list V714
+recode v714 (0 9=0)(1=1),gen(mum_work)
+la var mum_work "Mother working"
+tab v714 mum_work, m 
+
 
 
 * Mothers education
@@ -1048,7 +1066,8 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw cat_birth_wt anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex national_wgt regional_wgt state_wgt round ebf_denom 
+	sex national_wgt regional_wgt state_wgt round ebf_denom mum_work inst_birth bord 
+
 
 		
 * Save data with name of survey

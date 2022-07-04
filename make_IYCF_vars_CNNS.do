@@ -422,7 +422,7 @@ foreach var of varlist ebf exbf {
 cap drop ebf_denom
 gen ebf_denom=1 if agemos<6
 gen exbf_x = exbf*100
-version 16: table one [pw = iw_s_pool] if ebf_denom==1, c(mean exbf_x n exbf_x) format(%9.1f)
+// version 16: table one [pw = iw_s_pool] if ebf_denom==1, c(mean exbf_x n exbf_x) format(%9.1f)
 // CNNS   REPORT  EBF<6M  	58.0     3,615
 cap drop exbf_x
 
@@ -734,6 +734,37 @@ gen csection = 0
 replace csection = 1 if q639==3
 tab q639 csection, m 
 
+* Institutional births (public, private, home)
+tab q637
+la list q637
+tab q637o
+recode q637 (10/13=3)(20/27=1)(30/42=2)(96/99 . =4), gen(inst_birth)
+* double checked val codes against questionnaire
+la def inst_birth 1 public 2 private 3 home 4 "other-missing"
+la val inst_birth inst_birth
+la var inst_birth "Institutional Birth"
+tab q637 inst_birth, m 
+tab 
+
+* Birth order
+la list q106
+tab q106 // how many births prior to birth of index child
+gen bord = q106+1
+replace bord = . if q106==98
+tab bord q106, m 
+
+* mother's work status*
+tab q119
+la list q119
+recode q119 (2=0)(1=1)(3 .=0),gen(mum_work)
+la var mum_work "Mother working"
+tab q119 mum_work, m 
+tab q119 mum_work if agemos <24, m 
+
+tab q120
+
+
+
 * mothers education
 * Recode of q116/117
 tab  q116, m
@@ -940,7 +971,7 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw cat_birth_wt anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex national_wgt state_wgt round  ebf_denom
+	sex national_wgt state_wgt round ebf_denom mum_work inst_birth bord 
 
 // 	regional_wgt regional_bio_wgt 
 

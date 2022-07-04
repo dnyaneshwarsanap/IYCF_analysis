@@ -809,7 +809,7 @@ gen unhealthy_food = .
 * juice broth other_liq
 
 
-*********************************************************************
+
 *SOCIO-ECONOMIC-DEMOGRAPHIC VARS
 
 
@@ -858,6 +858,28 @@ tab q163
 gen csection = 0
 replace csection = 1 if q163==2
 tab q163 csection, m 
+
+* Institutional Birth
+// inst_birth 
+tab q159
+la list q159
+recode q159 (1=1)(2=2)(3=3)(96 99=4), gen(inst_birth)
+la def inst_birth 1 public 2 private 3 home 4 "other-missing"
+la val inst_birth inst_birth
+la var inst_birth "Institutional Birth"
+tab q159 inst_birth, m 
+
+* Birth Order		  
+// bord 
+gen bord = q137_1
+
+* mum_work 
+tab q115 q114, m 
+la list q114
+cap drop mum_work
+recode q114 (2=0)(1=1)(9=.),gen(mum_work)
+la var mum_work "Mother working"
+tab q114 mum_work, m 
 
 * mothers education
 tab q113_1, m 
@@ -1058,7 +1080,7 @@ keep psu hh_num one int_date birthday birthmonth birthyear dateofbirth age_days 
 	freq_formula freq_other_milk milk_feeds feeds mmf_nobf min_milk_freq_nbf ///
 	mmf_all mixed_milk mad_all egg_meat zero_fv sugar_bev unhealthy_food ///
 	lbw cat_birth_wt anc4plus csection earlyanc mum_educ caste rururb wi wi_s state ///
-	sex national_wgt regional_wgt state_wgt round ebf_denom 
+	sex national_wgt regional_wgt state_wgt round ebf_denom mum_work inst_birth bord 
 
 
 * Save data with name of survey

@@ -9,9 +9,11 @@
 
 
 * Outstanding tasks
-* Check EIBF
+
 * Median age EBF
-* make estimates work with set to missing include of drop vars
+
+* Check EIBF
+
 
 
 include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYCF\analysis\robert_paths.do"
@@ -19,8 +21,7 @@ include "C:\Users\stupi\OneDrive - UNICEF\1 UNICEF Work\1 moved to ECM\IIT-B\IYC
 
 * Open NFHS 5
 use `NFHS5', clear
-
-
+tab v000
 
 tab v007
 
@@ -1049,6 +1050,25 @@ la val csection no_yes
 tab m17 csection, m 
 
 
+* Institutional births (public, private, home)
+la list M15
+recode m15 (10/13=3)(20/27=1)(30/33=2)(96/99 . =4), gen(inst_birth)
+la def inst_birth 1 public 2 private 3 home 4 "other-missing"
+la val inst_birth inst_birth
+la var inst_birth "Institutional Birth"
+tab m15 inst_birth, m 
+
+* Birth order
+tab bord
+
+* mother's work status*
+tab v714
+la list V714
+recode v714 (0=0)(1=1)(.=.),gen(mum_work)
+la var mum_work "Mother working"
+tab v714 mum_work, m 
+tab v714 mum_work if agemos <24, m 
+
 
 * Mothers education
 tab v106, m 
@@ -1094,11 +1114,7 @@ lab var caste "Caste"
 tab caste, m 
 
 * Birth Order
-gen birth_order = bord 
-replace birth_order=5 if bord >=5
-la def birth_order 5 "5+"
-la val birth_order birth_order
-tab birth_order, m 
+* use bord
 
 
 * Residence Rural Urban
@@ -1308,9 +1324,7 @@ tab birth_place, m
 tab m15 birth_place, m
 
 * Instituitional Births
-recode birth_place (1 4 = 0) (2 3 = 1), gen(inst_birth)
-tab inst_birth birth_place, m
-
+* Please be aware - changed this from yes no to public, private or home. 
 
 
 * meeting with Triple A in past 3 months of pregnancy
@@ -1387,8 +1401,8 @@ keep psu hh_num int_date birthday birthmonth birthyear dateofbirth age_days agem
 	ebf age_ebf age_cbf cont_bf cont_bf_12_23 mdd freq_solids qual_freq_solids mmf_bf freq_milk ///
 	freq_formula freq_yogurt milk_feeds feeds mmf_nobf min_milk_freq_nbf mmf_all mixed_milk mad_all ///
 	egg_meat zero_fv sugar_bev unhealthy_food birth_weight cat_birth_wt lbw earlyanc anc4plus csection ///
-	mum_educ_years mum_educ caste birth_order rururb wi wi_s sex diar fever ari state birth_place /// 
-	inst_birth anc_BFcounsel pnc_child_visit pnc_assistance round district b19 b9 caseid midx 
+	mum_educ_years mum_educ caste rururb wi wi_s sex diar fever ari state birth_place /// 
+	inst_birth anc_BFcounsel pnc_child_visit pnc_assistance round district b19 b9 caseid midx mum_work inst_birth bord 
 
 
 		
