@@ -845,6 +845,7 @@ la list M15
 recode m15 (10/13=3)(20/27=1)(30/41=2)(96/99 . =4), gen(inst_birth)
 la def inst_birth 1 public 2 private 3 home 4 "other-missing"
 la val inst_birth inst_birth
+la var inst_birth "Institutional Birth"
 tab m15 inst_birth, m 
 
 * Birth order
@@ -853,11 +854,17 @@ tab bord
 * mother's work status*
 tab v714
 la list V714
-recode v714 (0 9=0)(1=1),gen(mum_work)
+recode v714 (0=0)(1=1)(.=9),gen(mum_work)
+* use label from NFHS-5
 la var mum_work "Mother working"
 tab v714 mum_work, m 
+tab v714 mum_work if agemos <24, m 
 
-
+tab v714a
+tab v716
+tab v717
+tab v731 
+tab v732
 
 * Mothers education
 tab v106, m 
