@@ -801,6 +801,19 @@ tab mum_educ_years mum_educ, m
 tab wi mum_educ, m 
 
 
+*Mother's Employment 
+*q119 = aside from own housework, has [name?s] mother worked for cash or kind in
+gen mum_employment = .
+replace mum_employment=1 if q119==1
+replace mum_employment=2 if q119==2
+lab define mum_employment 1 "Working" 2 "Not Working"
+lab val mum_employment mum_employment   
+lab var mum_employment "Mother's Employment"
+tab mum_employment,m
+
+
+
+
 * caste
 cap drop caste
 gen caste = 0 if q113!=.    //caste =0 if religion is missing
