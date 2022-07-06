@@ -1,7 +1,6 @@
 * IYCF Seasonality Analysis
 * Five pooled datasets from India 2005-21
 
-
 * Data requirements for following analysis:  All months of the year must be represented in the data.
 * Analysis with 5 datasets
 
@@ -25,11 +24,6 @@
 * Excel EBF graph by 12 months by survey (centred on midpoint of data collection) without trend lines
 * Excel Water graph by 12 months by survey (centred on midpoint of data collection) without trend lines
 
-******
-* Extra analysis
-* Analysis by region by month
-* Analysis by rural / urban by month
-* Analysis by wealth index by month
 
  
 
@@ -71,8 +65,9 @@ sum agemos
 
 * wi and mum_educ are considered categorical variables, as agegrp is considered categorical in stata manual
 
-local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ i.mum_work i.anc4+ i.early_anc i.c_section i.inst_birth i.bord c.age_days c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
-
+local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ i.mum_work i.anc4plus ///
+	i.earlyanc i.csection i.inst_birth i.bord c.age_days c.age_days#c.age_days ///
+	i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
 
 tab ebf round
 gen ebf_x = ebf*100
@@ -80,6 +75,7 @@ tab ebf_denom round
 
 version 16: table round [pw = national_wgt] if ebf_denom==1, c(mean ebf_x n ebf_x) format(%9.1f)
 version 16: table round [pw = national_wgt] , c(mean ebf_x n ebf_x) format(%9.1f)
+
 * Reported results from survey reports
 // youngest child < 6 months living with mother
 // NFHS-3 REPORT  EBF<6M  	46.4     5,081 -
@@ -88,15 +84,14 @@ version 16: table round [pw = national_wgt] , c(mean ebf_x n ebf_x) format(%9.1f
 // NFHS-4 REPORT  EBF<6M  	55.0    21,365 - 
 //                                         - uses age in months v008-b3  & child is alive
 //                                         - does not use most recent birth & child living with mother
-// CNNS   REPORT  EBF<6M  	58.0     3,615 - is old estimate from CNNS Report.  This has been updated by new code
+// CNNS   REPORT  EBF<6M  	58.0     3,615 - Estimate from CNNS Report updated by new code
 // NFHS-5 REPORT  EBF<6M  	63.7  	22,406 
 
 * Test for inclusion of only youngest child of woman
-egen ebf_count = tag(caseid v003 ebf)
+// egen ebf_count = tag(caseid v003 ebf)
 * Child is twin
-tab b0 ebf_count,m
-tab round ebf_count ,m
-* 103 cases from NFHS-5 of mulitiple births with EBF data collected
+// tab b0 ebf_count,m
+* 103 cases from NFHS-5 of multiple births with EBF data collected
 
 
 * Analysis
@@ -162,8 +157,6 @@ local Prev =(cond(`r(mean)'==0,"-", string(`r(mean)'*100)))
 local Obs =(cond(`r(N)'<=1,"-", string(`r(N)')))
 di "`Prev'"
 di "`Obs'" 
-	
-
 	
 	
 * Tables for dependent variables, max / min / amplitude / statistical significance of monthly variation
@@ -265,19 +258,57 @@ foreach var of varlist eibf prelacteal_milk prelacteal_sugarwater prelacteal_wat
 	use C:\Temp\Data\iycf_5surveys.dta, clear 
 }
 
-
 local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ i.mum_work  ///
 	i.anc4plus i.earlyanc i.csection i.inst_birth i.bord c.age_days       ///
 	c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
 local RowNum = 16
 
-* add cont_bf to end of varlist
-replace cont_bf=. if agemos<12 | agemos>23
-
-foreach var of varlist ebf water mixed_milk milk juice other_liq formula broth bottle cont_bf {
+foreach var of varlist ebf water mixed_milk milk juice other_liq formula broth bottle  {
 	di "`var'"
  	local RowNum = `RowNum' +1
-	logit `var' `ContVars' [pw = national_wgt] 
+	logit `var' `ContVars' [pw = national_wgt] if agemos<6
+	margins 
+	* save r(table) to normal matrix
+	matrix output = r(table)
+	local temp1 = substr("`r(predict1_label)'",4,.)
+	local var_name = subinstr("`temp1'",")","",.)
+	putexcel A`RowNum' = "`var_name'"
+	putexcel B`RowNum' = (output[1,1] * 100), nformat(##.0) // mean one digit 
+	* Note SD is calculated as SD = SE * sqrt(N)
+	putexcel C`RowNum' = (output[2,1] * sqrt(`r(N)')), nformat(number_d2) // standard deviation two digits
+	putexcel G`RowNum' = `r(N)', nformat(#,###) 
+
+	margins int_month
+	putexcel set margin_output, replace
+	* Add Matrix
+	putexcel A1 = matrix(r(table)'), names
+	* Add varname to Matrix
+	putexcel A1 = "`r(predict1_label)'"
+	putexcel save
+	import excel "C:\Temp\Junk\margin_output.xlsx", sheet("Sheet1") firstrow clear
+	sum b, meanonly
+	local min = r(min) *100
+	local max = r(max) *100
+	local amp = (`max'-`min')/2
+	putexcel set min_max_table, modify
+	putexcel D`RowNum' = `min', nformat(##.0) 		// min
+	putexcel E`RowNum' = `max', nformat(##.0) 	  	// max
+	putexcel F`RowNum' = `amp', nformat(number_d2)  // amplitude
+	putexcel save
+	use C:\Temp\Data\iycf_5surveys.dta, clear 
+}
+
+*Continued BF
+local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ i.mum_work  ///
+	i.anc4plus i.earlyanc i.csection i.inst_birth i.bord c.age_days       ///
+	c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+local RowNum = 26
+
+foreach var of varlist  cont_bf {
+	di "`var'"
+	
+ 	local RowNum = `RowNum' +1
+	logit `var' `ContVars' [pw = national_wgt] if agemos<12 | agemos>23
 	margins 
 	* save r(table) to normal matrix
 	matrix output = r(table)
@@ -325,8 +356,16 @@ putdocx text ("in Indian 5 Surveys ")
 putdocx save "`ExportPath'/`FileName'", replace
 	
 
+	
+	
+local ExportPath "C:/TEMP/Seasonality"
+local FileName "IYCF Seasonality.docx"
+di "`ExportPath'/`FileName'"
+
+
 * Exclusive Breastfeeding by Round
 * add corrections for selection of correct denominators
+cap drop ebf_x
 gen ebf_x = ebf*100 if agemos <6
 tab agemos ebf_x 
 
@@ -350,14 +389,25 @@ combomarginsplot file1 file2, labels( "Unadjusted" "Adjusted" ) ///
 	file1opts(pstyle(p1)) file2opts(pstyle(p2)) lplot1(mfcolor(white)) ///
 	title("Exclusive breastfeeding by survey") ytitle("Proportion") ///
 	legend(pos(6) ring(0) col(2) region(lstyle(none))) offset
-	
+graph export ebf_adj_unadj.tif, as(tif) replace
+
+
 * Add combomarginsplot to word file
 putdocx begin, font("Calibri") 
+putdocx pagebreak
+putdocx paragraph, halign(left)
+putdocx image ebf_adj_unadj.tif, linebreak(1)
+
 putdocx save "`ExportPath'/`FileName'", append
+
+
+
+
 
 
 * Giving Water by Round
 * selection of correct denominators
+cap drop water_x
 gen water_x = water*100 if agemos <6
 tab agemos water_x 
 
@@ -377,13 +427,16 @@ combomarginsplot file1 file2, labels( "Unadjusted" "Adjusted" ) ///
 	file1opts(pstyle(p1)) file2opts(pstyle(p2)) lplot1(mfcolor(white)) ///
 	title("Giving water by survey") ytitle("Proportion") ///
 	legend(pos(6) ring(0) col(2) region(lstyle(none))) offset
+graph export h20_adj_unadj.tif, as(tif) replace
 
-* Add combomarginsplot to word file1
+* Add combomarginsplot to word file
 putdocx begin, font("Calibri") 
-putdocx save "`ExportPath'\`FileName'", append
+putdocx pagebreak
+putdocx paragraph, halign(left)
+putdocx image h20_adj_unadj.tif, linebreak(1)
 
-local ExportPath "C:/TEMP/Seasonality"
-local FileName "IYCF Seasonality.docx"
+putdocx save "`ExportPath'/`FileName'", append
+
 
 
 * Plot adjusted EBF estimates by month from pooled data in one graph
@@ -396,6 +449,14 @@ margins int_month, saving(file1, replace)
 marginsplot, title("Exclusive breastfeeding by month of data collection") ///
 	ytitle("Proportion") ylab(0.5(.1)0.7) yscale(range(0.5 0.7)) ///
 	name(month_ebf, replace)
+graph export ebf_month.tif, as(tif) replace
+
+* Add combomarginsplot to word file
+putdocx pagebreak
+putdocx paragraph, halign(left)
+putdocx image ebf_month.tif, linebreak(1)
+
+
 
 	
 * Plot adjusted WATER estimates by month from pooled data in one graph
@@ -408,6 +469,13 @@ margins int_month, saving(file1, replace)
 marginsplot, title("Giving water by month of data collection") ///
 	ytitle("Proportion") ylab(0.2(.1)0.4) yscale(range(0.2 0.4)) ///
 	name(month_water, replace)
+graph export h20_month.tif, as(tif) replace
+
+* Add combomarginsplot to word file
+putdocx pagebreak
+putdocx paragraph, halign(left)
+putdocx image h20_month.tif, linebreak(1)
+
 
 * Merge graphs together
 graph combine month_ebf month_water , xsize(6.5) ysize(2.7) iscale(.8) name(comb, replace)
@@ -415,27 +483,20 @@ graph close month_ebf month_water
 graph export "Feeding variables by month of data collection.png", width(6000) replace
 
 putdocx begin, font("Calibri") 
-putdocx save "`ExportPath'\`FileName'", append
 
-* Change the y axis to prevalence
-* Change the y label to prevalence
-
-
-* Exclusive Breastfeeding by Month by Round - ALL SURVEY DATA (adjusted)
-* this format is not very interpretable
-// local ContVars ib12.int_month i.state i.rururb i.wi i.mum_educ i.mum_work  ///
-// 	i.anc4plus i.earlyanc i.csection i.inst_birth i.bord c.age_days       ///
-// 	c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
-// logit water_x `ContVars' [pw = national_wgt] 
-// margins int_month#round,  saving(file1, replace)
-// marginsplot, title("Exclusive breastfeeding by month of data collection & round") 
-//
+* Add combomarginsplot to word file
+putdocx pagebreak
+putdocx paragraph, halign(left)
+putdocx image "Feeding variables by month of data collection.png", linebreak(1)
 
 
 
 
+putdocx save "`ExportPath'/`FileName'", append
 
 
+local ExportPath "C:/TEMP/Seasonality"
+local FileName "IYCF Seasonality.docx"
 
 
 * Exclusive breastfeeding	
@@ -460,6 +521,14 @@ graph combine file1 file2 file3 file4 file5, xsize(6.5) ysize(2.7) iscale(.8) na
 graph close file1 file2 file3 file4 file5
 graph export "EBF by month by survey.png", width(6000) replace
 
+* Add EBF survey/month to word file
+putdocx begin, font("Calibri") 
+putdocx pagebreak
+putdocx paragraph, halign(left)
+putdocx text ("EBF by month by survey")
+putdocx image "EBF by month by survey.png", linebreak(1)
+
+
 * WATER
 * Plot the predicted values of the dependent variable in five graphs for five surveys
 * Combomarginsplot - joining five graphs onto one background
@@ -480,12 +549,22 @@ graph combine file1 file2 file3 file4 file5, xsize(6.5) ysize(2.7) iscale(.8) na
 graph close file1 file2 file3 file4 file5
 graph export "Water by month by survey.png", width(6000) replace
 
-putdocx begin, font("Calibri") 
-putdocx save "`ExportPath'\`FileName'", append
+* Add EBF survey/month to word file
+
+putdocx pagebreak
+putdocx paragraph, halign(left)
+putdocx text ("Water by month by survey")
+putdocx image "Water by month by survey.png", linebreak(1)
+
+putdocx save "`ExportPath'/`FileName'", append
 	
 * For Excel Graph
 * Use estimates that assume that all data was collected in April
 * see exported data in ebf_roundX
+* NFHS-5
+* start 6 2019
+* mid   5 2020
+* end   5 2021
 
 
 * FOR ANNEXES
@@ -504,7 +583,7 @@ local ContVars i.int_month i.state i.rururb i.wi i.mum_educ i.mum_work  ///
 foreach var in `depvar01' {
 	di `depvar01'
 		
-	logit `var' `ContVars' [pw = national_wgt] 
+	logit `var' `ContVars' [pw = national_wgt] if agemos<6
 	margins int_month
 	marginsplot, title(`var' by month of data collection) ytitle("Proportion") 
 	graph export `var'.tif, as(tif) replace
@@ -512,6 +591,27 @@ foreach var in `depvar01' {
 	putdocx paragraph, halign(center)
 	putdocx image "`var'.tif"
 }
+local ExportPath "C:/TEMP/Seasonality"
+local FileName "IYCF Seasonality.docx"
+putdocx save "`ExportPath'/`FileName'", append
+
+putdocx begin, font("Calibri") 
+
+* Continued breastfeeding
+	
+* Variables that represent data from date of data collection
+local ContVars i.int_month i.state i.rururb i.wi i.mum_educ i.mum_work  ///
+	i.anc4plus i.earlyanc i.csection i.inst_birth i.bord c.age_days ///
+	c.age_days#c.age_days i.sex i.cat_birth_wt i.diar i.fever i.ari i.round
+		
+logit cont_bf `ContVars' [pw = national_wgt] if agemos>=12 & agemos<24
+margins int_month
+marginsplot, title(`var' by month of data collection) ytitle("Proportion") 
+graph export `var'.tif, as(tif) replace
+
+putdocx paragraph, halign(center)
+putdocx image "`var'.tif"
+
 local ExportPath "C:/TEMP/Seasonality"
 local FileName "IYCF Seasonality.docx"
 putdocx save "`ExportPath'/`FileName'", append
@@ -532,7 +632,7 @@ local ContVars i.birthmonth i.state i.rururb i.wi i.mum_educ i.mum_work  ///
 foreach var in `depvar01' {
 	di `depvar01'
 		
-	logit `var' `ContVars' [pw = national_wgt] 
+	logit `var' `ContVars' [pw = national_wgt] if agemos<24
 	margins int_month
 	marginsplot, title(`var' by month of data collection) ytitle("Proportion") 
 	graph export `var'.tif, as(tif) replace
@@ -540,10 +640,7 @@ foreach var in `depvar01' {
 	putdocx paragraph, halign(center)
 	putdocx image "`var'.tif"
 }
-local ExportPath "C:/TEMP/Seasonality"
-local FileName "IYCF Seasonality.docx"
 putdocx save "`ExportPath'/`FileName'", append
-
 
 * Socio-Economic Status 
 
@@ -552,12 +649,11 @@ putdocx save "`ExportPath'/`FileName'", append
 logit ebf ib12.int_month##i.wi i.state i.rururb i.mum_educ c.age_days c.age_days2 i.sex i.cat_birth_wt i.diar i.fever i.ari [pw = national_wgt] 
 margins int_month#wi,  saving(file1, replace)
 marginsplot, title("Exclusive breastfeeding by month of data collection & SES") 
-	
-* Region
 
-* Rural Urban
-
-* Male vs Female
+* Extra analysis
+* Analysis by region by month
+* Analysis by rural / urban by month
+* Analysis by wealth index by month
 
 * END
 
